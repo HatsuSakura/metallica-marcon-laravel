@@ -1,0 +1,73 @@
+############################################################
+# LARAVEL: ignora file sensibili e cache app
+############################################################
+
+/vendor/                    # Dipendenze PHP
+/storage/*.key             # Chiavi private
+/storage/oauth-*.key       # Chiavi Passport
+/storage/logs/
+/storage/debugbar/
+/storage/framework/
+
+.env                        # File ambiente reale
+.env.*                     # Tutte le varianti (.env_local, .env_prod, ecc.)
+!.env.example              # Ma tieni l'esempio
+
+/bootstrap/cache/          # Cache compilata
+
+.phpunit.result.cache      # Risultato test PHPUnit
+.phpunit.cache
+
+composer.lock              # Solo se vuoi evitare commit forzati di lock (opzionale)
+
+############################################################
+# FRONTEND: vite, node_modules, cache build
+############################################################
+
+/node_modules/             # Dipendenze NPM
+/public/build/             # Output Vite
+/public/hot/               # Dev server hot module
+/public/storage/           # Symlink storage
+
+/package-lock.json         # Idem composer.lock: valutazione a team
+
+npm-debug.log*
+yarn-error.log*
+
+############################################################
+# IDE / SISTEMA / TOOLING
+############################################################
+
+/.idea/                    # PhpStorm
+/.vscode/                  # Visual Studio Code
+/.fleet/                   # JetBrains Fleet
+_ide_helper.php
+.phpstorm.meta.php
+
+.DS_Store                  # macOS
+Thumbs.db                  # Windows
+
+############################################################
+# DOCKER, DEPLOY, TOOLING VARI
+############################################################
+
+docker-compose.override.yml
+Homestead.json
+Homestead.yaml
+auth.json                  # eventuali credenziali Composer
+
+############################################################
+# FILE LOCALI PERSONALI
+############################################################
+
+/appunti.txt
+/appunti_*.txt
+/TO_DO_LIST.txt
+/!start_local.bat
+
+############################################################
+# DIRECTORY DI RELEASE / DUMP (attenzione al "!" nel nome)
+############################################################
+
+/\!DUMP/
+/\!RELEASE/
