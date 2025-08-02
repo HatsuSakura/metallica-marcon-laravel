@@ -2,7 +2,7 @@
 # LARAVEL: ignora file sensibili e cache app
 ############################################################
 
-/vendor/                    # Dipendenze PHP
+/vendor/                   # Dipendenze PHP
 /storage/*.key             # Chiavi private
 /storage/oauth-*.key       # Chiavi Passport
 /storage/logs/
@@ -15,8 +15,8 @@
 
 /bootstrap/cache/          # Cache compilata
 
-.phpunit.result.cache      # Risultato test PHPUnit
-.phpunit.cache
+/.phpunit.result.cache      # Risultato test PHPUnit
+./phpunit.cache
 
 composer.lock              # Solo se vuoi evitare commit forzati di lock (opzionale)
 
