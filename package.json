@@ -1,0 +1,45 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "fix:eslint": "eslint \"resources/**/*.{js,vue}\" --fix"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.9.1",
+        "@tailwindcss/forms": "^0.5.8",
+        "@types/eslint__eslintrc": "^2.1.2",
+        "@vitejs/plugin-vue": "^5.1.2",
+        "axios": "^1.7.7",
+        "daisyui": "^4.12.24",
+        "eslint": "^9.9.1",
+        "eslint-plugin-vue": "^9.27.0",
+        "laravel-vite-plugin": "^1.0",
+        "tailwindcss": "^3.4.10",
+        "vite": "^5.0"
+    },
+    "dependencies": {
+        "@fortawesome/fontawesome-svg-core": "^6.6.0",
+        "@fortawesome/free-brands-svg-icons": "^6.6.0",
+        "@fortawesome/free-regular-svg-icons": "^6.6.0",
+        "@fortawesome/free-solid-svg-icons": "^6.6.0",
+        "@fortawesome/vue-fontawesome": "^3.0.8",
+        "@inertiajs/inertia": "^0.11.1",
+        "@inertiajs/vue3": "2.0",
+        "@vuepic/vue-datepicker": "^10.0.0",
+        "datatables.net": "^2.1.8",
+        "datatables.net-dt": "^2.1.8",
+        "datatables.net-vue3": "^3.0.2",
+        "date-fns": "^4.1.0",
+        "dayjs": "^1.11.13",
+        "mitt": "^3.0.1",
+        "uuid": "^11.0.3",
+        "vue-select": "^4.0.0-beta.6",
+        "vue3-form-wizard": "^0.2.4",
+        "vue3-google-map": "^0.21.0",
+        "vuedraggable": "^4.1.0",
+        "vuex": "^4.0.2",
+        "vuex-persistedstate": "^4.1.0"
+    }
+}

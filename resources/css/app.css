@@ -1,0 +1,76 @@
+@import 'datatables.net-dt'; 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components{
+    .label{
+        @apply block mb-1 text-gray-500 dark:text-gray-300 font-medium
+    }
+
+    .input{
+        @apply block w-full p-2 rounded-md shadow-sm border-gray-300 dark:border-gray-600 text-gray-500
+    }
+
+    .input-error{
+        @apply text-sm text-red-500 dark:text-red-400 
+    }
+
+    .input-filter-l{
+        @apply w-28 placeholder:text-gray-400 dark:placeholder:text-gray-600 border border-gray-200 dark:border-gray-700 rounded-t-md rounded-l-md rounded-b-md rounded-r-none text-sm font-medium text-gray-600 dark:text-gray-400 dark:bg-gray-800
+    }
+
+    .input-filter-r{
+        @apply w-28 placeholder:text-gray-400 dark:placeholder:text-gray-600 border border-l-0 border-gray-200 dark:border-gray-700 rounded-t-md rounded-r-md rounded-b-md rounded-l-none text-sm font-medium text-gray-600 dark:text-gray-400 dark:bg-gray-800
+    }
+}
+
+html{
+    overflow-x: hidden;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+  }
+
+ #app {
+    min-height: 100vh; /* Ensure #app takes full height of body */
+ }
+
+  select{
+    padding-right: 2rem!important;
+   }
+
+
+   h2 {
+    font-size: 1.2rem;
+    font-weight: 400;
+    margin-top: 0.3rem;
+    margin-bottom: 0.3rem;
+}
+
+:root {
+    --transition-duration: 0.5s;
+}
+  
+[data-theme='lighttheme'],
+[data-theme='darktheme'] {
+    transition: background-color var(--transition-duration), color var(--transition-duration);
+}
+
+/* Style for the Info Window in Google MAP */
+.gm-style .gm-style-iw-c {
+    color: #222!important;
+}
+
+@layer components {
+    .accordion-section {
+        @apply border-b border-gray-500;
+    }
+    .accordion-content {
+        @apply p-4;
+    }
+}

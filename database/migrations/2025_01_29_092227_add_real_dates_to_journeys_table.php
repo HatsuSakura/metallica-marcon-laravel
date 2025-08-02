@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('journeys', function (Blueprint $table) {
+            $table->timestamp('real_dt_start')->nullable();
+            $table->timestamp('real_dt_end')->nullable();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('journeys', function (Blueprint $table) {
+            $table->dropColumn('real_dt_start');
+            $table->dropColumn('real_dt_end');
+        });
+    }
+};
