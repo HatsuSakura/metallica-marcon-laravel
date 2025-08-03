@@ -77,7 +77,8 @@
             </div>
           </div>
 
-          <div v-if="canBeDamagedOrDirty" class="flex flex-row items-center gap-4">
+          <div v-if="canBeDamagedOrDirty" class="flex flex-row items-center gap-2">
+            <font-awesome-icon :icon="['fas', 'triangle-exclamation']" class="text-2xl" />
             Stato {{ localItem.holder.name }} :
             <div class="flex flex-row items-center gap-2">
               <input type="checkbox" v-model="localItem.is_holder_dirty" :true-value="1" :false-value="0" class="toggle" @change="toggleIsRagnabileInput" />

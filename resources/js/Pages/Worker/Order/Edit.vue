@@ -37,7 +37,7 @@
                 <!-- BLOCCO OPZIONI ORDINE -->
                 <div class="flex flex-row justify-between items-center sticky top-16 bg-base-100 z-10 py-4">
 
-
+                  <!-- BLOCCO + Aggiungi Elemento -->
                   <div>
                     <Link v-if="Number(warehouseId) === currentWarehouse"
                       :href="route('warehouse.orders.items.create', { order: order.id })"
@@ -58,10 +58,7 @@
                     </button>
                   </div>
 
-
-
-
-                    <!-- BLOCCO RAGNO -->
+                  <!-- BLOCCO RAGNO -->
                   <div v-if="Number(warehouseId) === currentWarehouse" class="flex flex-row justify-start items-center gap-4">
                         <div class="flex flex-row gap-4 justify-between">
                           <label class="font-medium">Uso ragno:</label>
@@ -86,20 +83,29 @@
                         </div>
                   </div>
 
-
+                  <!-- BLOCCO Salva Tutto -->
                   <div>
-                      <button 
+                      <button v-if="Number(warehouseId) === currentWarehouse"
                         @click="saveAll" 
                         class="btn btn-outline btn-success"
                         :disabled="!canSaveAll"
                         >
                         <font-awesome-icon :icon="['fas','floppy-disk']" class="text-2xl"/> Salva TUTTO
                       </button>
+                      <button v-else
+                        class="btn btn-disabled"
+                        tabindex="-1" role="button"
+                        aria-disabled="true"
+                      >
+                        <font-awesome-icon :icon="['fas','floppy-disk']" class="text-2xl"/> Salva TUTTO
+                    </button>
                   </div>
 
 
                 </div>
+                <!-- FINE BLOCCO OPZIONI ORDINE -->
 
+                <!-- RIGA PER OGNI ITEM -->                
                 <div v-if="Number(warehouseId) === currentWarehouse" class="flex flex-col gap-2">
                   <OrderItemRow
                   v-for="(item, idx) in group.items"

@@ -1,8 +1,7 @@
 <template>
 
-  <div class="collapse collapse-arrow border border-base-300 bg-base-100">
+  <div class="border border-base-300 bg-base-100" style="border-radius: 1rem; padding-top:2px; padding-bottom: 2px;">
     <!-- HEADER -->
-    <input type="checkbox" />
     <div class="collapse-title flex justify-between items-center">
       <!-- ID -->
       <div class="flex flex-col items-center justify-center">
@@ -42,19 +41,19 @@
       </div>
       <!-- Descrizione -->
       <div class="w-1/2">{{ localItem.description || 'nessuna descrizione' }}</div>
-    </div>
-  </div>
 
-  <Box>
-            <!-- PULSANTE ACQUISIZIONE -->
+
         <div class="flex flex-row items-center justify-end">
             <button class="btn btn-success btn-outline" @click="importItem(item)">
                 <font-awesome-icon :icon="['fas', 'file-import']" class="text-2xl"/>
                 Importa
             </button>
         </div>
-  </Box>
 
+
+
+    </div>
+  </div>
 
 
 </template>
