@@ -25,8 +25,8 @@
                 type="radio"
                 name="tablist_warehouses"
                 role="tab"
-                class="tab inline-flex items-center whitespace-nowrap;"
-                :aria-label="group.denominazione"
+                class="tab inline-flex items-center whitespace-nowrap"
+                :aria-label="`${group.denominazione} [ ${group.count} ]`"
                 :value="Number(warehouseId)"
                 :checked="Number(warehouseId) === currentWarehouse"
                 :class="Number(warehouseId) === currentWarehouse ? 'current-warehouse' : ''"
@@ -105,34 +105,65 @@
                 </div>
                 <!-- FINE BLOCCO OPZIONI ORDINE -->
 
-                <!-- RIGA PER OGNI ITEM -->                
+                <!-- RIGA PER OGNI ITEM DELLA WAREHOUSE CORRENTE -->                
                 <div v-if="Number(warehouseId) === currentWarehouse" class="flex flex-col gap-2">
-                  <OrderItemRow
-                  v-for="(item, idx) in group.items"
-                  :key="item.id"
-                  :item="item"
-                  :index="idx"
-                  :warehouseChiefs="filteredChiefs"
-                  :warehouseManagers="filteredManagers"
-                  :warehouseWorkers="filteredWorkers"
-                  :parentHasRagno="form.has_ragno"
-                  :parentMachineryTime="form.machinery_time"
-                  :resetKey="resetKey"
-                  @update="handleItemUpdate"
-                  :saving="savingItems.includes(item.id)"
-                  @save-one="handleSaveOne"
-                  @update-is-ragnabile-toggle="onRowToggle"
-                  @update-manual-machinery-time="onRowManual"
-                  @reset-manual-machinery-time="onRowReset"
-                  />
+                    <template v-if="group.items.length > 0">
+
+                      <OrderItemRow
+                      v-for="(item, idx) in group.items"
+                      :key="item.id"
+                      :item="item"
+                      :index="idx"
+                      :warehouseChiefs="filteredChiefs"
+                      :warehouseManagers="filteredManagers"
+                      :warehouseWorkers="filteredWorkers"
+                      :parentHasRagno="form.has_ragno"
+                      :parentMachineryTime="form.machinery_time"
+                      :resetKey="resetKey"
+                      @update="handleItemUpdate"
+                      :saving="savingItems.includes(item.id)"
+                      @save-one="handleSaveOne"
+                      @update-is-ragnabile-toggle="onRowToggle"
+                      @update-manual-machinery-time="onRowManual"
+                      @reset-manual-machinery-time="onRowReset"
+                      @itemNotFound="onItemNotFound"
+                      @itemFound="onItemFound"
+                      />
+                    </template>
+                    <div v-else class="alert alert-info">
+                      Nessun elemento presente in questo magazzino.
+                    </div>
+               
                 </div>
+
+                <!-- RIGA PER OGNI ITEM DI ALTRE WAREHOUSE -->                
                 <div v-else class="flex flex-col gap-2">
+
+                  <template v-if="group.items.length > 0">
                   <OrderItemRowNotMyWarehouse
                     v-for="(item, idx) in group.items"
                     :key="item.id"
                     :item="item"
                     :index="idx"
+                    @import="onImportItem"
                   />
+                  </template>
+                  <div v-else class="alert alert-info">
+                      Nessun elemento presente in questo magazzino.
+                  </div>
+
+                </div>
+
+
+                <div v-if="Number(warehouseId) === currentWarehouse" class="my-4 flex flex-row justify-end">
+                  <button
+                    @click="saveAll" 
+                    class="btn btn-outline btn-success"
+                    :class="canCloseOrder ? '' : 'btn-disabled'"
+                  >
+                    <font-awesome-icon :icon="['fas','check']" class="text-2xl"/>
+                    CHIUDI ordine per "{{ group.denominazione }}"
+                  </button>
                 </div>
 
 
@@ -193,26 +224,213 @@ const filteredWorkers   = computed(() =>
 )
 
 const itemsByWarehouse = computed(() => {
-  return props.order.items.reduce((acc, item) => {
-    // prendi l’ID del magazzino di download (può tornarti stringa o numero)
-    const wid = item.warehouse_download.id ?? 0
-    // prendi la denominazione
-    const denom = item.warehouse_download.denominazione ?? 'none'
-    if (!acc[wid]) {
-      acc[wid] = {
-        id: wid,
-        denominazione: denom,
-        items: []
-      }
-    }
-    acc[wid].items.push(item)
+  // 1) inizializza tutte le warehouses come gruppi vuoti
+  const map = (props.warehouses || []).reduce((acc, w) => {
+    acc[w.id] = { id: w.id, denominazione: w.denominazione, items: [], count: 0 }
     return acc
   }, {})
+
+  // 2) popola dai items dell'ordine
+  const src = Array.isArray(order.items) ? order.items : []
+  for (const item of src) {
+    const wid   = item?.warehouse_download?.id ?? 0
+    const denom = item?.warehouse_download?.denominazione ?? 'none'
+
+    // se arriva un wid non presente in props.warehouses, crealo on-the-fly
+    if (!map[wid]) {
+      map[wid] = { id: wid, denominazione: denom, items: [], count: 0 }
+    }
+
+    map[wid].items.push(item)
+  }
+
+  // 3) aggiorna i contatori
+  Object.values(map).forEach(g => { g.count = g.items.length })
+
+  return map
 })
+
+
 
 
 const modifiedItems = ref({}) // lista degli item modificati, da salvare tutti insieme
 const savingItems = ref([])   // lista di item.id in corso di salvataggio a fronte della pressione del save() sul singolo itemRow
+
+
+/*
+ * Gestisce la modifica tra NOT FOUND e FOUND per rendere l'item accessibile dall'altro magazzino
+ */
+function optimisticUpdate(id, patch) {
+  if (!order?.items || !Array.isArray(order.items)) {
+    return { revert: () => {} }
+  }
+  const idx = order.items.findIndex(i => i.id === id)
+  if (idx === -1) return { revert: () => {} }
+
+  const prev = { ...order.items[idx] }
+  order.items[idx] = { ...order.items[idx], ...patch }
+
+  return {
+    revert: () => { order.items[idx] = prev }
+  }
+}
+
+async function onItemNotFound(payload) {
+  const { id, updated_at } = payload
+  const { revert } = optimisticUpdate(id, { is_not_found: 1 })
+
+  try {
+    await axios.patch(
+      route('warehouse-order-items.flag-not-found', { orderItem: id }),
+      { is_not_found: true, updated_at }
+    )
+    store.dispatch('flash/queueMessage', {
+      type: 'success',
+      text: `Item ${id} dichiarato NON TROVATO.`,
+    })
+  } catch (error) {
+    revert()
+    console.error('Errore nel flag NOT FOUND:', error)
+    store.dispatch('flash/queueMessage', {
+      type: 'error',
+      text: `Errore nel gestire lo stato NON TROVATO per l'item ${id}.`,
+    })
+  }
+}
+
+async function onItemFound(payload) {
+  const { id, updated_at } = payload
+  const { revert } = optimisticUpdate(id, { is_not_found: 0 })
+
+  try {
+    await axios.patch(
+      route('warehouse-order-items.flag-not-found', { orderItem: id }),
+      { is_not_found: false, updated_at }
+    )
+    store.dispatch('flash/queueMessage', {
+      type: 'success',
+      text: `Item ${id} ripristinato come TROVATO.`,
+    })
+  } catch (error) {
+    revert()
+    console.error('Errore nel flag FOUND:', error)
+    store.dispatch('flash/queueMessage', {
+      type: 'error',
+      text: `Errore nel gestire lo stato TROVATO per l'item ${id}.`,
+    })
+  }
+}
+
+
+// opzionale: spinner per item
+const importingItems = ref([])
+
+async function onImportItem({ id, journey_cargo_id }) {
+  // evita doppio click
+  if (importingItems.value.includes(id)) return
+  importingItems.value.push(id)
+
+  // Trova il primo journey_cargo id disponibile nel magazzino corrente
+  const currentJourneyCargo = (() => {
+    const group = itemsByWarehouse.value?.[currentWarehouse.value]
+    if (group?.items?.length){
+
+      for (const it of group.items) {
+        const jc = it?.journey_cargo
+        if (!jc) continue
+        // preferisci jc.id; fallback jc.cargo_id
+        const found = jc?.id ?? jc?.cargo_id ?? null
+        if (found != null) return found
+      }
+
+    }
+    else{
+      const list = order?.journey?.journey_cargos
+      console.log('list', list, currentWarehouse.value)
+      if (!Array.isArray(list)) return null
+      const hit = list.find(jc => Number(jc?.warehouse_id) === Number(currentWarehouse.value))
+      return hit?.id ?? null
+    }
+    // se non trovi nessun cargo, ritorna null
+    return null
+  })()
+
+    if (currentJourneyCargo == null) {
+    importingItems.value = importingItems.value.filter(x => x !== id)
+    store.dispatch('flash/queueMessage', {
+      type: 'error',
+      text: `Il viaggio di cui questo ordine faceva parte non è passato da questo magazzino.`,
+    })
+    return
+  }
+
+  try {
+    const res = await axios.post(
+      `/api/warehouse-order-items/move-journey-cargo/${id}`,
+      { journey_cargo_id: currentJourneyCargo, warehouse_id: currentWarehouse.value }
+    )
+
+    // può arrivare { orderItem: {...} } o l’oggetto diretto
+const updated = res.data?.orderItem ?? res.data
+
+// 🔒 Forza SEMPRE la proiezione locale del magazzino di atterraggio
+const wh = (props.warehouses || []).find(w => Number(w.id) === Number(currentWarehouse.value))
+updated.warehouse_download = wh
+  ? { id: wh.id, denominazione: wh.denominazione }
+  : { id: Number(currentWarehouse.value), denominazione: '—' }
+
+// opzionale ma utile: allinea anche il journey cargo mostrato in UI
+if (updated.journey_cargo && updated.journey_cargo.id !== currentJourneyCargo) {
+  updated.journey_cargo = { ...(updated.journey_cargo || {}), id: currentJourneyCargo }
+}
+
+// 🔁 Rimpiazza nell’array reattivo e CAMBIA LA REFERENCE
+const idx = order.items.findIndex(i => i.id === updated.id)
+if (idx !== -1) {
+  const prev = order.items[idx]
+
+  // unisci preservando relazioni/fields che il backend non rimanda
+  const merged = {
+    ...prev,
+    ...updated,
+
+    // salva le relazioni usate in OrderItemRow se mancano nel payload
+    holder:        updated.holder        ?? prev.holder,
+    cerCode:       updated.cerCode       ?? prev.cerCode,   // se usi camelCase
+    cer_code:      updated.cer_code      ?? prev.cer_code,  // se usi snake_case altrove
+    images:        updated.images        ?? prev.images,
+    warehouse:     updated.warehouse     ?? prev.warehouse, // se la row mostra dati del warehouse “principale”
+    journey_cargo: updated.journey_cargo ?? prev.journey_cargo,
+  }
+
+  order.items.splice(idx, 1, merged)
+} else {
+  order.items.push(updated)
+}
+order.items = [...order.items]    // <-- cambia la reference per invalidare le computed
+resetKey.value++                  // <-- se i figli hanno watcher “immediate”
+
+    // flash di successo
+    store.dispatch('flash/queueMessage', {
+      type: 'success',
+      text: `Materiale importato correttamente (item ${updated.id}).`,
+    })
+  } catch (error) {
+    console.error('Error moving warehouse item:', error)
+    store.dispatch('flash/queueMessage', {
+      type: 'error',
+      text: `Errore durante la procedura di import per l'item ${id}.`,
+    })
+  } finally {
+    importingItems.value = importingItems.value.filter(x => x !== id)
+  }
+}
+
+
+
+
+
+
 
 function handleItemUpdate(updatedItem) {
   // 1) mark it dirty for saveAll
@@ -297,6 +515,21 @@ const itemsDirty = computed(() => Object.keys(modifiedItems.value).length > 0);
 
 // overall flag
 const canSaveAll = computed(() => orderDirty.value || itemsDirty.value);
+
+const canCloseOrder = computed(() => {
+  const group = itemsByWarehouse.value?.[currentWarehouse.value]
+  if (!group) return false
+
+  const items = group.items || []
+  if (items.length === 0) return false // opzionale: non chiudere se vuoto
+
+  return items.every(it =>
+    !!it.warehouse_downaload_dt &&   // scarico
+    !!it.warehouse_weighing_dt &&    // pesatura
+    !!it.warehouse_selection_dt      // selezione
+  )
+})
+
 
 
 /**

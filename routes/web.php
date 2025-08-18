@@ -316,6 +316,7 @@ Route::prefix('api')
         Route::post('/warehouse-order-items/move-journey-cargo/{orderItem}', [API_WarehouseOrderItemsController::class, 'moveJourneyCargo'])->name('warehouse-order-items.move-journey-cargo');
         Route::post('/warehouse-order-items/save-items', [API_WarehouseOrderItemsController::class, 'saveItems'])->name('warehouse-order-items.save-items');
         Route::put('/warehouse-order-items/{orderItem}', [API_WarehouseOrderItemsController::class, 'update'])->name('warehouse-order-items.update');
+        Route::patch('/warehouse-order-items/{orderItem}/not-found', [API_WarehouseOrderItemsController::class, 'flagNotFound'])->name('warehouse-order-items.flag-not-found');
         Route::put('warehouse-journey-cargos/{journeyCargo}', [API_WarehouseJourneyCargosController::class, 'update'])->name('warehouse-journey-cargos.update');
         Route::post('/user/resend-verification/{user}', [API_RelatorUserResetAndresendFunctions::class, 'resendVerification'])->name('relator.user.resend.verification');
         Route::post('/user/send-password-reset/{user}', [API_RelatorUserResetAndresendFunctions::class, 'sendPasswordResetEmail'])->name('relator.user.send.password.reset');

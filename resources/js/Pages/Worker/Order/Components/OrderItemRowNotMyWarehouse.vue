@@ -44,10 +44,16 @@
 
 
         <div class="flex flex-row items-center justify-end">
-            <button class="btn btn-success btn-outline" @click="importItem(item)">
+            <button v-if="localItem.is_not_found" class="btn btn-success btn-outline" @click="importItem(item)">
                 <font-awesome-icon :icon="['fas', 'file-import']" class="text-2xl"/>
                 Importa
             </button>
+             <div v-else class="tooltip tooltip-left" data-tip="per importare il materiale, dichiaralo come 'NON TROVATO' in questo magazzino">
+                <button class="btn btn-disabled btn-outline">
+                  <font-awesome-icon :icon="['fas', 'file-import']" class="text-2xl"/>
+                  Importa
+                </button>
+             </div>
         </div>
 
 
@@ -67,6 +73,7 @@ import { Link } from '@inertiajs/vue3'
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import dayjs from 'dayjs'
+import { Teleport } from 'vue'
 
 const props = defineProps({
   item: Object,
@@ -77,21 +84,15 @@ const localItem = reactive({
   ...props.item
 })
 
-const importItem = async(item) => {
-    try {
-        const url = `/api/warehouse-order-items/move-journey-cargo/${item.id}`;
-        const response = await axios.post(url, {
-            journey_cargo_id: props.journeyCargoRequesting.id,
-        });
-        // Emit an event with the updated orderItem returned from the API.
-        emit('itemMoved', response.data.orderItem);
+const emit = defineEmits([
+  'import',
+])
 
-        console.log('Move warehouse response:', response.data);
-        store.dispatch('flash/queueMessage', { type: 'success', text: 'Materiale importato correttamente' });
-
-    } catch (error) {
-        console.error('Error moving warehouse item:', error);
-        store.dispatch('flash/queueMessage', { type: 'error', text: 'Errore durente la procedura di import ' + error });
-    } 
+function importItem() {
+  emit('import', {
+    id: props.item.id,
+    journey_cargo_id: props.journeyCargoRequesting?.id ?? null,
+  })
 }
+
 </script>

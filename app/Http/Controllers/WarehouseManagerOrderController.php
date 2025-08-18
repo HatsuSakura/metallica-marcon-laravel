@@ -61,6 +61,8 @@ class WarehouseManagerOrderController extends Controller
     public function edit(Order $order)
     {
         $order->load([
+            'journey',
+            'journey.journeyCargos',
             'customer',
             'customer.seller',
             'site',

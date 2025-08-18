@@ -174,7 +174,7 @@ class RelatorUserController extends Controller
             'email' => [
                 Rule::requiredIf(fn() => $request->input('role') !== UserRole::WAREHOUSE_WORKER->value),
                 'email',
-                'unique:users,email'. $user->id,
+                Rule::unique('users', 'email')->ignore($user->id), // ->whereNull('deleted_at'), // ->whereNull('deleted_at') garantisce il funzionamento anche con soft_deletes
             ],
             'is_ragnista' => 'nullable|boolean',
         ]);

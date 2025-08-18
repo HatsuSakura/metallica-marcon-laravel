@@ -41,10 +41,46 @@
       </div>
       <!-- Descrizione -->
       <div class="w-1/2">{{ localItem.description || 'nessuna descrizione' }}</div>
+      <div class="mr-6 flex flex-row gap-1">
+
+        <div class="w-8 h-8 rounded-full flex items-center justify-center"
+            :class="localItem.warehouse_downaload_dt
+          ? 'bg-success text-success-content'
+          : 'bg-error text-error-content'"
+        >
+          <font-awesome-icon :icon="['fas','truck-ramp-box']" />
+        </div>
+        <div class="w-8 h-8 rounded-full flex items-center justify-center"
+            :class="localItem.warehouse_weighing_dt
+          ? 'bg-success text-success-content'
+          : 'bg-error text-error-content'"
+        >
+          <font-awesome-icon :icon="['fas','weight-scale']" />
+        </div>
+                <div class="w-8 h-8 rounded-full flex items-center justify-center"
+            :class="localItem.warehouse_selection_dt
+          ? 'bg-success text-success-content'
+          : 'bg-error text-error-content'"
+        >
+          <font-awesome-icon :icon="['fas','magnifying-glass-plus']" />
+        </div>
+
+      </div>
     </div>
 
-    <!-- CONTENT -->
-    <div class="collapse-content flex flex-col gap-2">
+
+    <!-- START CONTENT -->
+    <div v-if="localItem.is_not_found" class="flex flex-row justify-between items-center mb-2 px-4">
+      <div>
+        Elemento dichiarato come "non trovato".<br/>Se trovato nel frattempo: premere il pulsante a destra per ri-attivare.
+      </div>
+      <div>
+        <button class="btn btn-primary btn-circle btn-outline btn-success" @click="itemFound()">
+          <font-awesome-icon :icon="['fas', 'eye']" class="text-2xl" />
+        </button>
+      </div>
+    </div>
+    <div v-else class="collapse-content flex flex-col gap-2">
       <div class="flex flex-row justify-between items-center mb-2">
         <div class="flex flex-row items-center gap-8">
           <div class="flex flex-row items-center gap-2">
@@ -115,7 +151,7 @@
           </div>
 
           <div v-else class="tooltip" data-tip="Non trovato">
-            <button class="btn btn-primary btn-circle btn-outline btn-error">
+            <button v-if="!localItem.warehouse_downaload_dt" class="btn btn-primary btn-circle btn-outline btn-error" @click="itemNotFound()">
               <font-awesome-icon :icon="['fas', 'eye-slash']" class="text-2xl" />
             </button>
           </div>
@@ -190,7 +226,7 @@
 
         <!-- SELEZIONE -->
         <Box class="w-1/3 flex flex-col items-center gap-2">
-          <div class="w-full flex justify-center"><span>SELEZIONE</span></div>
+          <div class="w-full flex justify-center"><span>SELEZIONE/CLASSIFICA</span></div>
           <div class="flex flex-row items-center gap-2">
             <input type="checkbox" v-model="localItem.has_selection" :true-value="1" :false-value="0"
               class="toggle my-3" /> Selezione
@@ -251,10 +287,13 @@
         </Box>
       </div>
     </div>
+    <!-- END CONTENT -->
+
   </div>
 </template>
 
 <script setup>
+import { useStore } from 'vuex'
 import Box from '@/Components/UI/Box.vue'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import ImageUploader from '@/Pages/Worker/Order/Components/ImageUploader.vue'
@@ -275,6 +314,7 @@ const props = defineProps({
   resetKey: Number,
   saving: Boolean,
 })
+
 const emit = defineEmits([
   'update-is-ragnabile-toggle',
   'update-manual-machinery-time',
@@ -282,6 +322,8 @@ const emit = defineEmits([
   'update',
   'save-one'
 ])
+
+const store     = useStore()
 
 const initialTotal = Number(props.item.machinery_time_fraction) || 0
 const localItem = reactive({ 
@@ -295,6 +337,162 @@ const canModify = ref(false)
 const existingImages = computed(() =>
   (localItem.images ?? []).filter(img => img.id)
 )
+
+
+/**
+ * LORODO + TARA = NETTO
+ */
+
+// --- Helpers peso ---
+function toNum(v) {
+  // '' o null -> 0 ; numeri/stringhe -> Number
+  const n = Number(v)
+  return Number.isFinite(n) ? n : 0
+}
+
+// Lordo + Tara = Netto
+watch(
+  () => [localItem.weight_gross, localItem.weight_tare],
+  ([gross, tare]) => {
+    const G = toNum(gross)
+    const T = toNum(tare)
+    // se LORDO è vuoto, netto = 0
+    if (gross === '' || gross == null) {
+      localItem.weight_net = 0
+      return
+    }
+    // se TARA non è valorizzata -> conta come 0
+    localItem.weight_net = G + T
+  },
+  { immediate: true }
+)
+
+
+/**
+ * DATE SCARICO, PESATURA, SELEZIONE
+ */
+// --- Helpers date ---
+function toDayjs(d) {
+  return d ? dayjs(d) : null
+}
+
+let lastToast = ''
+function dateInfo(type, text){
+  if (text === lastToast) return          // evita duplicati identici ravvicinati
+  lastToast = text
+  store.dispatch('flash/queueMessage', { type, text })
+  setTimeout(() => { lastToast = '' }, 400)
+}
+
+
+// 2.1) Se cambia la DATA DI SCARICO:
+// - non ha prerequisiti
+// - se PESATURA esiste ed è < SCARICO -> allinea a SCARICO
+// - se SELEZIONE esiste ed è < PESATURA -> riallineo dopo che ho sistemato PESATURA
+let lockingDL = false
+watch(
+  () => localItem.warehouse_downaload_dt,
+  (newDl) => {
+    if (lockingDL) { lockingDL = false; return }
+    const dDL = toDayjs(newDl)
+
+    // riallinea PESATURA
+    if (localItem.warehouse_weighing_dt) {
+      const dWG = toDayjs(localItem.warehouse_weighing_dt)
+      if (dDL && dWG.isBefore(dDL)) {
+        lockingDL = true
+        localItem.warehouse_weighing_dt = dDL.toDate()
+        dateInfo('success', 'Data di pesatura riallineata a quella di scarico')
+      }
+    }
+
+    // riallinea SELEZIONE
+    if (localItem.warehouse_selection_dt) {
+      const dWG2 = toDayjs(localItem.warehouse_weighing_dt)
+      const dSL  = toDayjs(localItem.warehouse_selection_dt)
+
+      if (!dWG2) {
+        lockingDL = true
+        localItem.warehouse_selection_dt = null
+        dateInfo('error', 'Imposta prima una data di pesatura')
+      } else if (dSL.isBefore(dWG2)) {
+        lockingDL = true
+        localItem.warehouse_selection_dt = dWG2.toDate()
+        dateInfo('success', 'Data di selezione riallineata a quella di pesatura')
+      }
+    }
+  }
+)
+
+
+
+// 2.2) Se cambia la DATA DI PESATURA:
+// - NON può essere impostata se SCARICO è null -> annulla
+// - deve essere ≥ SCARICO
+// - SELEZIONE (se esiste) deve essere ≥ PESATURA
+let lockingWG = false
+watch(
+  () => localItem.warehouse_weighing_dt,
+  (newWg) => {
+    if (lockingWG) { lockingWG = false; return }
+
+    const dDL = toDayjs(localItem.warehouse_downaload_dt)
+    if (!dDL) {
+      lockingWG = true
+      localItem.warehouse_weighing_dt = null
+      dateInfo('error', 'Imposta prima una data di scarico')
+      return
+    }
+
+    const dWG = toDayjs(newWg)
+    if (dWG && dWG.isBefore(dDL)) {
+      lockingWG = true
+      localItem.warehouse_weighing_dt = dDL.toDate()
+      dateInfo('success', 'Data di pesatura riallineata a quella di scarico')
+      return
+    }
+
+    // SELEZIONE ≥ PESATURA
+    const dWG2 = toDayjs(localItem.warehouse_weighing_dt)
+    const dSL  = toDayjs(localItem.warehouse_selection_dt)
+    if (dSL && dWG2 && dSL.isBefore(dWG2)) {
+      lockingWG = true
+      //localItem.warehouse_selection_dt = dWG2.toDate()   
+      //dateInfo('success', 'Data di selezione riallineata a quella di pesatura')
+      dateInfo('error', 'Data di pesatura successiva a quella di selezione.')
+      localItem.warehouse_weighing_dt = null;
+    }
+  }
+)
+
+
+// 2.3) Se cambia la DATA DI SELEZIONE:
+// - NON può essere impostata se PESATURA è null -> annulla
+// - deve essere ≥ PESATURA
+let lockingSL = false
+watch(
+  () => localItem.warehouse_selection_dt,
+  (newSl) => {
+    if (lockingSL) { lockingSL = false; return }
+
+    const dWG = toDayjs(localItem.warehouse_weighing_dt)
+    if (!dWG) {
+      lockingSL = true
+      localItem.warehouse_selection_dt = null
+      dateInfo('error', 'Imposta prima una data di pesatura') // ← testo corretto
+      return
+    }
+
+    const dSL = toDayjs(newSl)
+    if (dSL && dSL.isBefore(dWG)) {
+      lockingSL = true
+      localItem.warehouse_selection_dt = dWG.toDate()
+      dateInfo('success', 'Data di selezione riallineata a quella di pesatura')
+    }
+  }
+)
+
+
 
 // quando prop.item cambia (parent ha aggiornato), ricarica
 watch(
@@ -319,8 +517,6 @@ watch(
   },
   { immediate: true }
 )
-
-
 
 // quando resetKey cambia, resetta le preview
 watch(() => props.resetKey, () => {
@@ -364,6 +560,16 @@ function handleImageFiles(files) {
 
 function saveItem() {
   emit('save-one', serializeLocalItem())
+}
+
+function itemNotFound(){
+  console.log('local item = ',localItem);
+  emit('itemNotFound', serializeLocalItem())
+}
+
+function itemFound(){
+  console.log('local item = ',localItem);
+  emit('itemFound', serializeLocalItem())
 }
 
 function emitUpdate() {

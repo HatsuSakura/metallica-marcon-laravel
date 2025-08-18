@@ -60,7 +60,7 @@ class Journey extends Model
         return $this->belongsTo(Cargo::class, 'cargo_for_trailer_id');
     }
 
-    public function journeyCargo()
+    public function journeyCargos()
     {
         return $this->hasMany(JourneyCargo::class);
     }

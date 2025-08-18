@@ -70,20 +70,25 @@ class OrderItem extends Model
 
     public function getWarehouseDownloadAttribute()
     {
-         // prendo il primo (e unico) pivot
-        $pivot = $this->journeyCargos->first()?->pivot;
-        if (! $pivot || ! $pivot->warehouse_download_id) {
-            return null;
+        // 1) Se la relazione è già caricata, usa quella (veloce, no query extra)
+        if ($this->relationLoaded('journeyCargos')) {
+            $pivot = $this->journeyCargos
+                ->sortByDesc(fn($jc) => optional($jc->pivot)->updated_at)
+                ->first()?->pivot;
+            $wid = $pivot?->warehouse_download_id;
+        } else {
+            // 2) Altrimenti leggi la pivot "corrente" direttamente (1 query)
+            $wid = DB::table('journey_cargo_order_item')
+                ->where('order_item_id', $this->id)
+                ->orderByDesc('id')            // oppure created_at/updated_at se preferisci
+                ->value('warehouse_download_id');
         }
 
-        // carico solo id e denominazione
-        $wh = Warehouse::select('id', 'denominazione')
-            ->find($pivot->warehouse_download_id);
+        if (!$wid) return null;
 
-        // se vuoi un array:
-        return $wh
-            ? ['id' => $wh->id, 'denominazione' => $wh->denominazione]
-            : null;
+        // 3) Ritorna solo ciò che serve alla UI
+        $wh = Warehouse::select('id', 'denominazione')->find($wid);
+        return $wh ? ['id' => $wh->id, 'denominazione' => $wh->denominazione] : null;
     }
 
 

@@ -34,7 +34,7 @@ class RelatorDashboardController extends Controller
         ->with('cargoForVehicle')
         ->with('trailer')
         ->with('cargoForTrailer')
-        ->withCount('journeyCargo')
+        ->withCount('journeyCargos')
         ->paginate(25)
         ->withQueryString();
 

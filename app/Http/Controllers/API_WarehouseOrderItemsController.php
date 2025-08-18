@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use App\Services\OrderItemUpdater;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 
@@ -100,16 +101,89 @@ public function update( Request $request, OrderItem $orderItem, OrderItemUpdater
 
 
 
-
-    public function moveJourneyCargo(Request $request, OrderItem $orderItem) {
-        $validated = $request->validate([
-            'journey_cargo_id' => 'required|integer',
+    public function moveJourneyCargo(Request $request, OrderItem $orderItem)
+    {
+        $data = $request->validate([
+            'journey_cargo_id'      => ['required','integer','exists:journey_cargos,id'],
+            'warehouse_id'          => ['required','integer','exists:warehouses,id'], // ← nuovo
+            'is_double_load'        => ['sometimes','boolean'],
         ]);
-    
-        $orderItem->update(
-            $validated
-        );
-    
-        return response()->json(['message' => 'Item moved successfully.', 'orderItem' => $orderItem], 200);
+
+        return DB::transaction(function () use ($orderItem, $data, $request) {
+            // 1) Aggiorna l'ORDER ITEM (spostamento di magazzino)
+            $orderItem->forceFill([
+                'warehouse_id'         => $data['warehouse_id'],
+                'is_not_found'         => false, // resetta se era "not found"
+                // opzionale, se lo usi per audit/locking:
+                'updated_by_user_id'   => optional($request->user())->id,
+            ])->save();
+
+            // 2) Aggiorna/Imposta la PIVOT journey_cargo_order_item
+            $pivotAttrs = [
+                'is_double_load'        => (int)($data['is_double_load'] ?? 0),
+                // se non viene passato, usa il warehouse corrente come download
+                'warehouse_download_id' => $data['warehouse_id'],
+            ];
+
+            // Mantieni solo questa associazione attiva
+            $orderItem->journeyCargos()->sync([
+                $data['journey_cargo_id'] => $pivotAttrs
+            ]);
+
+            // 🔧 3) IMPORTANTISSIMO: resetta cache relazioni e ricarica
+            $orderItem->unsetRelation('journeyCargos'); // svuota relazione in cache
+            $orderItem->refresh(); // ricarica attributi dal DB (warehouse_id, ecc.)
+            $orderItem->load([
+                'journeyCargos' => fn($q) => $q->select('journey_cargos.id')->withPivot('warehouse_download_id'),
+                'warehouse',
+                'holder',         // 👈 quello che OrderItemRow legge
+                'cerCode',   // 👈 idem
+                'images' // se li mostri
+            ]);
+            $orderItem->append('warehouse_download'); // se necessario, ma in teoria è già in $appends!
+
+            // (gli appends 'warehouse_download' e 'journey_cargo' verranno ricalcolati ora)
+            return response()->json([
+                'message'   => 'Item moved successfully.',
+                'orderItem' => $orderItem,
+            ], 200);
+        });
     }
+
+
+
+
+    public function flagNotFound(Request $request, OrderItem $orderItem)
+    {
+        $data = $request->validate([
+            'is_not_found' => ['required','boolean'],
+            'updated_at'   => ['nullable','date'], // per optimistic locking “soft”
+        ]);
+
+        // (Opzionale ma consigliato) optimistic lock
+        if (!empty($data['updated_at'])) {
+            $clientUpdatedAt = Carbon::parse($data['updated_at'])->toImmutable();
+            if ($orderItem->updated_at && $orderItem->updated_at->ne($clientUpdatedAt)) {
+                return back()->withErrors([
+                    'conflict' => "L'item è stato aggiornato da un altro utente. Ricarica la pagina."
+                ], 409);
+            }
+        }
+
+        $orderItem->forceFill([
+            'is_not_found'        => $data['is_not_found'],
+            'updated_by_user_id'  => $request->user()->id, // in linea col vostro locking
+        ])->save();
+
+        // Se la richiesta arriva da XHR/axios puoi restituire JSON
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true]);
+        }
+
+        return back()->with('success', 'Stato "not found" aggiornato.');
+    }
+
+
+
+
 }
