@@ -17,7 +17,13 @@
                             </div>
                             <div>
                                 <!-- MAGAZZINO Select/Option -->
-                                <select v-if="is_double_load" v-model="warehouse_download_id" id="warehouse_download_id" class="select select-bordered">
+                                <select
+                                     v-if="is_double_load" 
+                                     v-model="warehouse_download_id" 
+                                     id="warehouse_download_id" 
+                                     class="select select-bordered"
+                                     @change="manageElementDoubleLoad()"
+                                >
                                     <option v-for="warehouse in props.warehouses.filter(warehouse => warehouse.id != props.warehouse_id)" :key="warehouse.id" :value="warehouse.id">
                                         {{ warehouse.denominazione }}
                                     </option>
@@ -72,8 +78,9 @@ const emitViewMap = () => {
 const is_double_load = ref();
 const warehouse_download_id = ref();
 onMounted(() => {
-    is_double_load.value = props.element.pivot?.is_double_load === 1 || false;
-    warehouse_download_id.value = props.element.pivot?.warehouse_download_id || props.element.warehouse_id;
+  is_double_load.value = props.element.pivot?.is_double_load === 1 || false;
+  // default "normale": warehouse del cassone, non quello dell'item
+  warehouse_download_id.value = props.element.pivot?.warehouse_download_id ?? props.warehouse_id ?? null;
 });
 
 // Watch for changes in parent's warehouse_id and the element's warehouse_id.

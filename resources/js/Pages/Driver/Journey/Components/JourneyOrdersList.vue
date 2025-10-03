@@ -13,7 +13,7 @@
                 <span>
                     <font-awesome-icon :icon="['fas', 'route']" class="text-4xl"/>
                 </span>                
-                <span v-if="journey.state == 'attivo'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
+                <span v-if="journey.state == 'attivo' || journey.state == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
                     <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
                 </span>
 
@@ -44,7 +44,7 @@
                 <font-awesome-icon :icon="['fas', 'cart-arrow-down']" class="text-4xl"/>
             </span>
 
-            <div v-if="props.journey.state == 'attivo'" class="flex flex-row gap-2 items-center">
+            <div v-if="props.journey.state == 'attivo' || journey.state == 'eseguito'" class="flex flex-row gap-2 items-center">
                 <span v-if="order.state == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
                     <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
                 </span>
@@ -71,7 +71,7 @@
                     <font-awesome-icon :icon="['fas', 'warehouse']" class="text-4xl"/>
                 </span>
 
-                    <span v-if="props.journey.state == 'completato'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
+                    <span v-if="journey.state == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
                         <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
                     </span>
 

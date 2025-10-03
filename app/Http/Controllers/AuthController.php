@@ -26,10 +26,9 @@ class AuthController extends Controller
             ]);
         }
 
-        // Controllo can_login appena dopo login riuscito (ed scludo login di warehouse_worker che non sono abilitati)
+        // Controllo can_login appena dopo login riuscito (ed escludo login di warehouse_worker che non sono abilitati)
         if (!auth()->user()->can_login) {
             Auth::logout();
-
             throw ValidationException::withMessages([
                 'base' => 'Questo utente non è autorizzato ad accedere al sistema.',
             ]);
@@ -38,34 +37,9 @@ class AuthController extends Controller
         // utilizzo il metodo REGENERATE per rigenerare immediatamente il token di sessione appena effettuato il login
         $request->session()->regenerate();
 
-        // ritireziona ad una pagina gestita da Laravel che viene passata come parametro
-        //return redirect()->intended('/relator/customer')->with('success', 'Utente loggato con successo: Benvenuto!');
-
-        $user = auth()->user();
-
-        if (
-            $user->role === UserRole::LOGISTIC
-        ||  $user->role === UserRole::WAREHOUSE_CHIEF) {
-            return redirect()->route('relator.dashboard');
-        }
-
-
-        if ( $user->role === UserRole::WAREHOUSE_MANAGER) {
-            return redirect()->route('worker.journeyCargo.index');
-        }        
-
-    
-        if ($user->role === UserRole::DRIVER) {
-            return redirect()->route('driver.journey.index');
-        }
-
-        if (
-            $user->role === UserRole::PROGRAMMER
-        ||  $user->is_admin) {
-            return redirect()->route('relator.dashboard');
-        }
-
-        return redirect()->route('user-account.index')->with('success', 'Dashboard non ancora costruita per questo ruolo');
+        // 🔑 unico redirect: pagina neutra → poi decide il middleware di ruolo
+        return redirect()->intended(route('dashboard'))->with('success', 'Benvenuto!');
+        //return redirect()->route('user-account.index')->with('success', 'Dashboard non ancora costruita per questo ruolo');
     
 
     }

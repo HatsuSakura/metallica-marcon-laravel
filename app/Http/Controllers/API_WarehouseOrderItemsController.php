@@ -2,102 +2,151 @@
 
 namespace App\Http\Controllers;
 
+//API_WarehouseOrderItemsController.php
+
+use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use App\Services\OrderItemUpdater;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\OrderItemExplosionSync;
 use Illuminate\Support\Facades\Password;
 
 
 class API_WarehouseOrderItemsController extends Controller{
 
-public function saveItems(Request $request, OrderItemUpdater $updater)
-{
-    $conflicts = [];
-    $saved = [];
 
-    $userId = $request->user()->id;
+public function saveItems(
+    Request $request,
+    OrderItemUpdater $updater,
+    OrderItemExplosionSync $explosionSync
+) {
+    $conflicts = [];
+    $saved     = [];
+    $userId    = $request->user()->id;
+
+    if ($request->filled('order_id')) {
+        $order = Order::findOrFail($request->input('order_id'));
+
+        // normalizza il ragnista: '' => null
+        $ragnista = $request->input('ragnista_id');
+        $ragnista = ($ragnista === '' || $ragnista === null) ? null : (int)$ragnista;
+
+        $order->forceFill([
+            'has_ragno'           => (int) $request->boolean('has_ragno'),
+            'ragnista_id'         => $ragnista,
+            'machinery_time'      => (int) $request->input('machinery_time', 0),
+            //'updated_by_user_id'  => $userId, // se usi l’audit
+        ])->save();
+    }
 
     foreach ($request->input('items', []) as $index => $data) {
         $item = OrderItem::findOrFail($data['id']);
 
-
+        // files caricati per questo indice
         $images = $request->file("items.$index.images", []);
 
-        // safeUpdate con immagini reali
-        $result = $updater->safeUpdate($item, array_merge($data, ['images' => $images]), $userId);
+        // explosions: JSON string → array
+        //$explosions = json_decode($request->input("items.$index.explosions", '[]'), true) ?: [];
+        $explosionsRaw = json_decode($request->input("items.$index.explosions", '[]'), true) ?: [];
+        $explosions    = $this->normalizeExplosionsArray($explosionsRaw);
 
-        //$result = $updater->safeUpdate($item, $data, $userId);
+        // payload scalari: togli ‘images’ e ‘explosions’
+        $scalars = collect($data)->except(['images', 'explosions'])->all();
 
+        // safeUpdate: setta updated_by_user_id, gestisce upload immagini
+        $result = $updater->safeUpdate($item, array_merge($scalars, ['images' => $images]), $userId);
 
         if ($result['status'] === 'conflict') {
             $conflicts[] = $result['conflict'];
-        } else {
-            $saved[] = $result['item'];
+            continue;
         }
+
+        // sync esplosione (anche [] per wipe)
+        $explosionSync->sync($item->id, $explosions);
+
+        // ricarica relazioni per UI
+        $fresh = $item->fresh([
+            'images',
+            'holder',
+            'cerCode',
+            'warehouse',
+        ]);
+
+        // ATTACCA l’albero annidato come "explosions"
+        $fresh->setRelation('explosions', $item->explosionsTree()->get());
+
+        $saved[] = $fresh;
     }
 
     if (!empty($conflicts)) {
         return response()->json([
-            'message' => 'Conflict',
+            'message'   => 'Conflict',
             'conflicts' => $conflicts,
         ], 409);
     }
 
     return response()->json([
-        'message' => 'Salvataggio completato',
+        'message'    => 'Salvataggio completato',
         'savedItems' => $saved,
+        'order'      => isset($order) ? $order->fresh() : null,
     ]);
 }
 
 
+public function update(
+    Request $request,
+    OrderItem $orderItem,
+    OrderItemUpdater $updater,
+    OrderItemExplosionSync $explosionSync,
+) {
+    $userId = $request->user()->id;
 
+    // 1) PRIMITIVI (eccetto images/explosions)
+    $data = $request->except(['images', 'explosions']);
 
-public function update( Request $request, OrderItem $orderItem, OrderItemUpdater $updater ) {
-/*            
-        $validated = $request->validate([
-            'warehouse_id' => 'required|integer',
-            'warehouse_notes' => 'nullable|string',
-            'warehouse_manager_id' => 'nullable|integer',
-            'worker_id' => 'nullable|integer',
-            'has_selection' => 'nullable|boolean',
-            'selection_time' => 'nullable|integer',
-            'is_ragnabile' => 'nullable|boolean',
-            'machinery_time_fraction' => 'nullable|integer',
-            'is_machinery_time_manual' => 'nullable|boolean',
-            'is_transshipment' => 'nullable|boolean',   
-            'weight_gross' => 'nullable|numeric',
-            'weight_tare' => 'nullable|numeric',
-            'weight_net' => 'nullable|numeric',
-        ]);
-*/
-        $userId = $request->user()->id;
+    // 2) IMMAGINI (array di UploadedFile)
+    $images = $request->file('images', []);
 
-        // Se usi file upload per le immagini
-        $images = $request->file('images', []);
+    // 3) ESPLOSIONE (JSON string -> array)
+    // $explosions = json_decode($request->input('explosions', '[]'), true) ?: [];
+    $explosionsRaw = json_decode($request->input('explosions', '[]'), true) ?: [];
+    $explosions    = $this->normalizeExplosionsArray($explosionsRaw);
 
-        $data = array_merge(
-          $request->except('images'),
-          ['images' => $images]
-        );
+    // 4) safeUpdate (gestisce anche upload immagini)
+    $result = $updater->safeUpdate($orderItem, array_merge($data, ['images' => $images]), $userId);
 
-        $result = $updater->safeUpdate($orderItem, $data, $userId);
-
-        if ($result['status'] === 'conflict') {
-            return response()->json([
-                'message'  => 'Conflict',
-                'conflicts'=> [$result['conflict']],
-            ], 409);
-        }
-
-    // Se non ci sono conflitti, ritorna l'item aggiornato
+    if ($result['status'] === 'conflict') {
         return response()->json([
-        'message'    => 'Item salvato',
-        'savedItems' => [ $result['item'] ],
-        ], 200);
+            'message'   => 'Conflict',
+            'conflicts' => [$result['conflict']],
+        ], 409);
     }
+
+    // 5) Sync esplosione (accetta l’ID dell’item)
+    $explosionSync->sync($orderItem->id, $explosions, $userId);
+
+    // 6) Carica relazioni utili per il frontend
+    $fresh = $orderItem->fresh([
+        'images',
+        'holder',
+        'cerCode',
+        'warehouse',
+    ]);
+
+    // ATTACCA l’albero annidato come "explosions"
+    $fresh->setRelation('explosions', $orderItem->explosionsTree()->get());
+
+    // se l’Image model espone accessor url, ok; in caso contrario puoi mappare qui
+    // $fresh->images->each(fn($img) => $img->url = Storage::disk('public')->url($img->filename));
+
+    return response()->json([
+        'item' => $fresh,
+    ]);
+}
 
 
 
@@ -182,6 +231,54 @@ public function update( Request $request, OrderItem $orderItem, OrderItemUpdater
 
         return back()->with('success', 'Stato "not found" aggiornato.');
     }
+
+
+    private function normalizeExplosionNode(array $n): ?array
+    {
+        $catalogId = $n['catalog_item_id']
+            ?? ($n['_selected']['id'] ?? null)
+            ?? ($n['catalog_item']['id'] ?? null);
+
+        if (!$catalogId) {
+            return null; // scarta nodi senza id valido
+        }
+
+        // NON affidarti al 'type' per decidere il peso: può non arrivare dal FE.
+        // Se weight_net è presente, prendilo. Se mancante, lascialo null.
+        $weight = array_key_exists('weight_net', $n)
+            ? (is_null($n['weight_net']) ? null : (float) $n['weight_net'])
+            : null;
+
+        $children = [];
+        if (!empty($n['children']) && is_array($n['children'])) {
+            foreach ($n['children'] as $child) {
+                $cn = $this->normalizeExplosionNode($child);
+                if ($cn) $children[] = $cn;
+            }
+        }
+
+        return [
+            'catalog_item_id' => (int)$catalogId,
+            'recipe_id'       => $n['_selectedRecipeId'] ?? ($n['recipe_id'] ?? null),
+            'recipe_version'  => $n['recipe_version'] ?? null,
+            'explosion_source'=> $n['explosion_source'] ?? 'ad_hoc',
+            'weight_net'      => $weight,
+            'notes'           => $n['notes'] ?? null,
+            'children'        => $children,
+        ];
+    }
+
+    private function normalizeExplosionsArray($nodes): array
+    {
+        $out = [];
+        if (!is_array($nodes)) return $out;
+        foreach ($nodes as $n) {
+            $nn = $this->normalizeExplosionNode($n);
+            if ($nn) $out[] = $nn;
+        }
+        return $out;
+    }
+
 
 
 

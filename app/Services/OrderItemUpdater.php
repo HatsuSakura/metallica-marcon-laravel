@@ -3,71 +3,98 @@
 namespace App\Services;
 
 use App\Models\OrderItem;
-use App\Services\OrderItemImageUploader;
 use Illuminate\Support\Arr;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderItemUpdater
 {
-    protected OrderItemImageUploader $imageUploader;
+    public function __construct(
+        protected OrderItemImageUploader $imageUploader,
+        protected OrderItemExplosionSync $explosionSync,   // <= NEW: DI del sync esplosioni
+    ) {}
 
-    public function __construct(OrderItemImageUploader $imageUploader)
-    {
-        $this->imageUploader = $imageUploader;
-    }
-
+    /**
+     * Salva l'item + immagini + (eventuale) esplosione in TRANSAZIONE.
+     * Accetta 'explosions' come array o JSON string (nel caso di multipart).
+     */
     public function update(OrderItem $item, array $data): OrderItem
     {
-        // Separiamo immagini da altri dati
-        $images = Arr::pull($data, 'images', []);
+        return DB::transaction(function () use ($item, $data) {
 
-        // Aggiorna i campi dell'item
-        $item->fill($data);
-        $item->save();
+            // 1) separa immagini ed esplosioni dal resto
+            $images     = Arr::pull($data, 'images', []);
+            $explosions = Arr::pull($data, 'explosions', null);
 
-        // Se ci sono immagini caricate, le processiamo
-        if (!empty($images)) {
-            $this->imageUploader->upload($item, $images); // array di UploadedFile
-        }
+            // se arrivano in multipart possono essere stringhe JSON
+            if (is_string($explosions)) {
+                $decoded = json_decode($explosions, true);
+                $explosions = is_array($decoded) ? $decoded : null;
+            }
 
-        return $item->fresh('images');
+            // 2) aggiorna i campi "base" dell'item
+            $item->fill($data);
+            $item->save();
+
+            // 3) immagini (se presenti)
+            if (!empty($images)) {
+                $this->imageUploader->upload($item, $images);
+            }
+
+            // 4) esplosione (se presente): replace atomico
+            if (is_array($explosions)) {
+                $this->explosionSync->sync($item->id, $explosions);
+            }
+
+            // 5) ritorna fresco con relazioni utili
+            return $item->fresh(['images', 'explosions.catalogItem', 'explosions.children.catalogItem']);
+        });
     }
 
+    /**
+     * Versione "safe" con detection conflitti (se la usi in alcuni endpoint).
+     * Integro la stessa logica di sopra per explosions/images.
+     */
     public function safeUpdate(OrderItem $item, array $data, int $userId): array
     {
         $incomingUpdatedAt = $data['updated_at'] ?? null;
-
-        if ($incomingUpdatedAt && $incomingUpdatedAt !== $item->updated_at->toISOString()) {
-            // Conflitto solo se modificato da altro utente
+        if ($incomingUpdatedAt && $incomingUpdatedAt !== $item->updated_at?->toISOString()) {
             if ($item->updated_by_user_id !== $userId) {
                 return [
-                    'status' => 'conflict',
+                    'status'   => 'conflict',
                     'conflict' => [
-                        'id' => $item->id,
-                        'reason' => 'modified by another user',
-                        'updatedItem' => $item->fresh(),
-                    ]
+                        'id'           => $item->id,
+                        'reason'       => 'modified by another user',
+                        'updatedItem'  => $item->fresh(),
+                    ],
                 ];
             }
         }
 
-        $images = Arr::pull($data, 'images', []); // può contenere UploadedFile[] oppure array vuoto
+        return DB::transaction(function () use ($item, $data, $userId) {
+            $images     = Arr::pull($data, 'images', []);
+            $explosions = Arr::pull($data, 'explosions', null);
 
-        $item->fill($data);
-        $item->updated_by_user_id = $userId;
-        $item->save();
+            if (is_string($explosions)) {
+                $decoded = json_decode($explosions, true);
+                $explosions = is_array($decoded) ? $decoded : null;
+            }
 
-        if (!empty($images)) {
-            $this->imageUploader->upload($item, $images);
-        }
+            $item->fill($data);
+            $item->updated_by_user_id = $userId;
+            $item->save();
 
-        // Ricarica l'item con la relazione images
-        $fresh = $item->fresh(['images']);
+            if (!empty($images)) {
+                $this->imageUploader->upload($item, $images);
+            }
 
-        return [
-            'status' => 'saved',
-            'item' => $fresh,
-        ];
+            if (is_array($explosions)) {
+                $this->explosionSync->sync($item->id, $explosions);
+            }
+
+            return [
+                'status' => 'saved',
+                'item'   => $item->fresh(['images', 'explosions.catalogItem', 'explosions.children.catalogItem']),
+            ];
+        });
     }
-
 }

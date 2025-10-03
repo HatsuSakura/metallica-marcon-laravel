@@ -15,7 +15,7 @@
         </div>
       </div>
   
-      <form @submit.prevent="create">
+      <form @submit.prevent="update">
   
         <div class="grid grid-cols-12 gap-2 w-full mb-4">
           
@@ -382,14 +382,45 @@ import ListingAddress from '@/Components/ListingAddress.vue';
         return form.warehouse_id_trailer != form.warehouse_id_truck;
       });
   
-      const create = () => {
+    // cargoWarehouseId = magazzino del cassone corrente (truck/trailer)
+    // otherWarehouseId = magazzino dell'altro cassone (per fallback nel doppio scarico)
+    const normalizeForPayload = (arr, cargoWarehouseId, otherWarehouseId) => {
+      return (arr || []).map(el => {
+        const isDouble = Number(el?.pivot?.is_double_load) === 1;
+        let wd = el?.pivot?.warehouse_download_id ?? null;
+
+        if (isDouble) {
+          // doppio scarico: usa la select; se non c'è, fallback all'altro cassone
+          if (wd === null || wd === '') {
+            wd = otherWarehouseId ?? null;
+          }
+        } else {
+          // caso normale: SEMPRE il magazzino del cassone corrente
+          wd = cargoWarehouseId ?? null;
+        }
+
+        return {
+          id: el.id,
+          is_double_load: isDouble ? 1 : 0,
+          warehouse_download_id: wd,
+        };
+      });
+    };
+
+
+
+      const update = () => {
         // Map each list to only send IDs
-        //form.items_truck    = listMotrice.value.map(item => item.id);
-        //form.items_trailer  = listRimorchio.value.map(item => item.id);
-        //form.items_fullfill = listRiempimento.value.map(item => item.id);
-        form.items_truck    = listMotrice.value;
-        form.items_trailer  = listRimorchio.value;
-        form.items_fullfill = listRiempimento.value;
+        const truckWh   = form.warehouse_id_truck || null;
+        const trailerWh = form.warehouse_id_trailer || null;
+
+        form.items_truck   = normalizeForPayload(listMotrice.value,   truckWh,   trailerWh);
+        form.items_trailer = normalizeForPayload(listRimorchio.value, trailerWh, truckWh);
+        form.items_fullfill = (listRiempimento.value || []).map(x => ({
+          id: x.id, is_double_load: 0, warehouse_download_id: truckWh // o trailerWh: decidi tu
+        }));
+
+
         form.logistic_id = user.value.id;
         form.post(route('relator.journeyCargo.store'));
       }
@@ -404,12 +435,11 @@ import ListingAddress from '@/Components/ListingAddress.vue';
 
         const JourneyCargoVehicle = props.journeyCargos.find(item => item.truck_location === 'vehicle') || null;
         const JourneyCargoTrailer = props.journeyCargos.find(item => item.truck_location === 'trailer') || null;
-         
 
         // Clear the lists first
-        listMotrice.value = JourneyCargoVehicle.items;
-        listRimorchio.value = JourneyCargoTrailer.items;
-        listRiempimento.value = [];
+        listMotrice.value      = (JourneyCargoVehicle.items || []).map(ensurePivot);
+        listRimorchio.value    = (JourneyCargoTrailer.items || []).map(ensurePivot);
+        listRiempimento.value  = [];
   
         // Iterate over each order and distribute items based on truck_location.
         props.orders.forEach(order => {
@@ -460,8 +490,9 @@ VECCHIA LOGICA
         const element = listMotrice.value.find(item => item.id === element_id) || listRimorchio.value.find(item => item.id === element_id);
         console.log('manageElementDoubleLoad ELEMENT', element);
         if (!element) return; // Element not found in either list
-        element.pivot.is_double_load = is_double_load;
-        element.pivot.warehouse_download_id = warehouse_download_id;
+        ensurePivot(element);
+        element.pivot.is_double_load = Number(is_double_load) ? 1 : 0;
+        element.pivot.warehouse_download_id = warehouse_download_id ?? null;
       };
 
       const viewMode = ref('empty');
@@ -535,6 +566,8 @@ VECCHIA LOGICA
       const [removed] = listOrdini.value.splice(index, 1); // Remove from source
       targetList.value.push(removed); // Add to target
     }
+
+    ensurePivot(removed);
   
   };
   
@@ -552,6 +585,14 @@ VECCHIA LOGICA
     eventBus.off('setOrderToRiempimentoList', handleSetToRiempimento);
   //  eventBus.off('setOrderToOrdersList', handleSetToOrders);
   });
+
+
+  function ensurePivot(obj) {
+    if (!obj.pivot) obj.pivot = {};
+    if (typeof obj.pivot.is_double_load === 'undefined') obj.pivot.is_double_load = 0;
+    if (typeof obj.pivot.warehouse_download_id === 'undefined') obj.pivot.warehouse_download_id = null;
+    return obj;
+  }
   
       </script>
       

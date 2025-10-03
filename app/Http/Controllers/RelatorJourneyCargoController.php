@@ -52,7 +52,7 @@ class RelatorJourneyCargoController extends Controller
             ]);
     }
 
-        /**
+    /**
      * Display the specified resource.
      */
     public function show(JourneyCargo $journeyCargo)
@@ -205,7 +205,7 @@ class RelatorJourneyCargoController extends Controller
         return inertia(
             'Relator/JourneyCargo/Edit',
             [
-                'journey' => $journey->load('driver', 'vehicle', 'cargoForVehicle', 'trailer', 'cargoForTrailer', 'journeyCargo'),
+                'journey' => $journey->load('driver', 'vehicle', 'cargoForVehicle', 'trailer', 'cargoForTrailer', 'journeyCargos'),
                 'warehouses' => $warehouses,
                 'orders' => $orders,
                 'journeyCargos' => $journeyCargos,

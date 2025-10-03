@@ -1,3 +1,4 @@
+// OrderItemRow.vue
 <template>
   <div class="collapse collapse-arrow border border-base-300 bg-base-100">
     <!-- HEADER -->
@@ -67,7 +68,6 @@
 
       </div>
     </div>
-
 
     <!-- START CONTENT -->
     <div v-if="localItem.is_not_found" class="flex flex-row justify-between items-center mb-2 px-4">
@@ -140,7 +140,6 @@
           </div>
         </div>
 
-
         <!-- Save button -->
         <div class="flex flex-row items-center gap-2">
 
@@ -157,8 +156,12 @@
           </div>
 
           <div class="tooltip" data-tip="Salva">
-            <button class="btn btn-primary btn-circle btn-outline btn-success" :disabled="!canModify || saving" @click="saveItem" >
-              <span v-if="saving" class="loading loading-spinner loading-md"></span>
+            <button
+              class="btn btn-primary btn-circle btn-outline btn-success"
+              :disabled="isSaving || !(props.hasDirtyScalars || props.hasStagedImages || props.hasDirtyExplosions)"
+              @click="saveItem"
+            >
+              <span v-if="isSaving" class="loading loading-spinner loading-md"></span>
               <font-awesome-icon v-else :icon="['fas', 'save']" class="text-2xl" />
             </button>
           </div>
@@ -203,11 +206,23 @@
           <div class="w-full flex justify-center"><span>PESATURA</span></div>
           <div class="flex items-center gap-1">
             Lordo:
-            <input v-model="localItem.weight_gross" type="text" class="input input-bordered flex" placeholder="LORDO" />
+            <input   
+              v-model.number="localItem.weight_gross"
+              type="number" step="1" class="input input-bordered flex"
+              placeholder="LORDO" @input="lastEdited = 'gross'" 
+            />
             Tara:
-            <input v-model="localItem.weight_tare" type="text" class="input input-bordered flex" placeholder="TARA" />
+            <input 
+              v-model.number="localItem.weight_tare"
+              type="number" step="0.01" class="input input-bordered flex"
+              placeholder="TARA" @input="lastEdited = 'tare'"
+            />
             Netto:
-            <input v-model="localItem.weight_net" type="text" class="input input-bordered flex" placeholder="NETTO" />
+            <input 
+              v-model.number="localItem.weight_net"
+              type="number" step="0.01" class="input input-bordered flex"
+              placeholder="NETTO" @input="lastEdited = 'net'" 
+            />
           </div>
           <div>
             <span class="font-medium">Operatore:</span>
@@ -257,8 +272,47 @@
         </Box>
       </div>
 
+       <!-- ESPLOSO -->
+<div class="mt-4">
+  <div class="flex items-center justify-between mb-2">
+    <div class="font-semibold">Esplosione (componenti/materiali)</div>
+    <button class="btn btn-sm" @click="showExplosion = !showExplosion">
+      {{ showExplosion ? 'Nascondi' : 'Gestisci esplosione' }}
+      <span class="ml-2 badge badge-ghost" title="Nodi root">{{ itemExplosions.length }}</span>
+      <!-- material leaves count -->
+      <span class="ml-1 badge badge-outline" title="Materiali (foglie)">{{ materialLeafCount }}</span>
+    </button>
+  </div>
+
+  <!-- 
+  Usare ...p (spread): appiattisce le chiavi di p nel nuovo oggetto che stai emettendo verso il parent.
+  emit('explosion:remove', { itemId: localItem.id, ...p })
+  // => payload = { itemId: 42, id: 123 }
+  Questo è quello che si aspetta il parent se i reducer vogliono le chiavi a livello top (payload.id, payload.parentId, ecc).
+  
+  Usare solo p (senza spread) dentro a un oggetto: annida il payload sotto la chiave p.
+  emit('explosion:remove', { itemId: localItem.id, p })
+  // => payload = { itemId: 42, p: { id: 123 } }
+  -->
+  <ExplosionEditor
+    v-if="showExplosion"
+    :tree="itemExplosions || []"
+    :catalog="catalog"
+    :recipes="recipes"
+    :parentNet="Number(localItem.weight_net) || 0"
+    @explosion:add-root="()       => emit('explosion:add-root', { itemId: localItem.id })"
+    @explosion:add-child="p       => emit('explosion:add-child', { itemId: localItem.id, ...(p || {}) })"
+    @explosion:remove="p          => emit('explosion:remove', { itemId: localItem.id, ...(p || {}) })"
+    @explosion:update-node="p     => emit('explosion:update-node', { itemId: localItem.id, ...(p || {}) })"
+    @explosion:toggle-collapse="p => emit('explosion:toggle-collapse', { itemId: localItem.id, ...(p || {}) })"
+    @explosion:set-recipe="p      => emit('explosion:set-recipe', { itemId: localItem.id, ...(p || {}) })"
+    @explosion:apply-recipe="p    => emit('explosion:apply-recipe', { itemId: localItem.id, ...(p || {}) })"
+  />
+</div>
+
+
       <!-- NOTE -->
-      <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2 w-full">
         <textarea v-model="localItem.warehouse_notes" class="textarea textarea-success w-full"
           placeholder="Note di Magazzino" />
         <textarea v-model="localItem.warehouse_non_conformity" class="textarea textarea-error w-full"
@@ -266,24 +320,17 @@
       </div>
 
       <!-- IMMAGINI -->
-      <div class="flex items-stretch gap-2 w-full">
-        <Box v-if="existingImages.length" class="w-3/4 h-full">
-          <template #header>Immagini caricate</template>
-          <section class="mt-4 grid grid-cols-3 gap-4">
-            <div v-for="img in existingImages" :key="img.id" class="flex flex-col justify-between">
-              <img :src="img.url" class="rounded-md" />
-              <Link :href="route('relator.item.image.destroy', { item: localItem.id, image: img.id })" method="delete"
-                as="button" class="btn btn-outline btn-error mt-2">
-              <font-awesome-icon :icon="['fas', 'trash']" class="text-2xl" /> Elimina
-              </Link>
-            </div>
-          </section>
-        </Box>
-        <EmptyState v-else class="w-3/4 h-full">
-          Non sono presenti immagini
-        </EmptyState>
-        <Box class="w-1/4 h-full">
-          <ImageUploader :images="previewFiles" @update:images="handleImageFiles" />
+      <div class="flex gap-2">
+        <Box class="h-full">
+          <ImageUploader
+            :staged="stagedImages"
+            :existing="localItem.images || []"
+            :max-files="10"
+            :max-file-size-mb="5"
+            @images:add="files => emit('images:add', { itemId: localItem.id, files })"
+            @images:remove="p => emit('images:remove', { itemId: localItem.id, ...(p || {}) })"
+            @images:delete-existing="p => emit('images:delete-existing', { itemId: localItem.id, ...(p || {}) })"
+          />
         </Box>
       </div>
     </div>
@@ -296,12 +343,12 @@
 import { useStore } from 'vuex'
 import Box from '@/Components/UI/Box.vue'
 import EmptyState from '@/Components/UI/EmptyState.vue'
-import ImageUploader from '@/Pages/Worker/Order/Components/ImageUploader.vue'
-import { ref, reactive, computed, watch } from 'vue'
-import { Link } from '@inertiajs/vue3'
+import { ref, reactive, computed, watch, nextTick } from 'vue'
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import dayjs from 'dayjs'
+import ImageUploader   from '@/Pages/Worker/Order/Components/ImageUploader.vue'
+import ExplosionEditor from '@/Pages/Worker/Order/Components/ExplosionEditor.vue'
 
 const props = defineProps({
   item: Object,
@@ -311,19 +358,43 @@ const props = defineProps({
   warehouseWorkers: Array,
   parentHasRagno: Boolean,
   parentMachineryTime: Number,
-  resetKey: Number,
   saving: Boolean,
+
+  hasDirtyExplosions: { type: Boolean, default: false },
+  hasStagedImages:    { type: Boolean, default: false  },
+  hasDirtyScalars:    { type: Boolean, default: false },
+
+  stagedImages: { type: Array, default: () => [] }, // immagini selezionate per questo item
+  catalog:      { type: Array, required: true },    // [{id,name,type}]
+  recipes:      { type: Array, default: () => []},  // [{id,name,version}]
 })
 
 const emit = defineEmits([
+  // patch “classiche”
   'update-is-ragnabile-toggle',
   'update-manual-machinery-time',
   'reset-manual-machinery-time',
+  // update / save single item
   'update',
-  'save-one'
+  'save-one',
+  // flag found/not found
+  'item-not-found',
+  'item-found',
+  // immagini
+  'images:add',
+  'images:remove',
+  'images:delete-existing',
+  // nuovi per gestione dummy explosion tree
+  'explosion:add-root',
+  'explosion:add-child',
+  'explosion:remove',
+  'explosion:update-node',
+  'explosion:toggle-collapse',
+  'explosion:set-recipe',
+  'explosion:apply-recipe',
 ])
 
-const store     = useStore()
+const store = useStore()
 
 const initialTotal = Number(props.item.machinery_time_fraction) || 0
 const localItem = reactive({ 
@@ -331,12 +402,200 @@ const localItem = reactive({
   machinery_time_fraction_hh: Math.floor(initialTotal / 60),
   machinery_time_fraction_mm: initialTotal % 60
 })
-const previewFiles = ref([])
-const canModify = ref(false)
 
-const existingImages = computed(() =>
-  (localItem.images ?? []).filter(img => img.id)
+const isSaving = computed(() => !!props.saving)
+
+/**
+ * HELPER FUNCTIONS
+ */
+const EMPTY = Object.freeze([]);
+
+// --- Helpers formato DATE ---
+function formatDate(d) {
+  return d ? dayjs(d).format('YYYY-MM-DD HH:mm:ss') : null
+}
+
+function toDayjs(v) {
+  if (v == null) return null
+  const d = dayjs(v)        // accetta Date, string, number, Dayjs
+  return d.isValid() ? d : null
+}
+
+// --- Helpers che inibisce operazioni finchè applico un patch da PARENT ---
+const applyingFromParent = ref(false)
+
+function runAsParentPatch(fn) {
+  applyingFromParent.value = true
+  try { fn?.() } finally {
+    nextTick(() => { applyingFromParent.value = false })
+  }
+}
+
+
+/**
+ * MAIN FUNCTIONS and WATCHERS
+ */
+
+/*
+ *  PATCH verso parent (campi semplici)
+ */
+// 0) Campi scalari che il row gestisce (senza images/explosions)
+const SCALAR_KEYS = [
+  'holder_quantity','cer_code_id',
+  'weight_gross','weight_tare','weight_net',
+  'is_ragnabile','machinery_time_fraction_hh','machinery_time_fraction_mm',
+  'is_holder_dirty','total_dirty_holders',
+  'is_holder_broken','total_broken_holders',
+  'has_selection','selection_time_hh','selection_time_mm',
+  'warehouse_downaload_worker_id','warehouse_downaload_dt',
+  'warehouse_weighing_worker_id','warehouse_weighing_dt',
+  'warehouse_selection_worker_id','warehouse_selection_dt',
+  'warehouse_notes','warehouse_non_conformity',
+]
+
+// helper per prendere solo le chiavi whitelisted
+function pick(obj, keys) {
+  const out = {}
+  for (const k of keys) out[k] = obj[k]
+  return out
+}
+
+// diff shallow: ritorna solo le chiavi con valore diverso
+function diffShallow(prev, next) {
+  const patch = {}
+  for (const k in next) {
+    // opzionale: normalizza numeri/stringhe se serve
+    if (prev[k] !== next[k]) patch[k] = next[k]
+  }
+  return patch
+}
+
+// snapshot iniziale (dopo aver popolato localItem da props.item)
+let prevSnapshot = pick(localItem, SCALAR_KEYS)
+
+// 1) quando il parent cambia item, si modifica porps.item. Ricarica l'item e aggiorna anche lo snapshot
+watch(() => props.item, (newItem) => {
+  runAsParentPatch(() => {
+    // 1) aggiorno tutti i campi
+    Object.assign(localItem, newItem)
+    // 2) splitto subito la frazione in hh/mm
+    const total = Number(newItem.machinery_time_fraction) || 0
+    localItem.machinery_time_fraction_hh = Math.floor(total / 60)
+    localItem.machinery_time_fraction_mm = total % 60
+    prevSnapshot = pick(localItem, SCALAR_KEYS) // 🔴 reset snapshot
+  })
+}, { immediate: true })
+
+/*
+// quando prop.item cambia (parent ha aggiornato), ricarica l'item
+watch(
+  () => props.item, (newItem) => 
+  runAsParentPatch(() => {
+    // 1) aggiorno tutti i campi
+    Object.assign(localItem, newItem)
+    // 2) splitto subito la frazione in hh/mm
+    const total = Number(newItem.machinery_time_fraction) || 0
+    localItem.machinery_time_fraction_hh = Math.floor(total / 60)
+    localItem.machinery_time_fraction_mm = total % 60
+    nextTick(() => { applyingFromParent.value = false })
+  }),
+  //{ deep: true, immediate: true }
+  { immediate: true }
 )
+*/
+
+// 2) Watch SOLO i campi whitelisted, non tutto localItem
+watch(
+  () => SCALAR_KEYS.map(k => localItem[k]),
+  () => {
+    if (applyingFromParent.value) return
+    const nextSnapshot = pick(localItem, SCALAR_KEYS)
+    const patch = diffShallow(prevSnapshot, nextSnapshot)
+    if (Object.keys(patch).length) {
+      emit('update', { id: localItem.id, ...patch }) // invia a parent solo le differenze
+      prevSnapshot = nextSnapshot
+    }
+  },
+  { deep: false } // importantissimo: niente deep
+)
+
+
+// quando viene modificato il selection time, aggiorna i campi in ore e minuti
+watch(
+  () => props.item.selection_time,
+  (totalMinutes) => {
+    localItem.selection_time_hh = Math.floor(totalMinutes / 60)
+    localItem.selection_time_mm = totalMinutes % 60
+  },
+  { immediate: true }
+)
+
+// quando attivo lo stato "sporco", inizializza il numero a 1 se era vuoto
+watch(
+  () => localItem.is_holder_dirty,
+  isDirty => {
+    if (isDirty === 1 && !localItem.total_dirty_holders) {
+      localItem.total_dirty_holders = 1
+    }
+  }
+)
+
+// quando attivo lo stato "rotto", inizializza il numero a 1 se era vuoto
+watch(
+  () => localItem.is_holder_broken,
+  isBroken => {
+    if (isBroken === 1 && !localItem.total_broken_holders) {
+      localItem.total_broken_holders = 1
+    }
+  }
+)
+
+const canBeDamagedOrDirty = computed(() => {
+  return [4, 5, 6, 7, 8].includes(localItem.holder_id) // holders that can be damaged or dirty
+})
+
+
+/**
+ * IMMAGINI
+ */
+// TUTTO LO STATO DELLE IMMAGINI VIVE NEL PARENT
+
+/*
+* ESPLOSIONE
+*/ 
+const itemExplosions = computed(() =>
+  Array.isArray(props.item?.explosions) ? props.item.explosions : EMPTY
+);
+
+// per il TOGGLE
+const showExplosion = ref(false)
+
+function nodeType(n) {
+  return n?.catalog_item?.type
+      || n?.catalogItem?.type
+      || n?._selected?.type
+      || n?.type
+      || null
+}
+
+function nodeChildren(n) {
+  if (Array.isArray(n?.children)) return n.children
+  if (Array.isArray(n?.children_recursive)) return n.children_recursive
+  if (Array.isArray(n?.childrenRecursive)) return n.childrenRecursive
+  return []
+}
+
+function countMaterialLeaves(list) {
+  let count = 0
+  for (const n of Array.isArray(list) ? list : []) {
+    if (nodeType(n) === 'material') count++
+    const kids = nodeChildren(n)
+    if (kids.length) count += countMaterialLeaves(kids)
+  }
+  return count
+}
+
+const materialLeafCount = computed(() => countMaterialLeaves(itemExplosions.value))
 
 
 /**
@@ -350,32 +609,65 @@ function toNum(v) {
   return Number.isFinite(n) ? n : 0
 }
 
-// Lordo + Tara = Netto
+const weightSyncing = ref(false)
+const lastEdited    = ref(null) // 'gross' | 'tare' | 'net' | null
+
+function n(v) {
+  const x = Number(v)
+  return Number.isFinite(x) ? x : 0
+}
+
+// Sync a tre vie con protezione dal loop
 watch(
-  () => [localItem.weight_gross, localItem.weight_tare],
-  ([gross, tare]) => {
-    const G = toNum(gross)
-    const T = toNum(tare)
-    // se LORDO è vuoto, netto = 0
-    if (gross === '' || gross == null) {
-      localItem.weight_net = 0
-      return
+  () => [localItem.weight_gross, localItem.weight_tare, localItem.weight_net],
+  ([gross, tare, net]) => {
+    if (weightSyncing.value) return
+    weightSyncing.value = true
+    try {
+      const G = n(gross)
+      const T = n(tare)
+      const N = n(net)
+
+      // Se non hai ancora editato nulla in questa sessione,
+      // comportati come prima: calcola NETTO da LORDO e TARA.
+      if (!lastEdited.value) {
+        if (gross === '' || gross == null) {
+          localItem.weight_net = 0
+        } else {
+          localItem.weight_net = +(G - T).toFixed(2)
+        }
+        return
+      }
+
+      switch (lastEdited.value) {
+        case 'gross':
+          // netto = lordo - tara
+          localItem.weight_net = +(G - T).toFixed(2)
+          break
+        case 'tare':
+          // netto = lordo - tara
+          localItem.weight_net = +(G - T).toFixed(2)
+          break
+        case 'net':
+          // tara = lordo - netto
+          // (se preferisci ricalcolare il lordo: lordo = netto + tara)
+          localItem.weight_tare = +(G - N).toFixed(2)
+          break
+      }
+    } finally {
+      // lascio lastEdited come è, così le prossime modifiche
+      // continuano a rispettare l’intento dell’utente
+      weightSyncing.value = false
     }
-    // se TARA non è valorizzata -> conta come 0
-    localItem.weight_net = G + T
   },
   { immediate: true }
 )
+// quando cambio item, resetto lastEdited
 
 
 /**
  * DATE SCARICO, PESATURA, SELEZIONE
  */
-// --- Helpers date ---
-function toDayjs(d) {
-  return d ? dayjs(d) : null
-}
-
 let lastToast = ''
 function dateInfo(type, text){
   if (text === lastToast) return          // evita duplicati identici ravvicinati
@@ -424,8 +716,6 @@ watch(
   }
 )
 
-
-
 // 2.2) Se cambia la DATA DI PESATURA:
 // - NON può essere impostata se SCARICO è null -> annulla
 // - deve essere ≥ SCARICO
@@ -465,7 +755,6 @@ watch(
   }
 )
 
-
 // 2.3) Se cambia la DATA DI SELEZIONE:
 // - NON può essere impostata se PESATURA è null -> annulla
 // - deve essere ≥ PESATURA
@@ -492,140 +781,33 @@ watch(
   }
 )
 
-
-
-// quando prop.item cambia (parent ha aggiornato), ricarica
-watch(
-  () => props.item,
-  newItem => {
-    // 1) aggiorno tutti i campi
-    Object.assign(localItem, newItem)
-
-    // 2) splitto subito la frazione in hh/mm
-    const total = Number(newItem.machinery_time_fraction) || 0
-    localItem.machinery_time_fraction_hh = Math.floor(total / 60)
-    localItem.machinery_time_fraction_mm = total % 60
-  },
-  { deep: true, immediate: true }
-)
-
-watch(
-  () => props.item.selection_time,
-  (totalMinutes) => {
-    localItem.selection_time_hh = Math.floor(totalMinutes / 60)
-    localItem.selection_time_mm = totalMinutes % 60
-  },
-  { immediate: true }
-)
-
-// quando resetKey cambia, resetta le preview
-watch(() => props.resetKey, () => {
-  previewFiles.value = []
-  const total = Number(props.item.machinery_time_fraction) || 0
-  localItem.machinery_time_fraction_hh = Math.floor(total / 60)
-  localItem.machinery_time_fraction_mm = total % 60
-  canModify.value = false
-})
-
-
-// quando attivo lo stato "sporco", inizializza il numero a 1 se era vuoto
-watch(
-  () => localItem.is_holder_dirty,
-  isDirty => {
-    if (isDirty === 1 && !localItem.total_dirty_holders) {
-      localItem.total_dirty_holders = 1
-    }
-  }
-)
-
-// idem per "rotto"
-watch(
-  () => localItem.is_holder_broken,
-  isBroken => {
-    if (isBroken === 1 && !localItem.total_broken_holders) {
-      localItem.total_broken_holders = 1
-    }
-  }
-)
-
-const canBeDamagedOrDirty = computed(() => {
-  return localItem.holder_id in [4, 5, 6, 7, 8] // holders that can be damaged or dirty
-})
-
-function handleImageFiles(files) {
-  previewFiles.value = files
-  canModify.value = true
-  emitUpdate()
-}
-
 function saveItem() {
-  emit('save-one', serializeLocalItem())
+  console.log('local item = ',localItem);
+  emit('save-one', { id: localItem.id })
 }
 
 function itemNotFound(){
   console.log('local item = ',localItem);
-  emit('itemNotFound', serializeLocalItem())
+  emit('item-not-found', { id: localItem.id, updated_at: dayjs().toISOString() })
 }
 
 function itemFound(){
-  console.log('local item = ',localItem);
-  emit('itemFound', serializeLocalItem())
+  const li = localItem?.value ?? localItem
+  console.log('local item = ',li);
+  emit('item-found', { id: li.id, updated_at: dayjs().toISOString() })
 }
 
-function emitUpdate() {
-  emit('update', serializeLocalItem())
-}
 
-function formatDate(dt) {
-  return dt ? dayjs(dt).format('YYYY-MM-DD HH:mm:ss') : null
-}
-
-function serializeLocalItem() {
-  return {
-    id: localItem.id,
-    holder_quantity: localItem.holder_quantity,
-    cer_code_id: localItem.cer_code_id,
-    weight_gross: localItem.weight_gross,
-    weight_tare: localItem.weight_tare,
-    weight_net: localItem.weight_net,
-    is_ragnabile: localItem.is_ragnabile ? 1 : 0,
-    machinery_time_fraction_hh: localItem.machinery_time_fraction_hh,
-    machinery_time_fraction_mm: localItem.machinery_time_fraction_mm,
-    machinery_time_fraction: localItem.is_ragnabile
-      ? ((Number(localItem.machinery_time_fraction_hh) || 0) * 60) + (Number(localItem.machinery_time_fraction_mm) || 0)
-      : 0,
-    is_holder_dirty: localItem.is_holder_dirty ? 1 : 0,
-    total_dirty_holders: localItem.total_dirty_holders,
-    is_holder_broken: localItem.is_holder_broken ? 1 : 0,
-    total_broken_holders: localItem.total_broken_holders,
-    has_selection: localItem.has_selection ? 1 : 0,
-    selection_time_hh: localItem.selection_time_hh,
-    selection_time_mm: localItem.selection_time_mm,
-    selection_time: localItem.has_selection
-      ? ((Number(localItem.selection_time_hh) || 0) * 60) + (Number(localItem.selection_time_mm) || 0)
-      : 0,
-    warehouse_downaload_worker_id: localItem.warehouse_downaload_worker_id,
-    warehouse_downaload_dt: formatDate(localItem.warehouse_downaload_dt),
-    warehouse_weighing_worker_id: localItem.warehouse_weighing_worker_id,
-    warehouse_weighing_dt: formatDate(localItem.warehouse_weighing_dt),
-    warehouse_selection_worker_id: localItem.warehouse_selection_worker_id,
-    warehouse_selection_dt: formatDate(localItem.warehouse_selection_dt),
-    warehouse_notes: localItem.warehouse_notes,
-    warehouse_non_conformity: localItem.warehouse_non_conformity,
-    images: previewFiles.value,
-  }
-}
-
-watch(localItem, () => {
-  canModify.value = true
-  emitUpdate()
-}, { deep: true })
-
-const downloadWorkers = computed(() =>
-  [...props.warehouseChiefs, ...props.warehouseManagers, ...props.warehouseWorkers]
+const downloadWorkers = computed(() =>  [
+    ...(props.warehouseChiefs ||  []),
+    ...(props.warehouseManagers ||  []),
+    ...(props.warehouseWorkers ||  []),
+  ]
 )
 const weighingWorkers = downloadWorkers
-const selectionWorkers = computed(() => [...props.warehouseWorkers])
+const selectionWorkers = computed(() => [
+    ...(props.warehouseWorkers ||  []),
+  ])
 
 // when user manually tweaks this row’s fraction:
 function onManualMachineryTimeInput() {
@@ -650,5 +832,6 @@ function resetManualMachineryTimeInput() {
 function toggleIsRagnabileInput() {
   emit('update-is-ragnabile-toggle', { id: localItem.id, isRagnabile: localItem.is_ragnabile ? 1 : 0 })
 }
+
 
 </script>

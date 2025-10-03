@@ -1,6 +1,7 @@
+// ImageUploader.vue
 <template>
   <div class="space-y-4 relative">
-    <!-- Overlay visivo durante drag attivo -->
+    <!-- Overlay drag -->
     <div
       v-if="isDragging"
       class="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 flex items-center justify-center pointer-events-none"
@@ -8,13 +9,47 @@
       <span class="text-white text-3xl font-semibold">Rilascia le foto</span>
     </div>
 
-    <!-- Dropzone -->
+    <!-- (Opzionale) immagini già esistenti sul server -->
+    <div v-if="existing && existing.length" class="rounded-xl border p-4">
+      <div class="mb-2 font-medium">Immagini caricate</div>
+      <section class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div
+          v-for="img in existing"
+          :key="img.id"
+          class="relative group"
+        >
+          <img :src="img.url" class="rounded-xl w-full h-32 object-cover border" />
+          <button
+            class="btn btn-xs btn-circle btn-error absolute top-1 right-1 opacity-80 group-hover:opacity-100"
+            :disabled="disabled"
+            @click.stop="requestDeleteExisting(img)"
+            title="Elimina immagine esistente"
+          >
+            <font-awesome-icon :icon="['fas','trash']" class="" />
+          </button>
+                    <button
+            class="btn btn-xs btn-circle btn-primary absolute top-1 left-1 opacity-80 group-hover:opacity-100"
+            :disabled="disabled"
+            @click.stop="viewImageInPopUp(img)"
+            title="Visuazlizza immagine"
+          >
+            <font-awesome-icon :icon="['fas','eye']" class="" />
+          </button>
+        </div>
+      </section>
+    </div>
+    <EmptyState v-else class="w-3/4 h-full">
+      Non sono presenti immagini
+    </EmptyState>
+
+    <!-- Dropzone (aggiunge nuove staged) -->
     <div
       class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-primary transition duration-200"
       @dragover.prevent="onDragOver"
       @dragleave.prevent="onDragLeave"
       @drop.prevent="onDrop"
       @click="triggerFileInput"
+      :class="disabled ? 'pointer-events-none opacity-60' : ''"
     >
       <p class="text-gray-600">
         Trascina qui le foto oppure clicca per selezionarle/scattarle
@@ -29,126 +64,221 @@
         capture="environment"
         class="hidden"
         multiple
+        :disabled="disabled"
         @change="onFileChange"
       />
+      <div v-if="hardLimitReached" class="mt-2 text-xs text-error">
+        Hai raggiunto il limite massimo di {{ maxFiles }} immagini (staged + esistenti).
+      </div>
     </div>
 
-    <!-- Previews -->
-    <div v-if="previews.length" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <!-- Anteprime delle STAGED (nuove) -->
+    <div v-if="stagedPreviews.length" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
       <div
-        v-for="(img, index) in previews"
-        :key="index"
+        v-for="(p, index) in stagedPreviews"
+        :key="p.key"
         class="relative group"
       >
-        <img
-          :src="img.url"
-          class="rounded-xl w-full h-32 object-cover border"
-        />
+        <img :src="p.url" class="rounded-xl w-full h-32 object-cover border" />
         <button
           class="btn btn-xs btn-circle btn-error absolute top-1 right-1 opacity-80 group-hover:opacity-100"
-          @click.stop="removeImage(index)"
+          :disabled="disabled"
+          @click.stop="removeStaged(index)"
+          title="Rimuovi (non verrà caricata)"
         >
           ✕
         </button>
       </div>
     </div>
 
-    <!-- Messaggi di errore -->
+    <!-- Messaggi di errore validazione aggiunta -->
     <div v-if="error" class="text-error text-sm mt-2">{{ error }}</div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+/**
+ * ImageUploader “dummy-child”
+ * - Non conserva copia applicativa di staged/existing: sono SSOT del parent.
+ * - Espone solo UI + validazione + anteprime ObjectURL per staged (cleanup sicuro).
+ * - Comunica con emits ‘images:*’.
+ */
+
+import EmptyState from '@/Components/UI/EmptyState.vue'
+import { ref, watch, computed, onBeforeUnmount } from 'vue'
+
+/* =========================
+ * Props (contratto nuovo)
+ * ========================= */
+const props = defineProps({
+  /** Nuove immagini non ancora salvate (controllate dal parent) */
+  staged:   { type: Array,  default: () => [] },         // File[]
+  /** Immagini già persistite (opzionale) */
+  existing: { type: Array,  default: () => [] },         // [{id,url}]
+  /** Limiti/validazioni (override facoltativi) */
+  maxFiles:      { type: Number, default: 10 },          // totale: existing + staged
+  maxFileSizeMb: { type: Number, default: 5  },
+  acceptedTypes: {
+    type: Array,
+    default: () => ['image/jpeg','image/png','image/webp','image/heic','image/heif']
+  },
+  /** Disabilita interazioni */
+  disabled: { type: Boolean, default: false },
+})
+
+/* =========================
+ * Emits (contratto nuovo)
+ * ========================= */
+const emit = defineEmits([
+  'images:add',             // (files: File[]) -> parent aggiunge a staged
+  'images:remove',          // ({ index, file }) -> parent rimuove da staged
+  'images:delete-existing', // ({ image }) -> parent elimina dal server e aggiorna existing
+])
+
+/* =========================
+ * Stato SOLO UI
+ * ========================= */
+const fileInput   = ref(null)
+const isDragging  = ref(false)
+const error       = ref(null)
 
 /**
- * props.images è quello che il parent passa come `previewFiles`.
- * Quando diventa [] (dopo saveAll), puliamo l'interno.
+ * Mappa File -> ObjectURL per anteprime.
+ * Nessuna lista “files” locale: render basato su props.staged.
  */
-const props = defineProps({
-  images: {
-    type: Array,
-    default: () => []
-  }
-})
+const urlMap = new Map() // Map<File, string>
 
-const emit = defineEmits(['update:images'])
+/** Previews calcolate da props.staged + urlMap */
+const stagedPreviews = ref([])
 
-const fileInput = ref(null)
-const files     = ref([])
-const previews  = ref([])
-const error     = ref(null)
-const isDragging = ref(false)
+/** Totale conteggiato su staged + existing (per limitare aggiunte) */
+const totalCount = computed(() => (props.staged?.length || 0) + (props.existing?.length || 0))
+const hardLimitReached = computed(() => totalCount.value >= props.maxFiles)
 
-// Configurazioni
-const MAX_FILE_SIZE_MB = 5
-const MAX_FILES = 10
-const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+/* =========================
+ * Watcher: staged -> (ri)crea preview
+ * ========================= */
+watch(
+  () => props.staged,
+  (next) => {
+    const list = Array.isArray(next) ? next : []
 
-// Se il parent azzera props.images, pulisci internal state
-watch(() => props.images, (newVal) => {
-  if (Array.isArray(newVal) && newVal.length === 0) {
-    // revoke object URLs
-    previews.value.forEach(p => URL.revokeObjectURL(p.url))
-    files.value = []
-    previews.value = []
-    error.value = null
-  }
-})
+    // Revoke URL che non servono più
+    for (const [file, url] of urlMap.entries()) {
+      if (!list.includes(file)) {
+        URL.revokeObjectURL(url)
+        urlMap.delete(file)
+      }
+    }
 
+    // Assicura URL per ogni File in staged
+    list.forEach(file => {
+      if (!(file instanceof File)) return
+      if (!urlMap.has(file)) urlMap.set(file, URL.createObjectURL(file))
+    })
+
+    // Aggiorna previews
+    stagedPreviews.value = list.map((file, i) => ({
+      key: `${i}-${file.name || 'f'}-${file.size}-${file.lastModified || '0'}`,
+      file,
+      url: urlMap.get(file),
+    }))
+
+    // reset error se lista vuota
+    if (!list.length) error.value = null
+  },
+  { immediate: true }
+)
+
+/* =========================
+ * Handlers UI
+ * ========================= */
 function triggerFileInput() {
+  if (props.disabled) return
   fileInput.value?.click()
 }
 
-function onFileChange(e) {
-  handleFiles([...e.target.files])
-}
-
 function onDragOver(e) {
+  if (props.disabled) return
   isDragging.value = true
   e.dataTransfer.dropEffect = 'copy'
 }
-
 function onDragLeave() {
   isDragging.value = false
 }
-
 function onDrop(e) {
+  if (props.disabled) return
   isDragging.value = false
-  handleFiles([...e.dataTransfer.files])
+  addFiles([...e.dataTransfer.files])
 }
 
-function handleFiles(selectedFiles) {
+function onFileChange(e) {
+  if (props.disabled) return
+  addFiles([...e.target.files])
+  // reset per poter ri-selezionare gli stessi file
+  e.target.value = ''
+}
+
+/**
+ * Validazione + emit ‘images:add’.
+ * Il parent decide come aggiornare staged (dedup/limiti business ulteriori).
+ */
+function addFiles(selected) {
   error.value = null
+  const accepted = []
 
-  for (const file of selectedFiles) {
-    if (files.value.length >= MAX_FILES) {
-      error.value = `Puoi caricare al massimo ${MAX_FILES} immagini`
-      break
-    }
+  // limite totale = existing + staged + nuovi
+  let remaining = props.maxFiles - totalCount.value
+  if (remaining <= 0) {
+    error.value = `Hai raggiunto il limite massimo di ${props.maxFiles} immagini`
+    return
+  }
 
-    if (!ACCEPTED_TYPES.includes(file.type)) {
+  for (const file of selected) {
+    if (remaining <= 0) break
+
+    if (!(file instanceof File)) continue
+
+    if (!props.acceptedTypes.includes(file.type)) {
       error.value = `Tipo file non supportato: ${file.name}`
       continue
     }
-
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      error.value = `Il file ${file.name} supera i ${MAX_FILE_SIZE_MB} MB`
+    if (file.size > props.maxFileSizeMb * 1024 * 1024) {
+      error.value = `Il file ${file.name} supera i ${props.maxFileSizeMb} MB`
       continue
     }
 
-    const url = URL.createObjectURL(file)
-    previews.value.push({ file, url })
-    files.value.push(file)
+    accepted.push(file)
+    remaining--
   }
 
-  emit('update:images', files.value)
+  if (accepted.length) emit('images:add', accepted)
 }
 
-function removeImage(index) {
-  URL.revokeObjectURL(previews.value[index].url)
-  previews.value.splice(index, 1)
-  files.value.splice(index, 1)
-  emit('update:images', files.value)
+/** Richiede rimozione dallo staged (indice corrente + file) */
+function removeStaged(index) {
+  const p = stagedPreviews.value[index]
+  if (!p) return
+  emit('images:remove', { index, file: p.file })
 }
+
+/** Richiede eliminazione di una “existing” persistita (no API qui!) */
+function requestDeleteExisting(image) {
+  if (!image) return
+  emit('images:delete-existing', { image })
+}
+
+/** Richiede l'apertura del pop-upo di zoom */
+function viewImageInPopUp(image) {
+  if (!image) return
+  window.open(image.url, '_blank', 'noopener,noreferrer')
+}
+
+/* =========================
+ * Cleanup ObjectURL
+ * ========================= */
+onBeforeUnmount(() => {
+  for (const url of urlMap.values()) URL.revokeObjectURL(url)
+  urlMap.clear()
+})
 </script>

@@ -1,7 +1,8 @@
 <?php
-
+// app/Models/OrderItem.php
 namespace App\Models;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Mpociot\Versionable\VersionableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -67,14 +68,18 @@ class OrderItem extends Model
     // Serve solo per i calcoli di relazione interna ma non ha senso mostrarlo all'utente
     protected $hidden  = ['journeyCargos'];
 
+    protected $casts = [
+        'has_exploded_children' => 'boolean',
+    ];
 
     public function getWarehouseDownloadAttribute()
     {
         // 1) Se la relazione è già caricata, usa quella (veloce, no query extra)
         if ($this->relationLoaded('journeyCargos')) {
-            $pivot = $this->journeyCargos
+            $pivot = $this->getRelation('journeyCargos')
                 ->sortByDesc(fn($jc) => optional($jc->pivot)->updated_at)
                 ->first()?->pivot;
+                
             $wid = $pivot?->warehouse_download_id;
         } else {
             // 2) Altrimenti leggi la pivot "corrente" direttamente (1 query)
@@ -119,6 +124,7 @@ class OrderItem extends Model
         return $this->belongsTo(User::class, 'warehouse_manager_id');
     }
 
+    // 1) la relazione MANY-TO-MANY (più JourneyCargo per ogni OrderItem)
     public function journeyCargos()
     {
         return $this->belongsToMany(JourneyCargo::class, 'journey_cargo_order_item')
@@ -126,16 +132,34 @@ class OrderItem extends Model
                     ->withTimestamps();
     }
 
-    // 3) l’accessor che restituisce SEMPRE il primo (e unico) JourneyCargo
+    // 2) l’accessor che restituisce SEMPRE il primo (e unico) JourneyCargo
     public function getJourneyCargoAttribute()
     {
-        return $this->journeyCargos->first();
+        if ($this->relationLoaded('journeyCargos')) {
+            return $this->getRelation('journeyCargos')->first(); // nessuna query extra
+        }
+        return $this->journeyCargos()->first(); // 1 query
     }
 
     public function images()
     {
         return $this->hasMany(OrderItemImage::class);
     }
+    
+    public function explosions()
+    {
+        return $this->hasMany(OrderItemExplosion::class);
+    }
 
+    public function explosionsRoot()
+    {
+        return $this->explosions()->whereNull('parent_explosion_id');
+    }
+
+    // questo NON è un relation name “magico”, ma un builder riusabile
+    public function explosionsTree()
+    {
+        return $this->explosionsRoot()->with(['childrenRecursive', 'catalogItem']);
+    }
 
 }

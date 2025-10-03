@@ -16,13 +16,30 @@ class Journey extends Model
 
     protected $casts = [
         'state' => JourneysState::class,
+
+        // datetime
+        'dt_start'                 => 'datetime',
+        'dt_end'                   => 'datetime',
+        'real_dt_start'            => 'datetime',
+        'real_dt_end'              => 'datetime',
+        'warehouse_download_dt_1'  => 'datetime',
+        'warehouse_download_dt_2'  => 'datetime',
+
+        // boolean
+        'is_double_load'           => 'boolean',
+        'is_temporary_storage'     => 'boolean',
+
     ];
 
     protected $fillable = [
         'dt_start',
         'dt_end',
+        'real_dt_start',
+        'real_dt_end',
+
         'is_double_load',
         'is_temporary_storage',
+
         'vehicle_id',
         'cargo_for_vehicle_id',
         'trailer_id',
@@ -30,8 +47,12 @@ class Journey extends Model
         'driver_id',
         'logistic_id',
         'state',
-        'real_dt_start',
-        'real_dt_end'
+
+        // per lo scarico
+        'warehouse_id_1',
+        'warehouse_download_dt_1',
+        'warehouse_id_2',
+        'warehouse_download_dt_2',
     ];
 
     // Relationship to order items

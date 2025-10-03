@@ -137,15 +137,6 @@ class WorkerOrderController extends Controller
             }
         }
 
-
-
-        /*
-        return response()->json([
-            'message' => 'Order created successfully!',
-            'order' => $order->load('items'),
-        ]);
-        */
-
         //return redirect()->route('relator.order.index')->with('success', 'Ritiro inserito con successo!');
         //return redirect()->back()->with('success', 'Ordine inserito con successo!');
         return redirect()->route('relator.customer.show', ['customer' => $request->customer_id])
@@ -159,6 +150,20 @@ class WorkerOrderController extends Controller
     {
         Gate::authorize('update', $order);
 
+        // carica tutto ciò che serve, incluse le EXPLOSIONS come albero
+        $order->load([
+            'journey','journey.vehicle','journey.trailer','journey.driver',
+            'site.owner','site.internalContacts','site.timetable',
+            'items' => function ($q) {
+                $q->with([
+                    'holder','cerCode','warehouse','images',
+                    'explosions' => function ($q2) {
+                        $q2->whereNull('parent_explosion_id')
+                        ->with(['childrenRecursive','catalogItem']);
+                    },
+                ]);
+            },
+        ]);
         $order_items = $order->items()->get();
         $order_holders = $order->holders()->get();
         $site = $order->site()->with('owner')->with('internalContacts')->with('timetable')->first();
@@ -172,9 +177,9 @@ class WorkerOrderController extends Controller
 
         return inertia(
             'Worker/Order/Edit', [
-                'order' => $order->load('journey', 'journey.vehicle', 'journey.trailer', 'journey.driver'),
-                'order_items' => $order_items,
-                'order_holders' => $order_holders,
+                'order' => $order,
+                //'order_items' => $order_items,
+                //'order_holders' => $order_holders,
                 'site' => $site,
                 'vehicles' => $vehicles,
                 'trailers' => $trailers,

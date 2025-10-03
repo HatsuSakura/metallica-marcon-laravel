@@ -3,211 +3,172 @@
 
 namespace App\Services;
 
-use App\Models\Cargo;
 use App\Models\Journey;
-use App\Models\OrderItem;
 use App\Models\JourneyCargo;
+use App\Models\OrderItem;
 use App\Enums\OrderItemsState;
 use App\Enums\OrdersTruckLocation;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class JourneyCargoService
 {
-    /**
-     * Create the two JourneyCargo objects associated with a Journey.
-     *
-     * @param Journey $journey
-     * @param array $truckData
-     * @param array $trailerData
-     * @return array
-     */
     public function createCargoForJourney(Journey $journey, array $truckData, array $trailerData): array
     {
         return DB::transaction(function () use ($journey, $truckData, $trailerData) {
 
-            // Check if the mandatory truck cargo already exists
-            $existingTruckCargo = JourneyCargo::where('journey_id', $journey->id)
-            ->where('truck_location', OrdersTruckLocation::TRUCK_MOTRICE->value)
-            ->first();
-        
-            if ($existingTruckCargo) {
-                // Option 1: Throw an exception so that the controller can handle it (e.g., show an error message)
-                throw new \Exception('Cargo for the truck has already been created for this journey.');
-            
-                // Option 2: Alternatively, you could simply return the existing cargos:
-                // $existingTrailerCargo = JourneyCargo::where('journey_id', $journey->id)
-                //     ->where('truck_location', OrdersTruckLocation::TRUCK_RIMORCHIO->value)
-                //     ->first();
-                // return [$existingTruckCargo, $existingTrailerCargo];
-            }
-        
+            // ATTENZIONE: assicurati che questi value coincidano col DB ('vehicle'/'trailer' oppure 'motrice'/'rimorchio')
+            $locTruck   = OrdersTruckLocation::TRUCK_MOTRICE->value;   // es. 'vehicle'
+            $locTrailer = OrdersTruckLocation::TRUCK_RIMORCHIO->value; // es. 'trailer'
 
-            
-            // ALWAYS CREATE CARGO FOR TRUCK (VEHICLE)
+            // Crea sempre il cassone TRUCK
             $truckCargo = JourneyCargo::create([
                 'journey_id'        => $journey->id,
                 'cargo_id'          => $journey->cargo_for_vehicle_id,
-                'truck_location'    => OrdersTruckLocation::TRUCK_MOTRICE->value,
-                'warehouse_id'      => $truckData['warehouse_id'], 
-                'is_grounding'      => $truckData['is_grounding'],
+                'truck_location'    => $locTruck,
+                'warehouse_id'      => $truckData['warehouse_id'],
+                'is_grounding'      => (bool) ($truckData['is_grounding'] ?? false),
                 'download_sequence' => $truckData['download_sequence'],
+                'state'             => 'creato',
             ]);
 
-            // Get all the OrderItems whit the ID in the truck (vehicle) ARRAY
-            //$items = OrderItem::whereIn('id', $truckData['items'])->get();
-            $items = OrderItem::hydrate( $truckData['items'] );
-            Log::info("VEHICLE ITEMS: {$items}");
-
-            foreach ($items as $item) {
-                $currentState = OrderItemsState::from($item->state);
-                if ($currentState->canTransitionTo(OrderItemsState::STATE_LOADED)) {
-
-                    $pivotData = [
-                        'is_double_load'      => isset($item->pivot) && isset($item->pivot->is_double_load)
-                                                   ? (bool)$item->pivot->is_double_load
-                                                   : false,
-                        'warehouse_download_id' => isset($item->pivot) && isset($item->pivot->warehouse_download_id)
-                                                   ? $item->pivot->warehouse_download_id
-                                                   : null,
-                    ];
-        
-                    Log::info("Pivot data for OrderItem TRUCK {$item->id}: ", $pivotData);
-                    $truckCargo->items()->syncWithoutDetaching([
-                        $item->id => [
-                            'is_double_load'       => $item->pivot['is_double_load'] ?? false,
-                            'warehouse_download_id' => $item->pivot['warehouse_download_id'] ?? null,
-                        ]
-                    ]);
-                    $item->state = OrderItemsState::STATE_LOADED;
-                    //$item->journey_cargo_id = $truckCargo->id;
-                    $item->save();
-
-
-                } else {
-                    Log::warning("Invalid state transition from {$currentState->value} for order ID {$item->id}");
-                }
+            // 1) Sincronizza gli item in pivot (crea o aggiorna senza staccare gli altri)
+            $truckMap = $this->buildPivotMap($truckData['items'] ?? []);
+            if (!empty($truckMap)) {
+                $truckCargo->items()->syncWithoutDetaching($truckMap);
+                // 2) Applica la transizione di stato sugli item coinvolti
+                $this->transitionItemsToLoaded(array_keys($truckMap));
             }
 
-            // IF EXISTS, CREATE CARGO FOR TRAILER
+            // Trailer opzionale: crealo solo se c'è un warehouse valido
             $trailerCargo = null;
-            if (!empty($trailerData)) {
+            if (!empty($trailerData) && !empty($trailerData['warehouse_id'])) {
                 $trailerCargo = JourneyCargo::create([
                     'journey_id'        => $journey->id,
                     'cargo_id'          => $journey->cargo_for_trailer_id,
-                    'truck_location'    => OrdersTruckLocation::TRUCK_RIMORCHIO->value,
+                    'truck_location'    => $locTrailer,
                     'warehouse_id'      => $trailerData['warehouse_id'],
-                    'is_grounding'      => $trailerData['is_grounding'],
+                    'is_grounding'      => (bool) ($trailerData['is_grounding'] ?? false),
+                    'download_sequence' => $trailerData['download_sequence'],
+                    'state'             => 'creato',
+                ]);
+
+                $trailerMap = $this->buildPivotMap($trailerData['items'] ?? []);
+                if (!empty($trailerMap)) {
+                    $trailerCargo->items()->syncWithoutDetaching($trailerMap);
+                    $this->transitionItemsToLoaded(array_keys($trailerMap));
+                }
+            }
+
+            Log::info('Created cargos', [
+                'journey_id' => $journey->id,
+                'truck_cargo_id' => $truckCargo->id,
+                'trailer_cargo_id' => $trailerCargo?->id,
+            ]);
+
+            return [$truckCargo->fresh('items'), $trailerCargo?->fresh('items')];
+        });
+    }
+
+    public function updateCargoForJourney(Journey $journey, array $truckData, array $trailerData): array
+    {
+        return DB::transaction(function () use ($journey, $truckData, $trailerData) {
+
+            // TRUCK
+            $truckCargo = JourneyCargo::query()->findOrFail($truckData['journey_cargo_id']);
+            $truckCargo->update([
+                'warehouse_id'      => $truckData['warehouse_id'],
+                'is_grounding'      => (bool) ($truckData['is_grounding'] ?? false),
+                'download_sequence' => $truckData['download_sequence'],
+            ]);
+
+            $truckMap = $this->buildPivotMap($truckData['items'] ?? []);
+            if (!empty($truckMap)) {
+                // upsert pivot (crea se non c'è, aggiorna se c'è)
+                $truckCargo->items()->sync($truckMap, false); // upsert + update pivot
+                $this->transitionItemsToLoaded(array_keys($truckMap));
+            }
+
+            // TRAILER (se presente)
+            $trailerCargo = null;
+            if (!empty($trailerData) && !empty($trailerData['journey_cargo_id'])) {
+                $trailerCargo = JourneyCargo::query()->findOrFail($trailerData['journey_cargo_id']);
+                $trailerCargo->update([
+                    'warehouse_id'      => $trailerData['warehouse_id'],
+                    'is_grounding'      => (bool) ($trailerData['is_grounding'] ?? false),
                     'download_sequence' => $trailerData['download_sequence'],
                 ]);
-            
-                //$items = OrderItem::whereIn('id', $trailerData['items'])->get();
-                $items = OrderItem::hydrate( $trailerData['items'] );
-                Log::info("ITEMS: {$items}");
-    
-                foreach ($items as $item) {
-                    //$currentState = $item->state;
-                    $currentState = OrderItemsState::from($item->state);
-                    if ($currentState instanceof OrderItemsState ){
-                        Log::info("CURRENT STATE: {$item->state}");
-                    }
-                    Log::info("Transition check from {$currentState->value} to " . OrderItemsState::STATE_LOADED->value);
-    
-                    $canTransition = $currentState->canTransitionTo(OrderItemsState::STATE_LOADED);
-                    Log::info("Can transition? " . ($canTransition ? 'Yes' : 'No'));
-    
-    
-                    if ($currentState->canTransitionTo(OrderItemsState::STATE_LOADED)) {
 
-                        $trailerCargo->items()->syncWithoutDetaching([
-                            $item->id => [
-                                'is_double_load'       => $item->pivot['is_double_load'] ?? false,
-                                'warehouse_download_id' => $item->pivot['warehouse_download_id'] ?? null,
-                            ]
-                        ]);
-                        $item->state = OrderItemsState::STATE_LOADED;
-                        //$item->journey_cargo_id = $trailerCargo->id;
-                        $item->save();
-                    } else {
-                        Log::warning("Invalid state transition from {$currentState->value} for order ID {$item->id}");
-                    }
+                $trailerMap = $this->buildPivotMap($trailerData['items'] ?? []);
+                if (!empty($trailerMap)) {
+                    $trailerCargo->items()->sync($trailerMap, false);
+                    $this->transitionItemsToLoaded(array_keys($trailerMap));
                 }
-
             }
-            return [$truckCargo, $trailerCargo];
+
+            return [$truckCargo->fresh('items'), $trailerCargo?->fresh('items')];
         });
     }
 
     /**
-     * Update the JourneyCargo objects associated with a Journey.
-     *
-     * @param Journey $journey
-     * @param array $truckData
-     * @param array $trailerData
-     * @return array
+     * Accetta sia:
+     *  - [12, 34]
+     *  - [['id'=>12,'is_double_load'=>true,'warehouse_download_id'=>3], ...]
+     *  - [['order_item_id'=>12, ...], ...]
      */
-    public function updateCargoForJourney(Journey $journey, array $truckData, array $trailerData): array
+    private function buildPivotMap(array $items): array
     {
-        return DB::transaction(function () use ($journey, $truckData, $trailerData) {
-            
-            // ALWAYS UPDATE CARGO FOR TRUCK (VEHICLE)
-            $truckCargo = JourneyCargo::where('id', $truckData['journey_cargo_id'] )->first();
-            $truckCargo->update([
-                'warehouse_id'      => $truckData['warehouse_id'], 
-                'is_grounding'      => $truckData['is_grounding'],
-                'download_sequence' => $truckData['download_sequence'],
-            ]);
-            $truckCargo->save();
+        $map = [];
 
-            // Get all the OrderItems whit the ID in the truck (vehicle) ARRAY
-            //$items = OrderItem::whereIn('id', $truckData['items'])->get();
-            $items = OrderItem::hydrate( $truckData['items'] );
+        foreach ($items as $row) {
+            // id: root id o order_item_id o pivot.order_item_id
+            $id =   Arr::get($row, 'id',
+                    Arr::get($row, 'order_item_id',
+                    Arr::get($row, 'pivot.order_item_id')));
+            if (!$id) continue;
 
-            foreach ($items as $item) {
-                $currentState = OrderItemsState::from($item->state);
-                if ($currentState == OrderItemsState::STATE_LOADED) {
-                    $truckCargo->items()->updateExistingPivot($item->id, [
-                        'is_double_load'       => $item->pivot['is_double_load'] ?? false,
-                        'warehouse_download_id' => $item->pivot['warehouse_download_id'] ?? null,
-                    ]);
-                    $item->save();
-                } else {
-                    Log::warning("Invalid state transition from {$currentState->value} for order ID {$item->id}");
-                }
+            // is_double_load: preferisci root-level, altrimenti pivot
+            $isDouble = Arr::get($row, 'is_double_load',
+                        Arr::get($row, 'pivot.is_double_load', 0));
+            $isDouble = (int) !!$isDouble;
+
+            // warehouse_download_id: preferisci root-level, altrimenti pivot
+            $wd =   Arr::get($row, 'warehouse_download_id',
+                    Arr::get($row, 'pivot.warehouse_download_id'));
+
+            if ($wd === '' || $wd === false) {
+                $wd = null;
+            } elseif ($wd !== null) {
+                $wd = (int) $wd;
             }
 
-            // IF EXISTS, CREATE CARGO FOR TRAILER
-            $trailerCargo = null;
-            if (!empty($trailerData)) {
+            $map[(int)$id] = [
+                'is_double_load'        => $isDouble,
+                'warehouse_download_id' => $wd,
+            ];
+        }
 
-                $trailerCargo = JourneyCargo::where('id', $trailerData['journey_cargo_id'] )->first();
-                $trailerCargo->update([
-                    'warehouse_id'      => $trailerData['warehouse_id'], 
-                    'is_grounding'      => $trailerData['is_grounding'],
-                    'download_sequence' => $trailerData['download_sequence'],
-                ]);
-                $trailerCargo->save();
-            
-                //$items = OrderItem::whereIn('id', $trailerData['items'])->get();
-                $items = OrderItem::hydrate( $trailerData['items'] );
-                //$items = $trailerData['items']; 
+        return $map;
+    }
 
-                foreach ($items as $item) {
-                    //$currentState = $item->state;
-                    $currentState = OrderItemsState::from($item->state);
-                    if ($currentState == OrderItemsState::STATE_LOADED) {
-                        $trailerCargo->items()->updateExistingPivot($item->id, [
-                            'is_double_load'       => $item->pivot['is_double_load'] ?? false,
-                            'warehouse_download_id' => $item->pivot['warehouse_download_id'] ?? null,
-                        ]);
-                        $item->save();
-                    } else {
-                        Log::warning("Invalid state transition from {$currentState->value} for order ID {$item->id}");
-                    }
-                }
+
+    /**
+     * Carica DAVVERO gli OrderItem e applica la transizione di stato.
+     */
+    private function transitionItemsToLoaded(array $ids): void
+    {
+        if (empty($ids)) return;
+
+        $items = OrderItem::whereIn('id', $ids)->get(['id','state']);
+        foreach ($items as $item) {
+            $current = OrderItemsState::from($item->state);
+            if ($current->canTransitionTo(OrderItemsState::STATE_LOADED)) {
+                $item->state = OrderItemsState::STATE_LOADED;
+                $item->save();
+            } else {
+                Log::warning("Invalid state transition from {$current->value} for order_item {$item->id}");
             }
-
-            return [$truckCargo, $trailerCargo];
-        });
+        }
     }
 }

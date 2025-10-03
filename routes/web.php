@@ -9,8 +9,12 @@ use App\Http\Controllers\MapController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\IndexController;
 use Illuminate\Auth\Events\PasswordReset;
+use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\ListingController;
 use App\Http\Controllers\WorkerJourneyCargo;
+use App\Http\Controllers\API_RecipeController;
+use App\Http\Controllers\RecipeNodeController;
+use App\Http\Controllers\CatalogItemController;
 use App\Http\Controllers\DriverOrderController;
 use App\Http\Controllers\RelatorSiteController;
 use App\Http\Controllers\RelatorUserController;
@@ -28,6 +32,9 @@ use App\Http\Controllers\RelatorCustomerController;
 use App\Http\Controllers\RelatorWithdrawController;
 use App\Http\Controllers\NotificationSeenController;
 use App\Http\Controllers\RelatorDashboardController;
+use App\Http\Controllers\CatalogItemRecipeController;
+use App\Http\Controllers\OrderItemExplosionController;
+use App\Http\Controllers\API_WarehouseOrdersController;
 use App\Http\Controllers\RelatorJourneyCargoController;
 use App\Http\Controllers\RelatorListingImageController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -35,13 +42,13 @@ use App\Http\Controllers\API_DriverOrderUpdateController;
 use App\Http\Controllers\WarehouseManagerOrderController;
 use App\Http\Controllers\API_DriverJourneyUpdateController;
 use App\Http\Controllers\API_WarehouseOrderItemsController;
-use App\Http\Controllers\API_WarehouseOrdersController;
 use App\Http\Controllers\API_RelatorSiteTimetableController;
 use App\Http\Controllers\RelatorListingAcceptOfferController;
 use App\Http\Controllers\WarehouseManagerOrderItemController;
 use App\Http\Controllers\API_WarehouseJourneyCargosController;
 use App\Http\Controllers\API_RelatorSiteBooleanUpdateController;
 use App\Http\Controllers\API_RelatorUserResetAndresendFunctions;
+use App\Http\Controllers\WarehouseManagerOrderItemImageController;
 
 /*
 Route::get('/', function () {
@@ -51,9 +58,11 @@ Route::get('/', function () {
 */
 
 //Route::get('/', [IndexController::class, 'login']);
-Route::get('/', [AuthController::class, 'create'])->name('login');
-Route::get('/hello', [IndexController::class, 'show'])->middleware('auth');
+//Route::get('/', [AuthController::class, 'create'])->name('login');
+//Route::get('/hello', [IndexController::class, 'show'])->middleware('auth');
 
+Route::get('/', fn() => to_route('login'));
+//Route::get('/', [AuthController::class, 'create'])->name('login');
 Route::get('login', [AuthController::class, 'create'])->name('login');
 Route::post('login', [AuthController::class, 'store'])->name('login.store');
 Route::delete('logout', [AuthController::class, 'destroy'])->name('logout');
@@ -146,6 +155,43 @@ Route::resource('notification', NotificationController::class)
 Route::put('notification/{notification}/seen', NotificationSeenController::class)
 ->middleware('auth')
 ->name('notification.seen');
+
+
+
+
+
+Route::get('/__who-auth', function () {
+    return get_class(app(\Illuminate\Routing\Router::class)->getMiddleware()['auth']);
+});
+
+Route::get('/__fingerprint', function () {
+    return json_encode([
+        'base_path' => base_path(),
+        'web_file'  => __FILE__,
+        'time'      => now()->toDateTimeString(),
+    ]);
+});
+
+// ESPERIMENTO DASHBOARD PER RUOLO
+// Entrata neutra
+Route::get('/dashboard', fn() => null)
+    ->middleware(['auth', 'verified', 'role.home.redirect'])
+    ->name('dashboard');
+
+// WAREHOUSE
+Route::get('/dashboard-warehouse', fn() => Inertia::render('Worker/Dashboard'))
+    ->middleware(['auth'])
+    //->middleware(['auth', 'can:access-warehouse'])
+    ->name('warehouse.home');
+
+/*
+// Fallback generica
+Route::middleware('auth')->get('/home', fn() => Inertia::render('Generic/Home'))
+    ->name('generic.home');
+*/
+
+
+
 
 // Route Grouping
 Route::prefix('relator')
@@ -281,6 +327,11 @@ Route::prefix('warehouse-manager/orders')->group(function() {
 });
 
 
+Route::prefix('warehouse-manager/order-item')->group(function() {
+    Route::get('{orderItem}/image', [WarehouseManagerOrderItemImageController::class, 'create'])->name('warehouse-manager.order-item.image.create');
+    Route::post('{orderItem}/image/create', [WarehouseManagerOrderItemImageController::class, 'store'])->name('warehouse-manager.order-item.image.store');
+    Route::delete('{orderItem}/image/{image}', [WarehouseManagerOrderItemImageController::class, 'destroy'])->name('warehouse-manager.order-item.image.destroy');
+});
 
 //// MARCON
 
@@ -303,6 +354,34 @@ Route::get('/map', function() {
 */
 
 
+
+// routes/web.php
+//Route::middleware(['auth', 'can:admin'])->group(function () {
+Route::middleware(['auth'])->group(function () {
+    Route::resource('catalog-items', CatalogItemController::class);
+    Route::resource('recipes', RecipeController::class);
+
+    // Recipe Nodes (AJAX)
+    // usiamo RecipeNodeController per chiarezza, anche se non è una risorsa
+    Route::get('/recipes/{recipe}/nodes',        [RecipeNodeController::class, 'index'])->name('recipes.nodes');
+    Route::post('/recipes/{recipe}/nodes',       [RecipeNodeController::class, 'store'])->name('recipes.nodes.store');
+    Route::put('/recipe-nodes/{node}',           [RecipeNodeController::class, 'update'])->name('recipes.nodes.update');
+    Route::delete('/recipe-nodes/{node}',        [RecipeNodeController::class, 'destroy'])->name('recipes.nodes.destroy');
+    Route::post('/recipe-nodes/{node}/replace-children', [RecipeNodeController::class, 'replaceChildren'])->name('recipes.nodes.replace-children');
+    // opzionale: “default-tree” per importare la ricetta predefinita del componente
+    Route::get('/recipes/default-tree', [API_RecipeController::class, 'defaultTree']);
+    Route::put('/recipes/{recipe}/nodes/sync', [\App\Http\Controllers\RecipeNodeController::class, 'sync'])->name('recipes.nodes.sync');
+ 
+    Route::get('/catalog-items/{item}/recipe', [CatalogItemRecipeController::class, 'editOrCreate'])->name('catalog-items.recipe.edit');
+
+    Route::get('/order-items/{orderItem}/explosions', [OrderItemExplosionController::class, 'show'])->name('api.order-items.explosions.show');
+    Route::put('/order-items/{orderItem}/explosions/sync', [OrderItemExplosionController::class, 'sync'])->name('api.order-items.explosions.sync');
+
+});
+
+
+
+
 // Define API routes separately, still using `web.php` for Inertia
 Route::prefix('api')
     ->middleware(['auth'])
@@ -314,13 +393,34 @@ Route::prefix('api')
         Route::put('/order/updateState/{order}', [API_DriverOrderUpdateController ::class, 'updateState']);
         Route::put('/warehouse-orders/{order}', [API_WarehouseOrdersController::class, 'update'])->name('update');
         Route::post('/warehouse-order-items/move-journey-cargo/{orderItem}', [API_WarehouseOrderItemsController::class, 'moveJourneyCargo'])->name('warehouse-order-items.move-journey-cargo');
-        Route::post('/warehouse-order-items/save-items', [API_WarehouseOrderItemsController::class, 'saveItems'])->name('warehouse-order-items.save-items');
+        Route::post('/warehouse-order-items/save-items', [API_WarehouseOrderItemsController::class, 'saveItems'])->name('warehouse-order-items.save-items-bulk');
+        /* Forzo temporaneamente il api. per un problema axios che al momento non riesco a debuggare */
+        Route::patch('/warehouse-order-items/not-found/{orderItem}', [API_WarehouseOrderItemsController::class, 'flagNotFound'])->name('api.warehouse-order-items.flag-not-found');
         Route::put('/warehouse-order-items/{orderItem}', [API_WarehouseOrderItemsController::class, 'update'])->name('warehouse-order-items.update');
-        Route::patch('/warehouse-order-items/{orderItem}/not-found', [API_WarehouseOrderItemsController::class, 'flagNotFound'])->name('warehouse-order-items.flag-not-found');
         Route::put('warehouse-journey-cargos/{journeyCargo}', [API_WarehouseJourneyCargosController::class, 'update'])->name('warehouse-journey-cargos.update');
         Route::post('/user/resend-verification/{user}', [API_RelatorUserResetAndresendFunctions::class, 'resendVerification'])->name('relator.user.resend.verification');
         Route::post('/user/send-password-reset/{user}', [API_RelatorUserResetAndresendFunctions::class, 'sendPasswordResetEmail'])->name('relator.user.send.password.reset');
+
+        /*
+         * ORDER ITEM EXPLOSION (ESPLOSIONE COLLO)
+         */
+        Route::prefix('order-items/{orderItem}')->group(function () {
+        Route::post('explosions', [OrderItemExplosionController::class, 'store']);            // ad-hoc
+        Route::post('explode/recipe', [OrderItemExplosionController::class, 'applyRecipe']);  // da ricetta
+        });
+        Route::prefix('order-item-explosions')->group(function () {
+        Route::put('{id}',    [OrderItemExplosionController::class, 'update']);
+        Route::delete('{id}', [OrderItemExplosionController::class, 'destroy']);
+        });
+
+        Route::get('/catalog-items', [CatalogItemController::class, 'search']);
+        Route::post('/catalog-items', [CatalogItemController::class, 'store']); // inline creation
+        
+        Route::get('/recipes/default-tree', [API_RecipeController::class, 'defaultTree']); // ?catalog_item_id=123
+        Route::get('/recipes/{recipe}/tree', [API_RecipeController::class, 'recipeTree'])->name('api.recipes.tree');
+
     });
+
 
 Route::prefix('withdraws/{withdraw}')->group(function () {
     Route::put('/update-state', [RelatorWithdrawController::class, 'updateState'])->name('withdraws.update-state');

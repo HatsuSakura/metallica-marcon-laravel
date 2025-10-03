@@ -158,7 +158,7 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
         </li>
 -->
         <li>
-          <Link @click="closeDrawer" :href="route('relator.dashboard')">Dashboard</Link>
+          <Link @click="closeDrawer" :href="route('dashboard')">La mia Dashboard</Link>
         </li>
         <li>
           <Link @click="closeDrawer" :href="route('relator.customer.index')">Clienti</Link>
@@ -201,6 +201,17 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
               <li>
                 <Link @click="closeDrawer" :href="route('relator.customer.index')">Clienti</Link>
               </li>
+              <details close>
+              <summary>Materiali e Ricette</summary>
+              <ul>
+                <li>
+                  <Link @click="closeDrawer" :href="route('catalog-items.index')">Materiali/Componenti</Link>
+                </li>
+                <li>
+                  <Link @click="closeDrawer" :href="route('recipes.index')">Ricette</Link>
+                </li>
+              </ul>
+              </details>
             </ul>
           </details>
         </li>

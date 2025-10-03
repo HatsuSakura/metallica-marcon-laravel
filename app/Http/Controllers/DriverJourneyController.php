@@ -75,20 +75,56 @@ class DriverJourneyController extends Controller
      */
     public function update(Request $request, Journey $journey)
     {
-        $journey->update([
-            $request->validate([
-                'customer_id'=> 'required',
-                'site_id'=> 'required',
-                'logistic_id'=> 'required',
-                'items' => 'nullable|array', // Make items optional
-                'items.*.product_id' => 'required|exists:products,id',
-                'items.*.quantity' => 'required|integer|min:1',
-            ])
+        Gate::authorize('update', $journey);
+
+        $validated = $request->validate([
+            // date/ora effettive del viaggio
+            'real_dt_start'            => ['nullable','date'],
+            'real_dt_end'              => ['nullable','date'],
+
+            // scarico a magazzino (1° e 2°)
+            'warehouse_id_1'           => ['nullable','exists:warehouses,id'],
+            'warehouse_download_dt_1'  => ['nullable','date'],
+
+            'warehouse_id_2'           => ['nullable','exists:warehouses,id'],
+            'warehouse_download_dt_2'  => ['nullable','date'],
+
+            // flag
+            'is_temporary_storage'     => ['required','boolean'],
+            'is_double_load'           => ['required','boolean'],
         ]);
 
-        //return redirect()->route('relator.journey.index')->with('success', 'Ritiro modificato con successo!');
-        return redirect()->back()->with('success', 'Viaggio modificato con successo!');
+        // normalizza i boolean (gestisce "true"/"false" string)
+        $validated['is_temporary_storage'] = (bool) ($validated['is_temporary_storage'] ?? false);
+        $validated['is_double_load']       = (bool) ($validated['is_double_load'] ?? false);
+
+        // se non è doppio scarico, azzera i campi del secondo scarico
+        if (!$validated['is_double_load']) {
+            $validated['warehouse_id_2'] = null;
+            $validated['warehouse_download_dt_2'] = null;
+        }
+
+        $validated['state'] = JourneysState::STATE_EXECUTED;
+
+        // aggiorna
+        $journey->update($validated);
+
+        /*
+        // Update each order
+        foreach ($orders as $order) {
+            $order->update([
+                'journey_id' => null,
+                'state' => OrdersState::STATE_CREATED,
+                'truck_location' => null,
+            ]);
+        }
+        */
+
+        return redirect()
+            ->route('driver.journey.index')
+            ->with('success', 'Viaggio modificato con successo!');
     }
+
 
 
     /**
