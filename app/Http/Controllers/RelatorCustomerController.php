@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Area;
 use App\Models\Site;
 use App\Models\User;
 use App\Enums\UserRole;
 use App\Models\Customer;
+use App\Enums\OrdersState;
 use Illuminate\Http\Request;
 use App\Enums\CustomerJobType;
-use App\Models\Area;
-use App\Models\InternalContact;
 use Illuminate\Support\Carbon;
+use App\Models\InternalContact;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
@@ -30,28 +31,57 @@ class RelatorCustomerController extends Controller
             ...$request->only(['chiave']) // ... is like "merge array"
         ];
 
+        // Trasformazione comune per ogni customer (sia collection che paginator)
+        $transform = function ($c) {
+            return [
+                /*
+                'id'                  => $c->id,
+                'ragione_sociale'     => $c->ragione_sociale,
+                'indirizzo_legale'    => $c->indirizzo_legale,
+                'codice_sdi'          => $c->codice_sdi,
+                'job_type'            => $c->job_type,
+                */
+                 ...$c->toArray(), // 👈 tutti i campi di Customer
+                'sites_count'         => (int) $c->sites_count,
+                'open_orders_count'   => (int) ($c->open_orders_count ?? 0),
+                'total_orders_count'  => (int) ($c->total_orders_count ?? 0),
+                'can' => [
+                    // Se il permesso dipende solo dal ruolo utente:
+                    'createOrder' => Gate::allows('create', Order::class),
+                    // Se invece vuoi contestualizzare per-customer (sostituisci la riga sopra con questa):
+                    // 'createOrder' => Gate::allows('create', [Order::class, $c]),
+                ],
+            ];
+        };
+
+        // Base query con contatori
+        $base = Customer::query()
+            ->alphabetic()
+            ->withCount('sites')
+            ->withCount([
+                // Adatta la condizione agli "stati aperti" reali del tuo ciclo di vita
+                // Esempio 1: "aperto" = nessuna chiusura registrata
+                'orders as open_orders_count' => fn($q) =>
+                    $q->whereNot('state', OrdersState::STATE_CLOSED->value),
+                // Esempio 2 (alternativo): "aperti" per stati specifici
+                // 'orders as open_orders_count' => fn($q) =>
+                //     $q->whereIn('state', ['creato','pianificato','eseguito']),
+                'orders as total_orders_count',
+            ])
+            ->filter($filters);
+
         if ($filters['localTable']) {
-            $query = Customer::query()
-            ->alphabetic()
-            ->withCount('sites')
-            ->filter($filters)
-            ->get(); 
-        }
-        else{
-            $query = Customer::query()
-            ->alphabetic()
-            ->withCount('sites')
-            ->filter($filters)
-            ->paginate(25)
-            ->withQueryString();
+            // Collection “locale” (senza paginazione)
+            $customers = $base->get()->map($transform);
+        } else {
+            // Paginazione + through per trasformare ogni item
+            $customers = $base->paginate(25)->withQueryString()->through($transform);
         }
 
-        return inertia(
-            'Relator/Customer/Index',
-            [
-                'filters' => $filters,
-                'customers' => $query
-            ]);
+        return inertia('Relator/Customer/Index', [
+            'filters'   => $filters,
+            'customers' => $customers,
+        ]);
     }
 
     public function show(Customer $customer){

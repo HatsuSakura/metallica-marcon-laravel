@@ -40,26 +40,27 @@ class Order extends Model
 protected static function booted()
     {
         static::creating(function ($order) {
-            $year    = now()->format('y');                     // es. "25"
+            $year_2  = now()->format('y');                     // es. "25"
+            $year_4  = (int) now()->format('Y');               // es. "2025"
             $month   = now()->format('m');                     // es. "06"
             $initial = $order->customer->seller->user_code;    // es. "MMM"
 
             // operazione atomica in transazione
-            $counter = DB::transaction(function () use ($year) {
+            $counter = DB::transaction(function () use ($year_4) {
                 $row = DB::table('order_counters')
-                         ->where('year', $year)
+                         ->where('year', $year_4)
                          ->lockForUpdate()
                          ->first();
 
                 if ($row) {
                     DB::table('order_counters')
-                      ->where('year', $year)
+                      ->where('year', $year_4)
                       ->increment('counter');
                     return $row->counter + 1;
                 }
 
                 DB::table('order_counters')->insert([
-                    'year'       => $year,
+                    'year'       => $year_4,
                     'counter'    => 1,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -71,7 +72,7 @@ protected static function booted()
             $order->legacy_code = sprintf(
                 '%s_%d%s_%04d',
                 $initial,
-                $year,
+                $year_2,
                 $month,
                 $counter
             );

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Order;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -36,6 +37,10 @@ class Customer extends Model
 
     public function sites(): HasMany{
         return $this->hasMany(Site::class, 'customer_id');
+    }
+
+    public function orders(): HasMany{
+        return $this->hasMany(Order::class, 'customer_id');
     }
 
     public function mainSite(): HasOne{

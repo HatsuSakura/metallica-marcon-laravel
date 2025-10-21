@@ -26,6 +26,27 @@
                     target="_blank"
                 >
                 -->
+
+                <div class="flex items-center gap-1">
+                    <!-- Badge contatore visibile solo a chi è autorizzato -->
+                    <span v-if="customer.can.createOrder" 
+                        class="badge badge-outline"
+                        :class="customer.open_orders_count > 0 ? 'badge-warning' : 'badge-success'"
+                    >  
+                        {{ customer.open_orders_count }} / {{ customer.total_orders_count }}
+                    </span>
+
+                    <!-- Bottone "Crea ordine" visibile solo a chi è autorizzato -->
+                    <Link
+                    v-if="customer.can.createOrder"
+                    :href="route('relator.order.create', { customer: customer.id })"
+                    class="btn btn-primary btn-sm"
+                    >
+                    Crea ordine
+                    </Link>
+                </div>
+
+
                 <a 
                     class="btn btn-circle btn-outline btn-primary" 
                     :href="route('relator.customer.show', {customer: customer.id})"

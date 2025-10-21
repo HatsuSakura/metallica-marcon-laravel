@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\Order;
+use App\Enums\UserRole;
 use Illuminate\Auth\Access\Response;
 
 class OrderPolicy
@@ -29,7 +30,12 @@ class OrderPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        // Esempio: manager, logistic e responsabili di magazzino
+        return in_array($user->role, [
+            UserRole::DEVELOPER,
+            UserRole::LOGISTIC,
+            UserRole::MANAGER,            
+        ], true);
     }
 
     /**
