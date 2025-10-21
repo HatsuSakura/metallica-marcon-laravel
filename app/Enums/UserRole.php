@@ -11,7 +11,7 @@ enum UserRole: string
     case WAREHOUSE_MANAGER = 'warehouse_manager';
     case WAREHOUSE_WORKER = 'warehouse_worker';
     case CUSTOMER = 'customer';
-    case PROGRAMMER = 'programmer';
+    case DEVELOPER = 'developer';
 
     public static function values(): array
     {

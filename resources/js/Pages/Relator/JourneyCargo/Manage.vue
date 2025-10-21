@@ -170,7 +170,7 @@ import { Inertia } from '@inertiajs/inertia'
 import Box from '@/Components/UI/Box.vue';
 import ZeroPaddingId from '@/Components/UI/ZeroPaddingId.vue';
 import ItemForOtherJourneyCargoManagment from './Components/ItemForOtherJourneyCargoManagment.vue';
-import WorkerItemRow from '@/Pages/Worker/Components/WorkerItemRow.vue';
+import WorkerItemRow from '@/Pages/Warehouse/Components/WorkerItemRow.vue';
 import JourneyCargoHead from '@/Components/JourneyCargoHead.vue';
 import EmptyState from '@/Components/UI/EmptyState.vue';
 import axios from 'axios';

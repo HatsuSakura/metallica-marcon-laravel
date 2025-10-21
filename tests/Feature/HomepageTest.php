@@ -42,7 +42,7 @@ class HomepageTest extends TestCase
             'surname' => 'Automatico',
             'email' => 'test.automatico@test.com',
             'password' => bcrypt('password!'),
-            'role' => UserRole::PROGRAMMER->value,
+            'role' => UserRole::DEVELOPER->value,
         ]);
  
         $this->assertNotNull($user);

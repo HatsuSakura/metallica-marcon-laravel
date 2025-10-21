@@ -43,7 +43,7 @@
                 </div>
 
                 <div>
-                <span v-if="item.adr" class="badge badge-primary badge-lg">C.ONU = {{ item.adr_onu_code }} con 
+                <span v-if="item.adr" class="badge badge-primary badge-lg">Cod. UN = {{ item.adr_onu_code }} con 
                     <span v-if="item.adr_totale" class="badge badge-primary badge-lg">ADR Totale</span>
                     <span v-if="item.adr_esenzione_totale" class="badge badge-primary badge-lg">Esenzione Totale</span>
                     <span v-if="item.adr_esenzione_parziale" class="badge badge-primary badge-lg">Esenzione Parziale</span>

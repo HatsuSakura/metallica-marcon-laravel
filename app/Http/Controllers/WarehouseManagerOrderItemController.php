@@ -31,7 +31,7 @@ class WarehouseManagerOrderItemController extends Controller
         ->get();
 
         return inertia(
-            'Worker/Item/Show',
+            'Warehouse/Item/Show',
             [
                 'items' => $items,
             ],
@@ -44,7 +44,7 @@ class WarehouseManagerOrderItemController extends Controller
         // eager-load direttamente i journeyCargos
         $order->load('journeyCargos','JourneyCargos.cargo');
 
-        return inertia('Worker/Order/Item/Create', [
+        return inertia('Warehouse/Order/Item/Create', [
             'order' => $order,
             'cerCodes' => CerCode::all(),
             'holders' => Holder::all(),

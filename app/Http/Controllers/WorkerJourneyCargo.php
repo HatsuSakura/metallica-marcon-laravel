@@ -51,7 +51,7 @@ class WorkerJourneyCargo extends Controller
 
 
         return inertia(
-            'Worker/JourneyCargo/Index',
+            'Warehouse/JourneyCargo/Index',
             [
                 //'filters' => $filters,
                 'journeyCargos' => $journeyCargos,
@@ -69,7 +69,7 @@ class WorkerJourneyCargo extends Controller
 
 
         return inertia(
-            'Worker/Item/Show',
+            'Warehouse/Item/Show',
             [
                 'items' => $items,
             ],
@@ -90,7 +90,7 @@ class WorkerJourneyCargo extends Controller
         $cerList = CerCode::select('id', 'code', 'description', 'is_dangerous')->get();
         $warehouses = Warehouse::all();
 
-        return inertia('Worker/JourneyCargo/Create', [
+        return inertia('Warehouse/JourneyCargo/Create', [
             'vehicles' => $vehicles,
             'trailers' => $trailers,
             'holders' => $holders,
@@ -216,7 +216,7 @@ class WorkerJourneyCargo extends Controller
        ->get();
 
        return inertia(
-           'Worker/JourneyCargo/Edit',
+           'Warehouse/JourneyCargo/Edit',
            [
                'journeyCargo' => $journeyCargo->load('items', 'items.holder', 'items.warehouse', 'items.cerCode', 'cargo', 'journey', 'warehouse'),
                'orders' => $orders,

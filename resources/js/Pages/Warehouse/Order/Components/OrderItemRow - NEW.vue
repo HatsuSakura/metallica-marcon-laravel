@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import ImageUploader from '@/Pages/Worker/Order/Components/ImageUploader.vue'
+import ImageUploader from '@/Pages/Warehouse/Order/Components/ImageUploader.vue'
 import ExplosionEditor from './ExplosionEditor.vue'
 
 const props = defineProps({

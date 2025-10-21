@@ -2,7 +2,7 @@
     <div>
         <h2>Dashboard</h2>
 
-        <div v-if="user.role == 'logistic' || user.role == 'programmer'" class="flex flex-col gap-2 w-full p-4 mb-4">
+        <div v-if="user.role == 'logistic' || user.role == 'developer'" class="flex flex-col gap-2 w-full p-4 mb-4">
 
             <!-- VIAGGI IN CORSO E CASSONI -->
             <div class="flex flex-row gap-2 w-full">
@@ -50,8 +50,8 @@
         </div>
 
 
-        <div v-if="user.role == 'warehouse_chief' || user.role == 'programmer'">
-            <h2>Gestione Cassoni <span v-if="user.role == 'programmer'"> | CAPO MAGAZZINO</span></h2>
+        <div v-if="user.role == 'warehouse_chief' || user.role == 'developer'">
+            <h2>Gestione Cassoni <span v-if="user.role == 'developer'"> | CAPO MAGAZZINO</span></h2>
             <DashCapoMagazzinoGestioneCassoni 
                 :journeyCargos="props.journeyCargos"
                 :user="user"
@@ -59,8 +59,8 @@
             />
         </div>
 
-        <div v-if="user.role == 'warehouse_chief' || user.role == 'programmer'">
-            <h2>Gestione Materiali scaricati da altro cassone (Doppio Scarico) <span v-if="user.role == 'programmer'"> | CAPO MAGAZZINO</span></h2>
+        <div v-if="user.role == 'warehouse_chief' || user.role == 'developer'">
+            <h2>Gestione Materiali scaricati da altro cassone (Doppio Scarico) <span v-if="user.role == 'developer'"> | CAPO MAGAZZINO</span></h2>
             <div v-for="(item, index) in itemsFromOtherCargosDoubleLoad">
                 <WorkerItemRow
                     :key="item.id"
@@ -77,7 +77,7 @@
             
         </div>
 
-        <div v-if="user.role == 'warehouse_chief' || user.role == 'programmer'">
+        <div v-if="user.role == 'warehouse_chief' || user.role == 'developer'">
             <h2>Gestione Materiali/Cassoni Magazziniere</h2>
             <div v-if="props.itemsCount.length > 0">
                 <DashMagazziniereItemsCount v-for="row in props.itemsCount" v-bind:key="row.id" :row=row class="w-full"/>
@@ -90,7 +90,7 @@
             
             
         </div>
-        <div v-if="user.role == 'warehouse_manager' || user.role == 'programmer'">
+        <div v-if="user.role == 'warehouse_manager' || user.role == 'developer'">
             <h2>Gestione Materiali/Cassoni Magazziniere</h2>
             <DashMagazziniereItemsCount 
                 v-if="currentManagerRow" 
@@ -119,7 +119,7 @@ import DashViaggioSimpleList from './Components/DashViaggioSimpleList.vue';
 import EmptyState from '@/Components/UI/EmptyState.vue';
 import DashItemSimpleList from './Components/DashItemSimpleList.vue';
 import DashMagazziniereItemsCount from './Components/DashMagazziniereItemsCount.vue';
-import WorkerItemRow from '@/Pages/Worker/Components/WorkerItemRow.vue';
+import WorkerItemRow from '@/Pages/Warehouse/Components/WorkerItemRow.vue';
 
 const props = defineProps({ 
     journeys: Object,

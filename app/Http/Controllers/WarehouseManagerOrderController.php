@@ -28,7 +28,7 @@ class WarehouseManagerOrderController extends Controller
         ->get();
 
         return inertia(
-            'Worker/Order/Index',
+            'Warehouse/Order/Index',
             [
                 'orders' => $orders
             ],
@@ -53,7 +53,7 @@ class WarehouseManagerOrderController extends Controller
         ]);
 
         return inertia(
-            'Worker/Order/Show',
+            'Warehouse/Order/Show',
             [
                 'order' => $order,
             ],
@@ -114,7 +114,7 @@ class WarehouseManagerOrderController extends Controller
 
 
         return inertia(
-            'Worker/Order/Edit',
+            'Warehouse/Order/Edit',
             [
                 'order' => $order,
                 'recipes' => $recipes,   // <-- ricette pronte: {id,name,version,catalog_item,nodes:[...]}

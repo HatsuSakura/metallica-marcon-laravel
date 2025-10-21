@@ -36,7 +36,7 @@ class WorkerOrderController extends Controller
         $holders = Holder::all();
 
         return inertia(
-            'Worker/Order/Index',
+            'Warehouse/Order/Index',
             [
                 //'filters' => $filters,
                 'orders' => $query,
@@ -59,7 +59,7 @@ class WorkerOrderController extends Controller
         $cerList = CerCode::select('id', 'code', 'description', 'is_dangerous')->get();
         $warehouses = Warehouse::all();
 
-        return inertia('Worker/Order/Create', [
+        return inertia('Warehouse/Order/Create', [
             'vehicles' => $vehicles,
             'trailers' => $trailers,
             'holders' => $holders,
@@ -176,7 +176,7 @@ class WorkerOrderController extends Controller
     
 
         return inertia(
-            'Worker/Order/Edit', [
+            'Warehouse/Order/Edit', [
                 'order' => $order,
                 //'order_items' => $order_items,
                 //'order_holders' => $order_holders,

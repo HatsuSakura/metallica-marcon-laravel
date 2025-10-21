@@ -4,11 +4,11 @@
     <div class="flex items-center justify-between">
       <div class="font-medium">Controllo peso totale</div>
       <div class="text-sm opacity-70">
-        Padre:
+        Netto pesato:
         <span class="badge badge-ghost">{{ parentNet.toFixed(3) }} kg</span>
-        Figli:
+        Materiali/Componenti:
         <span class="badge badge-ghost">{{ totalChildren.toFixed(3) }} kg</span>
-        Residuo:
+        Differenza:
         <span class="badge" :class="residual >= 0 ? 'badge-success' : 'badge-error'">
           {{ residual.toFixed(3) }} kg
         </span>
@@ -20,7 +20,7 @@
 
     <!-- TOOLBAR -->
     <div class="flex flex-wrap items-center gap-2 py-2">
-      <button class="btn btn-sm btn-primary" @click="emitAddRoot">+ Aggiungi Elemento/Componente</button>
+      <button class="btn btn-sm btn-primary" @click="emitAddRoot">+ Aggiungi Materiale/Componente</button>
     </div>
 
     <!-- TREE (flat render + indent) -->

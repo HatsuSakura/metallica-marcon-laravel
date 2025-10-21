@@ -1,5 +1,12 @@
 <template>
 
+<HeaderForDashboard
+    :backLinkRoute= "'warehouse.home'"
+    :backLinkText="'Dashboard'"
+>
+Ordini scaricati
+</HeaderForDashboard>
+
 
 <div class="flex flex-row flex-wrap justify-stretch items-stretch mb-4 gap-0 w-full">
 
@@ -38,6 +45,7 @@
 </template>
 
 <script setup>
+import HeaderForDashboard from '@/Components/UI/HeaderForDashboard.vue';
 import { Link } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
 

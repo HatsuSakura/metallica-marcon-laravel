@@ -290,7 +290,8 @@ const fmt = (d) => d ? dayjs(d).format('YYYY-MM-DD HH:mm:ss') : null
 const onComplete = () => {
   // Formatto le date prima dell’invio
   form.real_dt_start = fmt(form.real_dt_start)
-  form.real_dt_end = fmt(form.real_dt_end)
+  //form.real_dt_end = fmt(form.real_dt_end)
+  form.real_dt_end = fmt(form.warehouse_download_dt_1)
   form.warehouse_download_dt_1 = fmt(form.warehouse_download_dt_1)
 
   if (form.is_double_load) {

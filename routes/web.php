@@ -50,12 +50,6 @@ use App\Http\Controllers\API_RelatorSiteBooleanUpdateController;
 use App\Http\Controllers\API_RelatorUserResetAndresendFunctions;
 use App\Http\Controllers\WarehouseManagerOrderItemImageController;
 
-/*
-Route::get('/', function () {
-    //return view('welcome');
-    return inertia('Index/Index');
-});
-*/
 
 //Route::get('/', [IndexController::class, 'login']);
 //Route::get('/', [AuthController::class, 'create'])->name('login');
@@ -157,33 +151,42 @@ Route::put('notification/{notification}/seen', NotificationSeenController::class
 ->name('notification.seen');
 
 
-
-
-
-Route::get('/__who-auth', function () {
-    return get_class(app(\Illuminate\Routing\Router::class)->getMiddleware()['auth']);
-});
-
-Route::get('/__fingerprint', function () {
-    return json_encode([
-        'base_path' => base_path(),
-        'web_file'  => __FILE__,
-        'time'      => now()->toDateTimeString(),
-    ]);
-});
-
-// ESPERIMENTO DASHBOARD PER RUOLO
+// DASHBOARD PER RUOLO
 // Entrata neutra
 Route::get('/dashboard', fn() => null)
     ->middleware(['auth', 'verified', 'role.home.redirect'])
     ->name('dashboard');
 
 // WAREHOUSE
-Route::get('/dashboard-warehouse', fn() => Inertia::render('Worker/Dashboard'))
+Route::get('/dashboard-warehouse', fn() => Inertia::render('Warehouse/Dashboard'))
     ->middleware(['auth'])
     //->middleware(['auth', 'can:access-warehouse'])
     ->name('warehouse.home');
 
+// LOGISTIC
+Route::get('/dashboard-logistic', fn() => Inertia::render('Relator/Dashboard'))
+    ->middleware(['auth'])
+    //->middleware(['auth', 'can:access-warehouse'])
+    ->name('logistic.home');
+
+
+// DRIVER
+Route::get('/dashboard-driver', fn() => Inertia::render('Driver/Dashboard'))
+    ->middleware(['auth'])
+    //->middleware(['auth', 'can:access-warehouse'])
+    ->name('driver.home');
+
+// MANAGER
+Route::get('/dashboard-manager', fn() => Inertia::render('Manager/Dashboard'))
+    ->middleware(['auth'])
+    //->middleware(['auth', 'can:access-warehouse'])
+    ->name('manager.home');
+
+// DEVELOPER
+Route::get('/dashboard-developer', fn() => Inertia::render('Developer/Dashboard'))
+    ->middleware(['auth'])
+    //->middleware(['auth', 'can:access-warehouse'])
+    ->name('developer.home');
 /*
 // Fallback generica
 Route::middleware('auth')->get('/home', fn() => Inertia::render('Generic/Home'))

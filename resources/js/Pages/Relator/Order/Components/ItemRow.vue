@@ -104,7 +104,7 @@
             v-model="item.adr_onu_code" 
             type="text" 
             class="input input-bordered flex basis-32"
-            placeholder="C. ONU"
+            placeholder="Cod. UN"
             />
 
             <label class="label" for="adr">ADR Totale</label>

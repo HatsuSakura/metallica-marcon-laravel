@@ -172,15 +172,18 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
         <li>
           <Link @click="closeDrawer" :href="route('map.site.index')">Map View</Link>
         </li>
+<!--
         <li>
           <Link @click="closeDrawer" :href="route('driver.order.index')">Dashboard Autista - Ordini [DEBUG]</Link>
         </li>
         <li>
           <Link @click="closeDrawer" :href="route('driver.journey.index')">Dashboard Autista - Viaggi</Link>
         </li>
+   
         <li>
           <Link @click="closeDrawer" :href="route('warehouse-manager.orders.index')">Dashboard Ordini Capo Magazziniere</Link>
         </li>
+-->
         
         <li>
           <details close>
@@ -201,17 +204,19 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
               <li>
                 <Link @click="closeDrawer" :href="route('relator.customer.index')">Clienti</Link>
               </li>
-              <details close>
-              <summary>Materiali e Ricette</summary>
-              <ul>
-                <li>
-                  <Link @click="closeDrawer" :href="route('catalog-items.index')">Materiali/Componenti</Link>
-                </li>
-                <li>
-                  <Link @click="closeDrawer" :href="route('recipes.index')">Ricette</Link>
-                </li>
-              </ul>
-              </details>
+              <li>
+                <details close>
+                  <summary>Materiali e Ricette</summary>
+                  <ul>
+                    <li>
+                      <Link @click="closeDrawer" :href="route('catalog-items.index')">Materiali/Componenti</Link>
+                    </li>
+                    <li>
+                      <Link @click="closeDrawer" :href="route('recipes.index')">Ricette</Link>
+                    </li>
+                  </ul>
+                </details>
+              </li>
             </ul>
           </details>
         </li>

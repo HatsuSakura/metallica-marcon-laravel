@@ -1,6 +1,9 @@
 <template>
+    <DashboardHeader>
+        Dashboard Manager
+    </DashboardHeader>
+
     <div>
-        <h1>Dahboard WAREHOUSE</h1>
         <Link 
             :href="route('warehouse-manager.orders.index')"
             class="btn btn-primary"
@@ -11,6 +14,7 @@
 </template>
 
 <script setup>
+import DashboardHeader from '@/Components/UI/HeaderForDashboard.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
 </script>
