@@ -66,7 +66,7 @@ class API_DriverJourneyUpdateController extends Controller
 
         // Check if full data is requested
         if ($request->query('full', false)) {
-            $journey->load(['owner', 'journeys', 'timetable', 'internal_contacts']);
+            $journey->load(['customer', 'journeys', 'timetable', 'internal_contacts']);
         }
     
         return response()->json(['message' => 'Journey saved successfully.', 'journey' => $journey], 200);

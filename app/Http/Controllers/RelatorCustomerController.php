@@ -58,14 +58,10 @@ class RelatorCustomerController extends Controller
         $base = Customer::query()
             ->alphabetic()
             ->withCount('sites')
+            ->with(['sites' => fn($q) => $q->select('id','customer_id','denominazione','is_main')]) // << minimal
             ->withCount([
-                // Adatta la condizione agli "stati aperti" reali del tuo ciclo di vita
-                // Esempio 1: "aperto" = nessuna chiusura registrata
                 'orders as open_orders_count' => fn($q) =>
                     $q->whereNot('state', OrdersState::STATE_CLOSED->value),
-                // Esempio 2 (alternativo): "aperti" per stati specifici
-                // 'orders as open_orders_count' => fn($q) =>
-                //     $q->whereIn('state', ['creato','pianificato','eseguito']),
                 'orders as total_orders_count',
             ])
             ->filter($filters);
@@ -91,7 +87,7 @@ class RelatorCustomerController extends Controller
             'Relator/Customer/Show',
             //['customer' => $customer->load('sites')],
             [
-                'customer' => $customer->load('sites', 'sites.owner', 'sites.areas', 'sites.internalContacts', 'sites.orders', 'sites.withdraws', 'sites.timetable'),
+                'customer' => $customer->load('sites', 'sites.customer', 'sites.areas', 'sites.internalContacts', 'sites.orders', 'sites.withdraws', 'sites.timetable'),
                 'areas' => $areas,
             ],
         );

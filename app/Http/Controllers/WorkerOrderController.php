@@ -153,7 +153,7 @@ class WorkerOrderController extends Controller
         // carica tutto ciò che serve, incluse le EXPLOSIONS come albero
         $order->load([
             'journey','journey.vehicle','journey.trailer','journey.driver',
-            'site.owner','site.internalContacts','site.timetable',
+            'site.customer','site.internalContacts','site.timetable',
             'items' => function ($q) {
                 $q->with([
                     'holder','cerCode','warehouse','images',
@@ -166,7 +166,7 @@ class WorkerOrderController extends Controller
         ]);
         $order_items = $order->items()->get();
         $order_holders = $order->holders()->get();
-        $site = $order->site()->with('owner')->with('internalContacts')->with('timetable')->first();
+        $site = $order->site()->with('customer')->with('internalContacts')->with('timetable')->first();
         $vehicles = Vehicle::all();
         $trailers = Trailer::all();
         $holders = Holder::all();

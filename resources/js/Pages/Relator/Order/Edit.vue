@@ -46,7 +46,7 @@
               </div>
 
               <div class="flex items-center ">
-                <span class="font-medium">Commerciale: &nbsp;</span> {{ currentSite.owner.seller.name}}
+                <span class="font-medium">Commerciale: &nbsp;</span> {{ currentSite.customer.seller.name}}
               </div>
 
               <div class="flex items-center ">
@@ -74,10 +74,10 @@
                     Produttore
                   </div>
                   <div>
-                    {{ currentSite.owner.ragione_sociale }}
+                    {{ currentSite.customer.ragione_sociale }}
                   </div>
                   <div>
-                    {{ currentSite.owner.indirizzo_legale }}
+                    {{ currentSite.customer.indirizzo_legale }}
                   </div>
               </div>
             </div>

@@ -28,10 +28,6 @@
   </div>
 </dialog>
 
-
-
-
-
     <input 
         type="radio"
         :name="calculatedName"
@@ -69,9 +65,11 @@
                 Riepilogo sede {{ props.site.denominazione }}
             </div>
             <div class="navbar-end space-x-2">
-                <Link @click="selectSite(props.site)" :href="route('relator.order.create')"
-                    class="btn btn-circle btn-primary">
-                <font-awesome-icon :icon="['fas', 'plus']" class="h-5 w-5" stroke="currentColor" />
+                <Link 
+                    :href="route('relator.order.create', { site: props.site.id })"
+                    class="btn btn-circle btn-primary"
+                >
+                    <font-awesome-icon :icon="['fas', 'plus']" class="h-5 w-5" stroke="currentColor" />
                 </Link>
 
                 <button class="btn btn-circle btn-secondary" @click="openCreateWithdrawModal(props.site)">
@@ -259,7 +257,7 @@ import { useStore } from 'vuex';
 import EmptyState from '@/Components/UI/EmptyState.vue';
 import EditableTimetable from './EditableTimetable.vue';
 import SimpleMapWithMarker from '@/Pages/Map/Components/SimpleMapWithMarker.vue';
-import Create from '../../Withdraw/Create.vue';
+//import Create from '../../Withdraw/Create.vue';
 import StoricoRitiri from './StoricoRitiri.vue';
 import OrdiniInCorso from './OrdiniInCorso.vue';
 import SiteBooleanParameter from './SiteBooleanParameter.vue';

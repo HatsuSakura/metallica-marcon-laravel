@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use Log;
+use App\Models\Site;
 use App\Models\User;
+use App\Models\Order;
 use App\Models\Holder;
 use App\Enums\UserRole;
 use App\Models\CerCode;
 use App\Models\Trailer;
 use App\Models\Vehicle;
-use App\Models\Order;
-use Illuminate\Http\Request;
-use App\Enums\OrdersState;
 use App\Models\Warehouse;
+use App\Enums\OrdersState;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Log;
 
 class RelatorOrderController extends Controller
 {
@@ -45,10 +46,28 @@ class RelatorOrderController extends Controller
 
 
         /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+        * Show the form for creating a new resource.
+        */
+    public function create(Request $request)
     {
+        // 1) Recupera il site_id dalla query (?site=123)
+        $siteId = $request->integer('site');
+
+        if (!$siteId) {
+            // Backward-compat: se proprio vuoi, puoi leggere da sessione/vecchio store qui
+            // $siteId = session('current_site_id'); // opzionale
+        }
+
+        if (!$siteId) {
+            return back()->with('error', 'Seleziona prima una sede (site) per creare un ordine.');
+        } 
+        
+        // 2) Carica il Site con le relazioni utili
+        $site = Site::with(['customer','timetable','internalContacts'])->find($siteId);
+        if (!$site) {
+            return back()->with('error', 'La sede selezionata non esiste.');
+        }
+
         Gate::authorize('create', Order::class);
 
         $vehicles = Vehicle::all();
@@ -59,6 +78,8 @@ class RelatorOrderController extends Controller
         $warehouses = Warehouse::all();
 
         return inertia('Relator/Order/Create', [
+            'site'     => $site,                // la sede selezionata
+            'customer' => $site->customer,      // comodo in FE
             'vehicles' => $vehicles,
             'trailers' => $trailers,
             'holders' => $holders,
@@ -160,7 +181,7 @@ class RelatorOrderController extends Controller
 
         $order_items = $order->items()->get();
         $order_holders = $order->holders()->get();
-        $site = $order->site()->with('owner')->with('internalContacts')->with('timetable')->first();
+        $site = $order->site()->with('customer')->with('internalContacts')->with('timetable')->first();
         $vehicles = Vehicle::all();
         $trailers = Trailer::all();
         $holders = Holder::all();

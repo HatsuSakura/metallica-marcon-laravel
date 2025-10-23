@@ -44,7 +44,7 @@ class Customer extends Model
     }
 
     public function mainSite(): HasOne{
-        return $this->hasOne(Site::class, 'customer_id')->where('denominazione', 'Principale');
+        return $this->hasOne(Site::class, 'customer_id') ->where('is_main', true); 
     }
 
     public function scopeAlphabetic(Builder $query): Builder{

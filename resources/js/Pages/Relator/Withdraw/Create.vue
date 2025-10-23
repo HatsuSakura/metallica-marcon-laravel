@@ -130,10 +130,10 @@
                       Produttore
                     </div>
                     <div>
-                      {{ currentSite.owner.ragioneSociale }}
+                      {{ currentSite.customer.ragioneSociale }}
                     </div>
                     <div>
-                      {{ currentSite.owner.indirizzoLegale }}
+                      {{ currentSite.customer.indirizzoLegale }}
                     </div>
                 </div>
               </div>

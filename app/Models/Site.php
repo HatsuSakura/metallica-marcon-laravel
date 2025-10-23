@@ -72,15 +72,15 @@ class Site extends Model
                     return $query;
                 }
 
-                // Apply `occasionale` or `continuativo` filters on the `owner` relationship
+                // Apply `occasionale` or `continuativo` filters on the `customer` relationship
                 if ($filters['occasionale'] && !$filters['continuativo']) {
-                    return $query->whereHas('owner', function ($q) {
+                    return $query->whereHas('customer', function ($q) {
                         $q->where('customer_occasionale', '1');
                     });
                 }
 
                 if (!$filters['occasionale'] && $filters['continuativo']) {
-                    return $query->whereHas('owner', function ($q) {
+                    return $query->whereHas('customer', function ($q) {
                         $q->where('customer_occasionale', '0');
                     });
                 }
@@ -95,14 +95,14 @@ class Site extends Model
         )
         ->when(
             $filters['chiave'] ?? false,
-            fn ($query, $value) => $query->whereHas('owner', function ($q) use ($value) {
+            fn ($query, $value) => $query->whereHas('customer', function ($q) use ($value) {
                 $q->where('ragione_sociale', 'LIKE', "%{$value}%");
             })
         )
         /*
         ->when(
             $filters['chiave'] ?? false,
-            fn ($query, $value) => $query->whereHas('owner', function ($q) use ($value) {
+            fn ($query, $value) => $query->whereHas('customer', function ($q) use ($value) {
                 $q->whereRaw(
                     "MATCH(
                         ragione_sociale, partita_iva, codice_fiscale, indirizzo_legale, email_commerciale, email_amministrativa, pec
@@ -116,7 +116,7 @@ class Site extends Model
         ;
     }
     
-    public function owner(): BelongsTo{
+    public function customer(): BelongsTo{
         return $this->belongsTo(Customer::class, 'customer_id')->with('seller');
     }
 

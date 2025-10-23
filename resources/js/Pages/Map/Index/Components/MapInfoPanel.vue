@@ -2,8 +2,8 @@
     <div class="w-full pb-16">
         <div v-if="currentSite">
             <div class="text-lg"> 
-                {{ currentSite.owner.ragioneSociale }} - {{ currentSite.denominazione }} <br/>
-                <CustomerAddress :customer="currentSite.owner"   />
+                {{ currentSite.customer.ragioneSociale }} - {{ currentSite.denominazione }} <br/>
+                <CustomerAddress :customer="currentSite.customer"   />
             </div>
             <EditableTimetable :site="currentSite" class="mt-4"/>
             {{ currentSite }}

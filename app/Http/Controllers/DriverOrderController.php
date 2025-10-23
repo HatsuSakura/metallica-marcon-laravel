@@ -160,7 +160,7 @@ class DriverOrderController extends Controller
 
         $order_items = $order->items()->get();
         $order_holders = $order->holders()->get();
-        $site = $order->site()->with('owner')->with('internalContacts')->with('timetable')->first();
+        $site = $order->site()->with('customer')->with('internalContacts')->with('timetable')->first();
         $vehicles = Vehicle::all();
         $trailers = Trailer::all();
         $holders = Holder::all();

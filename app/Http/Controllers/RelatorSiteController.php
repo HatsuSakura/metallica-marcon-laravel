@@ -38,7 +38,7 @@ class RelatorSiteController extends Controller
     public function show(Site $site){
         return inertia(
             'Relator/Show',
-            ['site' => $site->load('orders', 'owner')],
+            ['site' => $site->load('orders', 'customer')],
         );
     }
 

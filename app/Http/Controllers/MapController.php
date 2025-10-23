@@ -27,7 +27,7 @@ class MapController extends Controller
             [
                 'filters' => $filters,
                 'sites' => Site::query()
-                    ->with(['owner', 'owner.seller', 'timetable']) 
+                    ->with(['customer', 'customer.seller', 'timetable']) 
                     ->filter($filters)
                     ->get(),
             ]);

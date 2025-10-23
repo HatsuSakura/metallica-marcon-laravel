@@ -25,7 +25,7 @@ class API_RelatorSiteBooleanUpdateController extends Controller
 
         // Check if full data is requested
         if ($request->query('full', false)) {
-            $site->load(['owner', 'orders', 'timetable', 'internal_contacts']);
+            $site->load(['customer', 'orders', 'timetable', 'internal_contacts']);
         }
     
         return response()->json(['message' => 'Site saved successfully.', 'site' => $site], 200);

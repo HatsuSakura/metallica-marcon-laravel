@@ -175,21 +175,21 @@
 const store = useStore();
 
   const form = useForm({
-    customerOccasionale: Boolean(props.customer.customerOccasionale),
-    ragioneSociale: props.customer.ragioneSociale,
-    partitaIva: props.customer.partitaIva,
-    codiceFiscale: props.customer.codiceFiscale,
-    indirizzoLegale: props.customer.indirizzoLegale,
+    customerOccasionale: Boolean(props.customer.customer_occasionale),
+    ragioneSociale: props.customer.ragione_sociale,
+    partitaIva: props.customer.partita_iva,
+    codiceFiscale: props.customer.codice_fiscale,
+    indirizzoLegale: props.customer.indirizzo_legale,
     lat: props.customer.main_site.lat,
     lng: props.customer.main_site.lng,
     seller_id: props.customer.seller_id,
-    codiceSdi: props.customer.codiceSdi,
-    jobType: props.customer.jobType,
-    emailCommerciale: props.customer.emailCommerciale,
-    emailAmministrativa: props.customer.emailAmministrativa,
+    codiceSdi: props.customer.codice_sdi,
+    jobType: props.customer.job_type,
+    emailCommerciale: props.customer.email_commerciale,
+    emailAmministrativa: props.customer.email_amministrativa,
     pec: props.customer.pec,
-    responsabileSmaltimenti: props.customer.responsabileSmaltimenti,
-    telefonoPrincipale: props.customer.telefonoPrincipale,
+    responsabileSmaltimenti: props.customer.responsabile_smaltimenti,
+    telefonoPrincipale: props.customer.telefono_principale,
   })
 
 

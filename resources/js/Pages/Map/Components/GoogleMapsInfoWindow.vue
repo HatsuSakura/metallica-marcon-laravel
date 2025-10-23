@@ -7,7 +7,7 @@
     <div class="name flex justify-between space-x-4">
       <div class="text-lg flex items-center space-x-2">
         <font-awesome-icon :icon="['fas', 'address-card']" class="text-2xl"/>
-        <span>{{props.site.owner.ragione_sociale}}</span>
+        <span>{{props.site.customer.ragione_sociale}}</span>
       </div>
       <div class="action">
         <div class="tooltip tooltip-left" data-tip="Modifica Cliente">
@@ -62,7 +62,7 @@
       <div class="tooltip" data-tip="Commerciale">
         <div class="flex items-center justify-between space-x-2 ">
           <font-awesome-icon :icon="['fas', 'briefcase']" class="text-2xl"/>
-          <span>{{props.site.owner.seller.name}}</span>
+          <span>{{props.site.customer.seller.name}}</span>
         </div>
       </div>
 

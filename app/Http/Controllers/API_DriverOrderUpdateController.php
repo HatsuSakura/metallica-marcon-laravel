@@ -63,7 +63,7 @@ class API_DriverOrderUpdateController extends Controller
 
         // Check if full data is requested
         if ($request->query('full', false)) {
-            $order->load(['owner', 'orders', 'timetable', 'internal_contacts']);
+            $order->load(['customer', 'orders', 'timetable', 'internal_contacts']);
         }
     
         return response()->json(['message' => 'Order saved successfully.', 'order' => $order], 200);

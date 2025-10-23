@@ -43,7 +43,7 @@
     id: props.order.site.id,
     position: { lat: props.order.site.lat, lng: props.order.site.lng },
     content: pinSvg.value,
-    title: props.order.site.owner ? `${props.order.site.owner.ragione_sociale} - ${props.order.site.denominazione}` : props.order.site.denominazione,
+    title: props.order.site.customer ? `${props.order.site.customer.ragione_sociale} - ${props.order.site.denominazione}` : props.order.site.denominazione,
     gmpClickable: true, // Ensures the marker is clickable
   }));
   

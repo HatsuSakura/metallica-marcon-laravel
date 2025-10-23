@@ -1,5 +1,5 @@
 <template>
-    <section v-if="currentSite" class="mb-8"> <!-- SERVE per evitare errori in apertura se VUEX STORE non è in sync-->
+    <section v-if="site" class="mb-8"> <!-- SERVE per evitare errori in apertura se VUEX STORE non è in sync-->
       <form @submit.prevent="create">   
 
         <!-- Intestazione + Buttons to Open/Close All -->
@@ -45,7 +45,7 @@
               </div>
 
               <div class="flex items-center ">
-                <span class="font-medium">Commerciale: &nbsp;</span> {{ currentSite.owner.seller.name}}
+                <span class="font-medium">Commerciale: &nbsp;</span> {{ site.customer.seller.name}}
               </div>
 
               <div class="flex items-center ">
@@ -73,10 +73,10 @@
                     Produttore
                   </div>
                   <div>
-                    {{ currentSite.owner.ragione_sociale }}
+                    {{ site.customer.ragione_sociale }}
                   </div>
                   <div>
-                    {{ currentSite.owner.indirizzo_legale }}
+                    {{ site.customer.indirizzo_legale }}
                   </div>
               </div>
             </div>
@@ -84,7 +84,7 @@
             <div class="flex content-center">
               <div>
                 <div class="flex content-center pr-4">
-                  <div class="radial-progress" :style="{ '--value': currentSite.fattore_rischio_calcolato * 100, color: backgroundColor }" role="progressbar">{{ currentSite.fattore_rischio_calcolato * 100 }}%</div>
+                  <div class="radial-progress" :style="{ '--value': site.fattore_rischio_calcolato * 100, color: backgroundColor }" role="progressbar">{{ site.fattore_rischio_calcolato * 100 }}%</div>
                   <font-awesome-icon :icon="['fas', buildingFaIcon]" class="text-4xl p-4" :style="{ color: backgroundColor }" />
                 </div>
                 
@@ -94,20 +94,20 @@
                     Sede di carico
                   </div>
                   <div>
-                    {{ currentSite.denominazione }}
+                    {{ site.denominazione }}
                   </div>
                   <div>
-                    {{ currentSite.indirizzo }}
+                    {{ site.indirizzo }}
                   </div>
               </div>
             </div>
 
             <div class="flex flex-col items-center justify-evenly">
               <div class="flex font-medium">
-                Consulente ADR&nbsp;<span v-if="currentSite.has_adr_consultant">PRESENTE</span><span v-else>ASSENTE</span>
+                Consulente ADR&nbsp;<span v-if="site.has_adr_consultant">PRESENTE</span><span v-else>ASSENTE</span>
               </div>
               <div class="flex">
-                <font-awesome-icon :icon="['fas', 'vial-circle-check']" class="text-4xl" :class="currentSite.has_adr_consultant? 'text-success' : 'text-error'" />
+                <font-awesome-icon :icon="['fas', 'vial-circle-check']" class="text-4xl" :class="site.has_adr_consultant? 'text-success' : 'text-error'" />
               </div>
             </div>
 
@@ -123,7 +123,7 @@
           >
             <div>
                 <div class="font-medium">Mezzi di sollevamento:</div>
-                <SiteMezziDiSollevamento :site="currentSite" />
+                <SiteMezziDiSollevamento :site="site" />
             </div>
 
               <hr class="my-4"/>
@@ -131,7 +131,7 @@
               <div class="mt-4">
                 <div class="font-medium">Referenti Interni:</div>
                 <DataTable
-                  :data="currentSite.internal_contacts"
+                  :data="site.internal_contacts"
                   :columns="columns_internal_contacts"
                   data-paging="false"
                   data-filter="false"
@@ -287,6 +287,8 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
  
     
     const props = defineProps({
+      site: Object,
+      customer: Object,
       vehicles: Array,
       trailers: Array,
       holders: Array,
@@ -305,7 +307,8 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
     }
 
     const store = useStore();
-    const currentSite = computed(() => store.state.currentSite || null );
+    const site = props.site;
+    const customer = props.customer;
 
     const currentDate = computed(
       () => new Date()
@@ -321,9 +324,9 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
     // Declare the ref
     const orariApertura = ref('');
 
-    // Watch for changes in currentSite and update orariApertura dynamically
+    // Watch for changes in site and update orariApertura dynamically
     watchEffect(() => {
-      if (currentSite.value.timetable?.hours_array) {
+      if (site.timetable?.hours_array) {
         orariApertura.value = 'Orari compilati automaticamente';
       } else {
         orariApertura.value = 'ATTENZIONE: non ci sono orari salvati per questa sede!';
@@ -345,9 +348,9 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
       requested_at: currentDate.value,
       expected_withdraw_dt: null,
       logistic_id: user ? user.value.id : null, // Fallback to null if user is not defined
-      has_adr_consultant: currentSite.value?.has_adr_consultant ?? '',
-      customer_id: currentSite.customer_id,
-      site_id: currentSite.id,
+      has_adr_consultant: site.has_adr_consultant ?? '',
+      customer_id: site.customer_id,
+      site_id: site.id,
       user_id: user ? user.id : null, // Fallback to null if user is not defined
       code: null,
       items: [], // Start with an empty items array
@@ -472,9 +475,9 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
       if(form.expected_withdraw_dt){
         console.log('data inserita', form.expected_withdraw_dt)
         console.log('giorno della settimana', form.expected_withdraw_dt.getDay())
-        console.log('array Orari', currentSite.value.timetable.hours_array)
+        console.log('array Orari', site.timetable.hours_array)
     
-        const daySchedule = JSON.parse(currentSite.value.timetable.hours_array).find(
+        const daySchedule = JSON.parse(site.timetable.hours_array).find(
             (item) => item.position === form.expected_withdraw_dt.getDay()
         );
           if (daySchedule) {
@@ -532,8 +535,8 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
         const backgroundColor = ref(null);
         const borderColor = ref(null);
     
-    // Watch for changes in currentSite and update form fields accordingly
-    watch(currentSite, (newSite) => {
+    // Watch for changes in site and update form fields accordingly
+    watch(site, (newSite) => {
       if (newSite) {
         form.customer_id = newSite.customer_id;
         form.site_id = newSite.id;
