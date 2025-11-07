@@ -49,6 +49,7 @@
                 v-for="(site, index) in reactiveCustomer.sites" 
                 :site="site"
                 :areas="props.areas"
+                :orders="(orders_by_site[site.id] ?? [])"
                 @siteUpdated="updateSite"
                 :counter="index" 
                 :key="site.id"
@@ -73,6 +74,7 @@ import TabSite from './Components/TabSite.vue';
 const props = defineProps({
     customer:Object,
     areas: Array,
+    orders_by_site: { type: Object, default: () => ({}) }
 })
 
 const reactiveCustomer = reactive(props.customer);

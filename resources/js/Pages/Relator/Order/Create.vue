@@ -198,17 +198,16 @@
             :initialOpen=true
             @register="registerSection"
           >
-          <ItemRow
-                v-for="(item, index) in form.items"
-                :key="item.id"
-                :item="item"
-                :index="index"
-                :cerList="cerList"
-                :holders="holders"
-                :warehouses="warehouses"
-                @update="updateItem(index, $event)"
-                @remove="removeItem(index)"
-              />
+            <ItemRow
+              v-for="(item, index) in form.items"
+              :key="item.id ?? index"
+              v-model:item="form.items[index]"
+              :index="index"
+              :cerList="cerList"
+              :holders="holders"
+              :warehouses="warehouses"
+              @remove="removeItem(index)"
+            />
               <button type="button" @click="addItem" class="btn btn-primary btn-sm">
                 <font-awesome-icon :icon="['fas', 'diagram-successor']" class="text-2xl"/>
                 <font-awesome-icon :icon="['fas', 'plus']" class="text-2xl"/>
@@ -222,10 +221,11 @@
           <!-- SEZIONE 5 HOLDERS-->
           <AccordionRow
             id="5"
-            title="Quantitativi Richiesti"
+            title="Contenitori da Ritirare/Consegnare"
             :initialOpen=true
             @register="registerSection"
           >
+<!--
           <div class="flex flex-row items-center gap-2 mb-2">
             <div class="flex">
               <button type="button" @click="calculateHolders" class="btn btn-primary btn-circle">
@@ -239,13 +239,14 @@
               Calcola quantitativi di base
             </div>
           </div>
-
+-->
             <HolderRow
               v-for="(holder, index) in form.holders"
-              :key="holder.id"
+              :key="holder.holder_id ?? index"
+              :index="index"
               :holder="holder"
               :holders="holders"
-              @update="updateHolder(index, $event)"
+              @change-holder-id="onChangeHolderId"
               @remove="removeHolder(index)"
             />
             
@@ -358,119 +359,141 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
     })
     
     // form ITEMS
-    const addItem = () => {
-      form.items.push({
-        //id: uuid.v4(),
-        cer_code_id: '', 
-        holder_id: '', 
-        holder_quantity: '',
-        is_bulk: false,
-        description: '', 
-        weight_declared: '',
-        warehouse_id: '',
-        adr: null,
-        adr_hp: null,
-        adr_onu_code: null,
-        adr_totale: false,
-        adr_esenzione_totale: false,
-        adr_esenzione_parziale: false
-      });
-    };
-    
-    const updateItem = (index, item) => {
-      form.items[index] = item
-    };
+const addItem = () => {
+  form.items.push({
+    cer_code_id: null,
+    is_bulk: false,
+    holder_id: null,
+    holder_quantity: 1,
 
-    const removeItem = (index) => {
-      form.items.splice(index, 1);
-      updateAdrFieldsVisibility();
-    };
+    // dimensioni custom (solo per holder is_custom)
+    custom_l_cm: null,
+    custom_w_cm: null,
+    custom_h_cm: null,
 
-    const holderCounter = ref([]); // Use a reactive array to persist data
+    description: '',
+    weight_declared: 0,
+    warehouse_id: null,
 
-    const calculateHolders = () => {
+    adr: false,
+    adr_hp: null,
+    adr_onu_code: null,
+    adr_totale: false,
+    adr_esenzione_totale: false,
+    adr_esenzione_parziale: false,
+  })
+}
+   
 
-      holderCounter.value = [] // svuota l'array
-
-      form.items.forEach((item) => {
-        if (item.holder_id && item.holder_quantity) {
-          console.log('dentro forEach per ITEMS')
-          const existingHolder = holderCounter.value.find(holder => Number(holder.holder_id) === Number(item.holder_id) );
-          console.log('existingHolder = ', existingHolder)
-          if (existingHolder) {
-            existingHolder.holder_piene = Number(existingHolder.holder_piene) + Number(item.holder_quantity);
-          } 
-          else {
-            countHolder(item.holder_id, item.holder_quantity);
-          }
-        }
-      });
-
-      // Algoritmo per rimuovere gli holders modificati o cancellati.
-      // Lo tolgo perchè non sa distinguere un holder aggiunto a mano da uno inserito autometicamente
-      // eventualmente verificare con la logistica la necessità
-      /*
-      form.holders.forEach((savedHolder) => {
-        const foundInCountHolder = holderCounter.value.find(holder => Number(holder.id) === Number(savedHolder.id) );
-        if (!foundInCountHolder) {
-          savedHolder.exists = 0
-          removeHolder(savedHolder)
-        }
-      })
-      */
-
-      holderCounter.value.forEach((countedHolder) => {
-        console.log(countedHolder)
-        const existingHolder = form.holders.find(holder => Number(holder.holder_id) === Number(countedHolder.holder_id) );
-        if (existingHolder) {
-          existingHolder.holder_piene = countedHolder.holder_piene;
-        }
-        else{
-          addHolder(countedHolder.holder_id, countedHolder.holder_piene, countedHolder.holder_vuote)
-        }
-      })
-    }
 
 // form HOLDERS
-    const countHolder = (id, piene, vuote) => {
-      holderCounter.value.push({ 
-        holder_id: id? Number(id) : '', 
-        holder_piene: piene? Number(piene) : '', 
-        holder_vuote: '', 
-        holder_totale: '',
-      });
-    }
 
-    const addHolder = (id, piene, vuote) => {
-      console.log('aggiungo holder', piene, vuote )
-      form.holders.push({ 
-        holder_id: id? Number(id) : '', 
-        holder_piene: piene? Number(piene) : '', 
-        holder_vuote: vuote? Number(vuote) : '', 
-        holder_totale: '',
-      });
-    };
-    
     const removeHolder = (index) => {
       form.holders.splice(index, 1);
     };
     
     // Watch the form.holders array for changes
+    // 1) Ricalcolo automatico: solo holder_piene, mai toccare holder_vuote
     watch(
-      () => form.holders, // Watching the holders array
-      (newHolders) => {
-        // Calculate holder_totale for each holder when holder_piene or holder_vuote changes
-        newHolders.forEach((holder) => {
-          console.log('dentro watch per HOLDERS', holder)
-          const piene = Number(holder.holder_piene) || 0; // Convert to number or use 0 if empty
-          const vuote = Number(holder.holder_vuote) || 0;
-          holder.holder_totale = piene + vuote; // Calculate holder_totale
-        });
+      () => form.items,
+      (items) => {
+        // conta per holder_id gli auto (dai items non sfusi)
+        const autoCounts = items.reduce((acc, it) => {
+          if (!it.is_bulk && it.holder_id && Number(it.holder_quantity) > 0) {
+            const id = Number(it.holder_id)
+            acc[id] = (acc[id] ?? 0) + Number(it.holder_quantity)
+          }
+          return acc
+        }, {})
+
+        const byId = new Map(form.holders.map(h => [Number(h.holder_id), h]))
+
+        // aggiorna/crea righe per ogni holder auto
+        Object.entries(autoCounts).forEach(([idStr, auto]) => {
+          const id = Number(idStr)
+          let row = byId.get(id)
+          if (!row) {
+            row = {
+              holder_id: id,
+              holder_piene: 0,
+              holder_vuote: 0,     // ± regolato dall’utente
+              holder_totale: 0,
+            }
+            form.holders.push(row)
+            byId.set(id, row)
+          }
+          row.holder_piene   = Number(auto)
+          row.holder_totale = Number(row.holder_piene) + Number(row.holder_vuote)
+        })
+
+        // per righe esistenti non più presenti come auto → azzera holder_piene ma non cancellare
+        form.holders.forEach(row => {
+          if (!autoCounts.hasOwnProperty(row.holder_id)) {
+            row.holder_piene = 0
+            row.holder_totale = Number(row.holder_piene) + Number(row.holder_vuote)
+          }
+        })
       },
-      { deep: true } // Ensure deep watching for nested properties
-    );
+      { deep: true, immediate: true }
+    )
+
+    // 2) Aggiunta manuale di una riga holder (niente duplicati)
+    function addHolder(id) {
+      const holderId = Number(id)
+      const existing = form.holders.find(h => Number(h.holder_id) === holderId)
+      if (existing) {
+        window.alert("Contenitore già presente: gestisci i totali con 'Vuoti richiesti' senza aggiungere altre righe.")
+        // opzionale: highlight
+        existing._highlight = true
+        setTimeout(() => { existing._highlight = false }, 1200)
+        return
+      }
+      form.holders.push({
+        holder_id: holderId,
+        holder_piene: 0,
+        holder_vuote: 0,
+        holder_totale: 0,
+      })
+    }
+
+    // 3) Quando nel child cambiano l’holder selezionato, blocca duplicati o accetta
+    function onChangeHolderId({ index, newId, oldId }) {
+      const newNum = Number(newId)
+
+      // se è già presente in un'altra riga
+      if (form.holders.some((h, i) => i !== index && Number(h.holder_id) === newNum)) {
+        window.alert("Contenitore già presente: gestisci i totali con 'Vuoti richiesti' senza aggiungere altre righe.")
+
+        // 🔸 reset della riga “sbagliata”
+        form.holders[index].holder_id = null     // resetta la select
+        form.holders[index]._highlight = true
+
+        // opzionale: feedback visivo temporaneo
+        setTimeout(() => { form.holders[index]._highlight = false }, 1200)
+        return
+      }
+
+      // ✅ caso valido
+      form.holders[index].holder_id = newNum
+    }
+
+
+    // 4) Ricalcolo totale quando cambiano vuoti o auto (senza manual_piene)
+    watch(
+      () => form.holders,
+      (rows) => {
+        rows.forEach(row => {
+          row.holder_vuote = Number(row.holder_vuote ?? 0)
+          row.holder_piene   = Number(row.holder_piene ?? 0)
+          row.holder_totale = row.holder_piene + row.holder_vuote
+        })
+      },
+      { deep: true }
+    )
+
+
+
   
-    
     const manageDate = (date) => {
       console.log('gestisco la data')
       if(form.expected_withdraw_dt){
@@ -574,8 +597,7 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
       form.is_urgent = form.is_urgent === true;
       form.post(route('relator.order.store'));
     }
-    
-    
+       
     
     
     </script>

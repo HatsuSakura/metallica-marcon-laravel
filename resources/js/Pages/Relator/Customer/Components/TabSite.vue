@@ -227,7 +227,7 @@
 
             <div class="col-span-4 md:col-span-4">
                 <OrdiniInCorso
-                    :orders = "props.site.orders"
+                    :orders = "props.orders"
                 />
             </div>
 
@@ -269,6 +269,7 @@ const props = defineProps({
     site: Object,
     counter: Number,
     areas: Array,
+    orders: Array,
 });
 
 const store = useStore();

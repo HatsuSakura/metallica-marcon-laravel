@@ -12,14 +12,12 @@
                 <font-awesome-icon :icon="['fas', 'pencil']" />
             </Link>
             
-            <Link
-                :href="route('relator.order.destroy', {order: order.id} )"
-                method="delete"
-                as="button"
+            <button
                 class="btn btn-error btn-circle btn-sm"
+                @click="destroyOrder(order.id)"
             >
                 <font-awesome-icon :icon="['fas', 'trash-can']" />
-            </Link>
+            </button>
         </li>
     </ul>
     <EmptyState v-else>Nessun ordine attivo per questo Cliente</EmptyState>
@@ -28,11 +26,20 @@
 <script setup>
 import dayjs from 'dayjs';
 import EmptyState from '@/Components/UI/EmptyState.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 
 
 const props = defineProps({
     orders: Array
 })
+
+function destroyOrder(orderId) {
+  router.delete(route('relator.order.destroy', { order: orderId }), {
+    preserveScroll: true,
+    onSuccess: () => {
+      router.reload({ only: ['orders'], preserveScroll: true })
+    },
+  })
+}
 
 </script>

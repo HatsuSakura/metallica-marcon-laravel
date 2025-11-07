@@ -327,12 +327,12 @@ class WorkerOrderController extends Controller
         Gate::authorize('delete', $order);
         $order->deleteOrFail();
 
-        return redirect()->back()->with('success', 'Ritiro cancellato con successo!');
+        return redirect()->back()->with('success', 'Ordine cancellato con successo!');
     }
 
     public function restore(Order $order){
         $order->restore();
-        return redirect()->back()->with('success', 'Ritiro ripristinato con successo!');
+        return redirect()->back()->with('success', 'Ordine ripristinato con successo!');
     }
 
 

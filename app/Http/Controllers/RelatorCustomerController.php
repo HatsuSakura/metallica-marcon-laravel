@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Area;
 use App\Models\Site;
 use App\Models\User;
+use App\Models\Order;
 use App\Enums\UserRole;
 use App\Models\Customer;
 use App\Enums\OrdersState;
@@ -81,14 +82,40 @@ class RelatorCustomerController extends Controller
     }
 
     public function show(Customer $customer){
+        
         $areas = Area::all();
+        
+        // Carichiamo tutto ciò che ti serve sul customer, ma NON sites.orders
+        $customer->load(
+                    'sites',
+                    'sites.customer',
+                    'sites.areas',
+                    'sites.internalContacts',
+                    //'sites.orders', // Caricato su-demand nella tab degli ordini
+                    'sites.withdraws',
+                    'sites.timetable'
+        );
+
+        // Precalcolo dei site_id del customer (1 query)
+        $siteIds = $customer->sites->pluck('id');
 
         return inertia(
             'Relator/Customer/Show',
-            //['customer' => $customer->load('sites')],
             [
-                'customer' => $customer->load('sites', 'sites.customer', 'sites.areas', 'sites.internalContacts', 'sites.orders', 'sites.withdraws', 'sites.timetable'),
+                'customer' => $customer,
                 'areas' => $areas,
+
+                // ORDINI del customer = ordini appartenenti a QUALSIASI suo site
+                // Closure = lazy prop valutata solo quando richiesta con only:['orders']
+                'orders_by_site' => fn () => 
+                    Order::query()
+                        ->whereIn('site_id', $customer->sites()->pluck('id'))
+                        ->withoutTrashed()
+                        ->latest()
+                        ->get()
+                        ->groupBy('site_id')            // Collection { site_id => [orders...] }
+                        ->map(fn($c) => $c->values())   // assicura array “puliti”
+                        ->toArray(),
             ],
         );
     }
