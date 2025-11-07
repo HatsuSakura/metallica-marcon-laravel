@@ -96,6 +96,8 @@ class RelatorOrderController extends Controller
     public function store(Request $request)
     {
 
+        $CUSTOM_HOLDER_ID = 1;
+
         $validatedData = $request->validate([
             'is_urgent' => 'boolean',
             'requested_at' => 'required|date',
@@ -116,6 +118,26 @@ class RelatorOrderController extends Controller
                 'exclude_if:items.*.is_bulk,true',
             ],
             'items.*.holder_id' => 'nullable|integer|exists:holders,id|prohibited_if:is_bulk,true',
+
+            'items.*.custom_l_cm' => [
+                'nullable','numeric','gt:0',
+                "required_if:items.*.holder_id,{$CUSTOM_HOLDER_ID}",
+                "exclude_unless:items.*.holder_id,{$CUSTOM_HOLDER_ID}",
+                'prohibited_if:items.*.is_bulk,1',
+            ],
+            'items.*.custom_w_cm' => [
+                'nullable','numeric','gt:0',
+                "required_if:items.*.holder_id,{$CUSTOM_HOLDER_ID}",
+                "exclude_unless:items.*.holder_id,{$CUSTOM_HOLDER_ID}",
+                'prohibited_if:items.*.is_bulk,1',
+            ],
+            'items.*.custom_h_cm' => [
+                'nullable','numeric','gt:0',
+                "required_if:items.*.holder_id,{$CUSTOM_HOLDER_ID}",
+                "exclude_unless:items.*.holder_id,{$CUSTOM_HOLDER_ID}",
+                'prohibited_if:items.*.is_bulk,1',
+            ],
+
             'items.*.description' => 'nullable|string',
             'items.*.weight_declared' => 'required|numeric',
             'items.*.weight_gross' => 'nullable|numeric',

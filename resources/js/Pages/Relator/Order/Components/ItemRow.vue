@@ -49,16 +49,38 @@
             />
         
             <!-- Holder Select/Option -->
-            <select v-model="item.holder_id" 
-              id="holder" 
-              class="select select-bordered"
-              :disabled="item.is_bulk"
-            >
-                <option disabled value="">Seleziona un contenitore</option>
-                <option v-for="holder in holders" :key="holder.id" :value="holder.id">
-                {{ holder.name }}
-                </option>
-            </select>
+            <div>
+              <select v-model="item.holder_id" 
+                id="holder" 
+                class="select select-bordered"
+                :disabled="item.is_bulk"
+              >
+                  <option disabled value="">Seleziona un contenitore</option>
+                  <option v-for="holder in holders" :key="holder.id" :value="holder.id">
+                  {{ holder.name }}
+                  </option>
+              </select>
+
+              <div v-if="!item.is_bulk && customSelectedHolder" class="flex gap-2 items-end">
+                <div class="form-control">
+                  <label class="label"><span class="label-text">Largh. (cm)</span></label>
+                  <input v-model.number="item.custom_l_cm" type="number" min="0.01" step="0.01" class="input input-bordered w-28" />
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">Prof. (cm)</span></label>
+                  <input v-model.number="item.custom_w_cm" type="number" min="0.01" step="0.01" class="input input-bordered w-28" />
+                </div>
+                <div class="form-control">
+                  <label class="label"><span class="label-text">Altezza (cm)</span></label>
+                  <input v-model.number="item.custom_h_cm" type="number" min="0.01" step="0.01" class="input input-bordered w-28" />
+                </div>
+              </div>
+
+
+            </div>
+
+
+
         
             <!-- Descrizione TEXT Input -->
             <input 
@@ -164,7 +186,7 @@
   </template>
   
   <script setup>
-  import { ref, watch } from "vue";
+  import { ref, watch, computed } from "vue";
   import vSelect from "vue-select";
   import "vue-select/dist/vue-select.css";
   
@@ -183,12 +205,23 @@
   
   const emit = defineEmits(['remove']);
 
+  const customSelectedHolder = computed(() => {
+    return props.holders.find(h => h.id === props.item.holder_id)?.is_custom
+  })
+
+  watch(() => props.item.holder_id, (newVal) => {
+    if (!customSelectedHolder.value) {
+      props.item.custom_l_cm = props.item.custom_w_cm = props.item.custom_h_cm = null;
+    }
+  });
   
   // Quando cambia il flag sfuso, normalizzo i campi holder
   watch(() => props.item.is_bulk, (isBulk) => {
     if (isBulk) {
       props.item.holder_id = null;
       props.item.holder_quantity = 0;
+      // nel dubbio piallo anche i custom dimensions
+      props.item.custom_l_cm = props.item.custom_w_cm = props.item.custom_h_cm = null;
     } else {
       // quando esco da sfuso, propongo default sensati
       if (!props.item.holder_quantity || props.item.holder_quantity < 1) {
