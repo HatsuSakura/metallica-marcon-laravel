@@ -25,7 +25,19 @@
                 </template>
                 </v-select>
             </div>
-        
+
+
+            <!-- Toggle SFUSO -->
+            <div class="flex items-center">
+                <label class="label" for="sfuso">Sfuso</label>
+                <input 
+                  id="sfuso" 
+                  v-model="item.is_bulk" 
+                  type="checkbox" 
+                  class="toggle"
+                />
+            </div>
+       
             <!-- Quantity Number Input -->
             <input 
                 v-model.number="item.holder_quantity" 
@@ -33,10 +45,15 @@
                 class="input input-bordered w-16"
                 placeholder="Q.tà"
                 min="1"
+                :disabled="item.is_bulk"
             />
         
             <!-- Holder Select/Option -->
-            <select v-model="item.holder_id" id="holder" class="select select-bordered">
+            <select v-model="item.holder_id" 
+              id="holder" 
+              class="select select-bordered"
+              :disabled="item.is_bulk"
+            >
                 <option disabled value="">Seleziona un contenitore</option>
                 <option v-for="holder in holders" :key="holder.id" :value="holder.id">
                 {{ holder.name }}
@@ -133,9 +150,16 @@
             class="toggle" 
             @click="checkAdrEsenzioni('adr_esenzione_parziale')" 
             />
+        
+          </div>
 
 
-        </div>
+    <!-- Hint quando sfuso -->
+    <div v-if="item.is_bulk" class="text-xs opacity-80 ml-auto">
+      Modalità <strong>sfuso</strong> attiva: nessun contenitore attivo e quantità contenitori impostata a 0.
+    </div>
+
+
     </div>
   </template>
   
@@ -151,9 +175,29 @@
     holders: Array,
     warehouses: Array,
   });
+
+  // Default robusto per il nuovo campo
+  if (props.item.is_bulk === undefined) {
+    props.item.is_bulk = false;
+  }
   
   const emit = defineEmits(['remove']);
+
   
+  // Quando cambia il flag sfuso, normalizzo i campi holder
+  watch(() => props.item.is_bulk, (isBulk) => {
+    if (isBulk) {
+      props.item.holder_id = null;
+      props.item.holder_quantity = 0;
+    } else {
+      // quando esco da sfuso, propongo default sensati
+      if (!props.item.holder_quantity || props.item.holder_quantity < 1) {
+        props.item.holder_quantity = 1;
+      }
+    }
+  }, { immediate: true });
+
+
   const is_selected_cer_dangerous = ref(false);
 
   const getCerStyle = (cerId) => {

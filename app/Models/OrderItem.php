@@ -21,6 +21,7 @@ class OrderItem extends Model
         'cer_code_id',
         'holder_id',
         'holder_quantity',
+        'is_bulk',
         'description',
         'weight_declared',
         'weight_gross',
@@ -70,6 +71,7 @@ class OrderItem extends Model
 
     protected $casts = [
         'has_exploded_children' => 'boolean',
+        'is_bulk' => 'boolean',
     ];
 
     public function getWarehouseDownloadAttribute()

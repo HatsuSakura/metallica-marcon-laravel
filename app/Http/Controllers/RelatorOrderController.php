@@ -14,6 +14,7 @@ use App\Models\Vehicle;
 use App\Models\Warehouse;
 use App\Enums\OrdersState;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
@@ -105,8 +106,16 @@ class RelatorOrderController extends Controller
             // 'journey_id' => ALLA CREAZIONE, al momento soprattutto, non viene passato e prende il default NULL
             'items' => 'nullable|array', // Make items optional
             'items.*.cer_code_id' => 'required|exists:cer_codes,id',
-            'items.*.holder_id' => 'required|exists:holders,id',
-            'items.*.holder_quantity' => 'required|integer|min:1',
+            'items.*.is_bulk' => 'required|boolean',
+            // se sfuso, ignoriamo il campo; se NON sfuso, è richiesto e min:1
+            'items.*.holder_quantity'       => [
+                'nullable',     // lo rendiamo ignorabile quando sfuso
+                'integer',
+                'required_unless:items.*.is_bulk,true',
+                'min:0',
+                'exclude_if:items.*.is_bulk,true',
+            ],
+            'items.*.holder_id' => 'nullable|integer|exists:holders,id|prohibited_if:is_bulk,true',
             'items.*.description' => 'nullable|string',
             'items.*.weight_declared' => 'required|numeric',
             'items.*.weight_gross' => 'nullable|numeric',
