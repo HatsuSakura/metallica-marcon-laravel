@@ -1,0 +1,32 @@
+Piano di patch
+
+1. Create.vue – Helpers & Costanti
+    Aggiungi costanti ID target e (opzionale) impronta bancale.
+    Helpers ceilDiv, volume/impronta in cm, mappa holdersById.
+
+2. Create.vue – Classificazione NON Standard
+    Funzione classifyNonStandardItem(item) che restituisce { kind: 'bancale'|'cassa', units } usando:
+        volume “minimo dominante” (preferito)
+        fallback su impronta/altezza
+
+3. Create.vue – Calcolo compartimento
+    Funzione computeCompartmentLoad(orders, capCasseBase, capBancaliBase) che:
+        aggrega per holder
+        calcola bancali (dichiarati + equivalenti)
+        calcola casse equivalenti (poi spazi /3)
+        applica interdipendenza
+        restituisce breakdown + flag over
+
+4. Create.vue – Integrazione
+    Sostituisci calculateTotalLoad() per usare computeCompartmentLoad.
+    Richiama calculateTotalLoad():
+        su @change dei draggable (già c’è),
+        in coda a checkCargo(),
+        in onMounted().
+
+5. Create.vue – Feedback UI (leggero)
+    (Opzionale ma consigliato) Colora i Box “Ordini” quando over=true (class binding).
+
+6. DraggableObject.vue – Micro UX
+    (Opzionale) Aggiungi un micro-badge “NS” se l’ordine contiene almeno un item is_custom=1.
+    (Opzionale) tooltip con dimensioni del primo item NS.

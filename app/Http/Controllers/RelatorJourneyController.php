@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Cargo;
 use App\Models\Order;
+use App\Models\Holder;
 use App\Enums\UserRole;
 use App\Models\Journey;
 use App\Models\Trailer;
@@ -56,6 +57,7 @@ class RelatorJourneyController extends Controller
         $vehicles = Vehicle::all();
         $trailers = Trailer::all();
         $cargos = Cargo::all();
+        $holders = Holder::all();
         $drivers = User::where('role', UserRole::DRIVER->value )->get();
         $warehouses = Warehouse::all();
         $orders = Order::query()
@@ -75,6 +77,7 @@ class RelatorJourneyController extends Controller
             'vehicles' => $vehicles,
             'trailers' => $trailers,
             'cargos' => $cargos,
+            'holders' => $holders,
             'drivers' => $drivers,
             'warehouses' => $warehouses,
             'orders' => $orders,

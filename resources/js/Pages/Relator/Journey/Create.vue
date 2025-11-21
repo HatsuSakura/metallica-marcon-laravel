@@ -109,7 +109,12 @@
                 <Box padding="p-1">
                   <div class="flex flex-col items-center">
                     <div class="text-2xl font-medium">
-                      {{ ordiniCasseMotrice }}
+                      {{ ordiniCasseMotrice }} / 
+                      <span
+                        :class="ordiniBancaleMotrice > 0 ? 'text-error' : 'text-success'"
+                      >
+                        {{ spaziCasseMotrice - ordiniBancaleMotrice}}
+                      </span>
                     </div>
                     <div>
                       Casse
@@ -119,7 +124,12 @@
                 <Box padding="p-1">
                   <div class="flex flex-col items-center">
                     <div class="text-2xl font-medium">
-                      {{ ordiniBancaleMotrice }}
+                      {{ ordiniBancaleMotrice }} / 
+                      <span
+                        :class="ordiniCasseMotrice > 0 ? 'text-error' : 'text-success'"
+                      >
+                        {{ spaziBancaleMotrice - ordiniCasseMotrice}}
+                      </span>
                     </div>
                     <div>
                       Bancali
@@ -221,7 +231,12 @@
                 <Box padding="p-1">
                   <div class="flex flex-col items-center">
                     <div class="text-2xl font-medium">
-                      {{ ordiniCasseRimorchio }}
+                      {{ ordiniCasseRimorchio }} / 
+                      <span
+                        :class="ordiniBancaleRimorchio > 0 ? 'text-error' : 'text-success'"
+                      >
+                        {{ spaziCasseRimorchio - ordiniBancaleRimorchio}}
+                      </span>
                     </div>
                     <div>
                       Casse
@@ -231,7 +246,12 @@
                 <Box padding="p-1">
                   <div class="flex flex-col items-center">
                     <div class="text-2xl font-medium">
-                      {{ ordiniBancaleRimorchio }}
+                      {{ ordiniBancaleRimorchio }} / 
+                      <span
+                        :class="ordiniCasseRimorchio > 0 ? 'text-error' : 'text-success'"
+                      >
+                        {{ spaziBancaleRimorchio - ordiniCasseRimorchio}}
+                      </span>
                     </div>
                     <div>
                       Bancali
@@ -471,7 +491,12 @@
                 <Box padding="p-1">
                   <div class="flex flex-col items-center">
                     <div class="text-2xl font-medium">
-                      {{ ordiniCasseMotrice + ordiniCasseRimorchio + ordiniCasseRiempimento }}
+                      {{ ordiniCasseMotrice + ordiniCasseRimorchio + ordiniCasseRiempimento }} / 
+                      <span
+                        :class=" (ordiniBancaleMotrice + ordiniBancaleRimorchio + ordiniBancaleRiempimento) > 0 ? 'text-error' : 'text-success'"
+                      >
+                        {{ (spaziCasseMotrice + spaziCasseRimorchio) - (ordiniBancaleMotrice + ordiniBancaleRimorchio + ordiniBancaleRiempimento) }}
+                      </span>
                     </div>
                     <div>
                       Casse
@@ -481,7 +506,12 @@
                 <Box padding="p-1">
                   <div class="flex flex-col items-center">
                     <div class="text-2xl font-medium">
-                      {{ ordiniBancaleMotrice + ordiniBancaleRimorchio + ordiniBancaleRiempimento }}
+                      {{ ordiniBancaleMotrice + ordiniBancaleRimorchio + ordiniBancaleRiempimento }} / 
+                      <span
+                        :class=" (ordiniCasseMotrice + ordiniCasseRimorchio + ordiniCasseRiempimento) > 0 ? 'text-error' : 'text-success'"
+                      >
+                        {{ (spaziBancaleMotrice + spaziBancaleRimorchio) - (ordiniCasseMotrice + ordiniCasseRimorchio + ordiniCasseRiempimento) }}
+                      </span>
                     </div>
                     <div>
                       Bancali
@@ -694,7 +724,7 @@
     const clearViewMode = () => {
       viewMode.value = 'empty';
     }
-
+/*
     const calculateTotalLoad = () =>{
       ordiniCasseMotrice.value= 0
       ordiniBancaleMotrice.value= 0
@@ -724,7 +754,50 @@
       });
       
     }
- 
+ */
+
+ const calculateTotalLoad = () => {
+  // MOTRICE
+  const mot = computeCompartmentLoad(
+    listMotrice.value,
+    spaziCasseMotrice.value,
+    spaziBancaleMotrice.value
+  )
+
+  // peso: esattamente quello che facevi prima
+  ordiniCaricoMotrice.value   = mot.pesoTot
+  // spazi a terra:
+  ordiniBancaleMotrice.value  = mot.bancali.used
+  ordiniCasseMotrice.value    = mot.casse.used_spaces
+
+  showCapacityAlerts(mot, 'Motrice')
+
+  // RIMORCHIO
+  const rim = computeCompartmentLoad(
+    listRimorchio.value,
+    spaziCasseRimorchio.value,
+    spaziBancaleRimorchio.value
+  )
+
+  ordiniCaricoRimorchio.value  = rim.pesoTot
+  ordiniBancaleRimorchio.value = rim.bancali.used
+  ordiniCasseRimorchio.value   = rim.casse.used_spaces
+
+  if (trailerEnabled.value) showCapacityAlerts(rim, 'Rimorchio')
+
+  // RIEMPIMENTO: stima complessiva (se ti interessa anche qui il peso totale)
+  const rie = computeCompartmentLoad(
+    listRiempimento.value,
+    (spaziCasseMotrice.value + spaziCasseRimorchio.value),
+    (spaziBancaleMotrice.value + spaziBancaleRimorchio.value)
+  )
+
+  ordiniCaricoRiempimento.value  = rie.pesoTot
+  ordiniBancaleRiempimento.value = rie.bancali.used
+  ordiniCasseRiempimento.value   = rie.casse.used_spaces
+}
+
+
     const trailerEnabled          = ref(false);
 
     const spaziCasseMotrice       = ref(0);
@@ -837,6 +910,8 @@
         spaziCasseRimorchio.value   = selectedTrailerCargo.value.spazi_casse;
         spaziBancaleRimorchio.value = selectedTrailerCargo.value.spazi_bancale;
       }
+
+      calculateTotalLoad()
     }
 
 
@@ -907,6 +982,8 @@ onMounted(() => {
   eventBus.on('setOrderToTrailerList', handleSetToTrailer);
   eventBus.on('setOrderToRiempimentoList', handleSetToRiempimento);
   eventBus.on('setOrderToOrdersList', handleSetToOrders);
+
+  calculateTotalLoad(); // inizializza peso + spazi
 });
 
 onUnmounted(() => {
@@ -915,6 +992,219 @@ onUnmounted(() => {
   eventBus.off('setOrderToRiempimentoList', handleSetToRiempimento);
   eventBus.off('setOrderToOrdersList', handleSetToOrders);
 });
+
+
+
+/*
+ * GESTIONE SPAZI A TERRA
+ */
+
+ // ====== COSTANTI & HELPERS ======
+const HOLDER_ID_BANCALE = 2
+const HOLDER_ID_CASSA   = 4
+
+// Opzionale: impronta standard del bancale in cm^2 (se vuoi usare fallback footprint)
+const PALLET_FOOTPRINT_CM2 = null // es. 120*80 = 9600 se vuoi usarlo
+
+const ceilDiv = (num, den) => Math.ceil(num / den)
+
+// --- Mappa holders by id, con flag “dichiarati” ---
+const holdersById = computed(() => {
+  const map = {}
+  for (const h of (props.holders || [])) {
+    map[h.id] = {
+      id: h.id,
+      name: h.name,
+      is_custom: !!h.is_custom,
+      volume_cm3: h.volume ?? null, // atteso in cm^3 quando sarà popolato
+      equivalent_holder_id: h.equivalent_holder_id ?? null,
+      equivalent_units: h.equivalent_units ?? null,
+      is_declared_bancale: h.id === HOLDER_ID_BANCALE,
+      is_declared_cassa:   h.id === HOLDER_ID_CASSA,
+    }
+  }
+  return map
+})
+
+// ====== DIMENSIONI/CLASSIFICAZIONE NON STANDARD ======
+// Recupera dimensioni in cm dai campi dell'item (custom_l_cm, custom_w_cm, custom_h_cm)
+const getCustomDimsCm = (item) => {
+  const L = Number(item.custom_l_cm ?? 0)
+  const W = Number(item.custom_w_cm ?? 0)
+  const H = Number(item.custom_h_cm ?? 0)
+  return { L, W, H }
+}
+const volumeCm3 = ({L, W, H}) => (L>0 && W>0 && H>0) ? (L*W*H) : 0
+const footprintCm2 = ({L, W}) => (L>0 && W>0) ? (L*W) : 0
+
+// Trova holder standard (is_custom=0, volume valorizzato) col volume minimo >= nsVol
+const findMinimalDominatingHolderByVolume = (nsVol) => {
+  const candidates = (props.holders || [])
+    .filter(h => !h.is_custom && h.volume && h.volume > 0)
+    .sort((a,b) => a.volume - b.volume)
+  for (const h of candidates) {
+    if (h.volume >= nsVol) return h
+  }
+  return null
+}
+
+const classifyNonStandardItem = (item) => {
+  // Ritorna { kind: 'bancale'|'cassa', units: number }
+  const dims = getCustomDimsCm(item)
+  const nsVol = volumeCm3(dims)
+  const nsFoot = footprintCm2(dims)
+
+  // 1) Volume: holder minimo dominante
+  const eq = nsVol > 0 ? findMinimalDominatingHolderByVolume(nsVol) : null
+  if (eq) {
+    if (eq.id === HOLDER_ID_BANCALE || eq.equivalent_holder_id === HOLDER_ID_BANCALE) {
+      return { kind: 'bancale', units: 1 }
+    }
+    if (eq.id === HOLDER_ID_CASSA || eq.equivalent_holder_id === HOLDER_ID_CASSA) {
+      return { kind: 'cassa', units: 1 }
+    }
+    if (eq.equivalent_holder_id === HOLDER_ID_BANCALE) return { kind: 'bancale', units: 1 }
+    if (eq.equivalent_holder_id === HOLDER_ID_CASSA)   return { kind: 'cassa', units: 1 }
+  }
+
+  // 2) Fallback footprint (se configurato)
+  if (PALLET_FOOTPRINT_CM2 && nsFoot > 0) {
+    if (nsFoot >= PALLET_FOOTPRINT_CM2) {
+      const units = Math.max(1, ceilDiv(nsFoot, PALLET_FOOTPRINT_CM2))
+      return { kind: 'bancale', units }
+    } else {
+      return { kind: 'cassa', units: 1 }
+    }
+  }
+
+  // 3) Fallback altezza prudenziale
+  const TALL_THRESHOLD_CM = 80 // puoi promuoverla a config UI
+  if (dims.H && dims.H > TALL_THRESHOLD_CM) return { kind: 'bancale', units: 1 }
+  return { kind: 'cassa', units: 1 }
+}
+
+// ====== CALCOLO COMPARTIMENTO ======
+function computeCompartmentLoad(orders, capCasseBase, capBancaliBase) {
+  const totalsByHolder = {}
+  let pesoTot = 0
+
+  for (const o of (orders || [])) {
+    for (const it of (o.items || [])) {
+      pesoTot += Number(it.weight_declared ?? 0)
+
+      const holder_id = it.holder_id ?? it.holder?.id
+      const qty = Number(it.holder_quantity ?? it.qty ?? 0)
+      if (!holder_id || !qty) continue
+
+      const h = holdersById.value[holder_id]
+      if (!h) continue
+
+      // Aggrego grezzo per holder (standard non-equivalenti)
+      totalsByHolder[holder_id] = (totalsByHolder[holder_id] ?? 0) + qty
+    }
+  }
+
+  // Bancali e Casse
+  let bancaliDeclared = 0
+  let bancaliEquiv = 0
+  let casseDeclaredUnits = 0 // pezzi cassa (poi /3 -> spazi)
+  let casseEquivUnits = 0
+
+  // 1) Explode totalsByHolder distinguendo dichiarati/equivalenti e custom
+  for (const [holderIdStr, qty] of Object.entries(totalsByHolder)) {
+    const holderId = Number(holderIdStr)
+    const h = holdersById.value[holderId]
+    if (!h || !qty) continue
+
+    if (!h.is_custom) {
+      // ---- STANDARD ----
+      if (h.is_declared_bancale) { bancaliDeclared += qty; continue }
+      if (h.is_declared_cassa)   { casseDeclaredUnits += qty; continue }
+
+      if (h.equivalent_holder_id === HOLDER_ID_BANCALE && h.equivalent_units) {
+        bancaliEquiv += ceilDiv(qty, h.equivalent_units)
+        continue
+      }
+      if (h.equivalent_holder_id === HOLDER_ID_CASSA && h.equivalent_units) {
+        casseEquivUnits += ceilDiv(qty, h.equivalent_units)
+        continue
+      }
+
+      // Se standard ma senza mapping → ignora o log
+      continue
+    }
+
+    // ---- CUSTOM per holder_id di tipo "Imballo NON Standard" ----
+    // Serve iterare sui singoli item per leggere dimensioni (non basta il totale by holder)
+  }
+
+  // 2) Aggiungi contributo dei NON standard item iterando sugli item (serve per le dimensioni)
+  for (const o of (orders || [])) {
+    for (const it of (o.items || [])) {
+      const holder_id = it.holder_id ?? it.holder?.id
+      const qty = Number(it.holder_quantity ?? it.qty ?? 0)
+      if (!holder_id || !qty) continue
+      const h = holdersById.value[holder_id]
+      if (!h || !h.is_custom) continue
+
+      const cls = classifyNonStandardItem(it) // {kind, units}
+      if (cls.kind === 'bancale') {
+        bancaliEquiv += (cls.units * qty)
+      } else {
+        casseEquivUnits += (cls.units * qty)
+      }
+    }
+  }
+
+  // 3) Totali usati
+  const bancaliUsed = bancaliDeclared + bancaliEquiv
+  const casseUnitsTotal = casseDeclaredUnits + casseEquivUnits
+  const casseUsedSpaces = Math.ceil(casseUnitsTotal / 3) // impilamento a 3
+
+  // 4) Interdipendenza
+  let cassaCapAvail = 0
+  if (bancaliUsed >= capBancaliBase) {
+    cassaCapAvail = 0
+  } else {
+    cassaCapAvail = Math.max(0, Number(capCasseBase ?? 0) - bancaliUsed)
+  }
+
+  const overBancali = bancaliUsed > Number(capBancaliBase ?? 0)
+  const overCasse   = casseUsedSpaces > cassaCapAvail
+
+  return {
+    pesoTot,
+    bancali: {
+      used: bancaliUsed,
+      cap: Number(capBancaliBase ?? 0),
+      over: overBancali,
+      breakdown: { declared: bancaliDeclared, equivalent: bancaliEquiv },
+    },
+    casse: {
+      used_spaces: casseUsedSpaces,
+      cap_base: Number(capCasseBase ?? 0),
+      cap_available: cassaCapAvail,
+      over: overCasse,
+      breakdown: {
+        declared_units: casseDeclaredUnits,
+        equivalent_units: casseEquivUnits,
+      },
+    },
+  }
+}
+
+// ====== ALERT SINTETICI ======
+function showCapacityAlerts(loadObj, labelCompartimento) {
+  const messages = []
+  if (loadObj.bancali.over) {
+    messages.push(`${labelCompartimento}: spazi BANCALI superati (usati ${loadObj.bancali.used} / cap ${loadObj.bancali.cap})`)
+  }
+  if (loadObj.casse.over) {
+    messages.push(`${labelCompartimento}: spazi CASSE superati (usati ${loadObj.casse.used_spaces} / disp ${loadObj.casse.cap_available})`)
+  }
+  if (messages.length) alert(messages.join('\n'))
+}
+
 
     </script>
     
