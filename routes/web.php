@@ -11,7 +11,6 @@ use App\Http\Controllers\IndexController;
 use Illuminate\Auth\Events\PasswordReset;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\JourneyController;
-use App\Http\Controllers\ListingController;
 use App\Http\Controllers\WorkerJourneyCargo;
 use App\Http\Controllers\API_RecipeController;
 use App\Http\Controllers\RecipeNodeController;
@@ -20,14 +19,12 @@ use App\Http\Controllers\DriverOrderController;
 use App\Http\Controllers\RelatorSiteController;
 use App\Http\Controllers\RelatorUserController;
 use App\Http\Controllers\UserAccountController;
-use App\Http\Controllers\ListingOfferController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RelatorCargoController;
 use App\Http\Controllers\HolderController;
 use App\Http\Controllers\RelatorOrderController;
 use App\Http\Controllers\DriverJourneyController;
 use App\Http\Controllers\RelatorJourneyController;
-use App\Http\Controllers\RelatorListingController;
 use App\Http\Controllers\RelatorTrailerController;
 use App\Http\Controllers\RelatorVehicleController;
 use App\Http\Controllers\RelatorCustomerController;
@@ -38,14 +35,12 @@ use App\Http\Controllers\CatalogItemRecipeController;
 use App\Http\Controllers\OrderItemExplosionController;
 use App\Http\Controllers\API_WarehouseOrdersController;
 use App\Http\Controllers\RelatorJourneyCargoController;
-use App\Http\Controllers\RelatorListingImageController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\API_DriverOrderUpdateController;
 use App\Http\Controllers\WarehouseManagerOrderController;
 use App\Http\Controllers\API_DriverJourneyUpdateController;
 use App\Http\Controllers\API_WarehouseOrderItemsController;
 use App\Http\Controllers\API_RelatorSiteTimetableController;
-use App\Http\Controllers\RelatorListingAcceptOfferController;
 use App\Http\Controllers\WarehouseManagerOrderItemController;
 use App\Http\Controllers\API_WarehouseJourneyCargosController;
 use App\Http\Controllers\API_RelatorSiteBooleanUpdateController;
@@ -139,10 +134,7 @@ Route::resource('user-account', UserAccountController::class)
 ->only('create', 'store', 'index', 'edit');
 
 
-Route::resource('listing', ListingController::class)->only(['index', 'show']); // utenti non loggati possono vedere i listing
-Route::resource('listing.offer', ListingOfferController::class)
-->middleware('auth')
-->only(['store']);
+// listings removed
 
 Route::resource('notification', NotificationController::class)
 ->middleware('auth')
@@ -207,15 +199,7 @@ Route::prefix('relator')
 ->name('relator.')
 ->middleware(['auth', 'verified'])
 ->group(function() {
-    Route::name('listing.restore') // non standard routes ABOVE the standard ones
-    ->put(
-        'listing/{listing}/restore',
-        [RelatorListingController::class, 'restore']
-    )->withTrashed();
-
-    Route::resource('listing', RelatorListingController::class)
-    //->only(['index', 'edit', 'create', 'store', 'update', 'destroy'])
-    ->withTrashed();
+    // listings removed
 
 
     Route::name('dashboard')
@@ -284,14 +268,7 @@ Route::prefix('relator')
     //->only(['index', 'edit', 'create', 'store', 'update', 'destroy'])
     ->withTrashed();
 
-    // single action controller
-    Route::name('offer.accept')->put('offer/{offer}/accept', RelatorListingAcceptOfferController::class);
-
-    Route::resource('listing.image', RelatorListingImageController::class)
-    ->only('create', 'store', 'destroy');
-
-    Route::resource('item.image', RelatorListingImageController::class)
-    ->only('create', 'store', 'destroy');
+    // offer/listing image routes removed
 });
 
 

@@ -297,7 +297,6 @@
       import OrderInfo from './Components/OrderInfo.vue';
       import eventBus from '@/eventBus';
   import ZeroPaddingId from '@/Components/UI/ZeroPaddingId.vue';
-import ListingAddress from '@/Components/ListingAddress.vue';
   
       const props = defineProps({
         journey: Object,

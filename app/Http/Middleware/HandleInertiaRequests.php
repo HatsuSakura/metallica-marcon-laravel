@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Listing;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -58,9 +57,6 @@ class HandleInertiaRequests extends Middleware
                 ]: null,
                 
                 'permissions' => [
-                    'listing' => [
-                        //'create' => $request->user()->can('create', Listing::class),
-                    ],
                     'withdraw' => [
 
                     ],

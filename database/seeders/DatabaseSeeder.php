@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use App\Models\Listing;
 use App\Models\Vehicle;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -68,13 +67,6 @@ class DatabaseSeeder extends Seeder
             'email' => 'logistica@metallicamarcon.it',
             'password' => '12345!',
             'is_admin' => true,
-        ]);
-
-        Listing::factory(10)->create([
-            'by_user_id' => 1 // to manage the first migrate:refresh --seed
-        ]);
-        Listing::factory(10)->create([
-            'by_user_id' => 2 // to manage the first migrate:refresh --seed
         ]);
 
     }

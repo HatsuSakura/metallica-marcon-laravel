@@ -64,7 +64,6 @@
 import Box from '@/Components/UI/Box.vue';
 import { Link } from '@inertiajs/vue3';
 import { computed, ref, reactive, toRaw } from 'vue';
-import Offer from '@/Pages/Relator/Show/Components/Offer.vue';
 import CustomerSpace from '@/Components/CustomerSpace.vue';
 import CustomerAddress from '@/Components/CustomerAddress.vue';
 import SiteSpace from '@/Components/SiteSpace.vue';

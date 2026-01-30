@@ -151,12 +151,6 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
       <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
       <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-2 pt-12">
         <!-- Sidebar content here -->
-<!--
-        <li>
-          <Link @click="closeDrawer" :href="route('listing.index')"><font-awesome-icon icon="cart-arrow-down" />
-          Listings</Link>
-        </li>
--->
         <li>
           <Link @click="closeDrawer" :href="route('dashboard')">La mia Dashboard</Link>
         </li>

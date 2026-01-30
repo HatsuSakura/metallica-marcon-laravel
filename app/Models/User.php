@@ -4,10 +4,7 @@ namespace App\Models;
 
 use App\Enums\UserRole;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Models\Offer;
-use App\Models\Listing;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
@@ -107,12 +104,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
 
 
-    public function listings(): HasMany{
-        return $this->hasMany(Listing::class, 'by_user_id');
-    }
-
-    public function offers(): HasMany{
-        return $this->hasMany(Offer::class, 'bidder_id');
-    }
+    //
 
 }

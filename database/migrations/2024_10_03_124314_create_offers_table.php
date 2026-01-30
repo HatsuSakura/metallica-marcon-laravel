@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Listing;
 use App\Models\User;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
@@ -17,10 +16,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
 
-            $table->foreignIdFor(
-                Listing::class,
-                'listing_id'
-            )->constrained('listings');
+            $table->foreignId('listing_id')->constrained('listings');
 
             $table->foreignIdFor(
                 User::class,
