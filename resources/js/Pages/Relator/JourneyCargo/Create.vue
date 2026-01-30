@@ -330,7 +330,7 @@ import ZeroPaddingId from '@/Components/UI/ZeroPaddingId.vue';
       download_sequence_trailer: '',
       items_truck: [],
       items_trailer: [],
-      items_fullfill: [], 
+      items_fulfill: [], 
     })
     
     // Computed property for the inverse toggle
@@ -384,7 +384,7 @@ import ZeroPaddingId from '@/Components/UI/ZeroPaddingId.vue';
       // Map each list to only send IDs
       form.items_truck    = listMotrice.value;
       form.items_trailer  = listRimorchio.value;
-      form.items_fullfill = listRiempimento.value;
+      form.items_fulfill = listRiempimento.value;
       form.logistic_id = user.value.id;
       form.post(route('relator.journeyCargo.store'));
     }
@@ -426,7 +426,7 @@ import ZeroPaddingId from '@/Components/UI/ZeroPaddingId.vue';
             listRimorchio.value.push(item);
           });
           //listRimorchio.value.push(...order.items);
-        } else if (order.truck_location === 'fullfill' && order.items.length > 0) {
+        } else if (order.truck_location === 'fulfill' && order.items.length > 0) {
           order.items.forEach(item => {
             if (!item.pivot) {
               item.pivot = {

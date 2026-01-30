@@ -98,7 +98,7 @@
         <select v-model="form.trailer_id" class="input select">
           <option value="" disabled>Nessun rimorchio di default</option>
           <option v-for="trailer in props.trailers" :key="trailer.id" :value="trailer.id">
-            {{ trailer.name }}
+            {{ trailer.name }} - {{ trailer.plate }}
           </option>
         </select>
         <div class="input-error" v-if="form.errors.trailer_id">

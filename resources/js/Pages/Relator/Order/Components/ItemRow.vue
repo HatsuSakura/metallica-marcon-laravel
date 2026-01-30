@@ -89,7 +89,7 @@
       <input 
         v-model.number="item.weight_declared" 
         type="number" 
-        step="0.1"
+        step="10"
         class="input input-bordered w-24"
         placeholder="Peso [Kg]"
       />
@@ -174,6 +174,8 @@
       Modalità <strong>sfuso</strong> attiva: nessun contenitore attivo e quantità contenitori impostata a 0.
     </div>
   </div>
+
+  <hr class="my-3"/>
 </template>
 
 <script setup>
@@ -213,7 +215,7 @@ if (item.value.is_bulk === undefined) {
 
 watch(() => item.value.is_bulk, (isBulk) => {
   if (isBulk) {
-    item.value.holder_id = null;
+    item.value.holder_id = '';
     item.value.holder_quantity = 0;
     // piallo anche le dimensioni custom per sicurezza
     item.value.custom_l_cm = item.value.custom_w_cm = item.value.custom_h_cm = null;

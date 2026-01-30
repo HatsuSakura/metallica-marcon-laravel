@@ -16,6 +16,7 @@ class Journey extends Model
 
     protected $casts = [
         'state' => JourneysState::class,
+        'plan_version' => 'integer',
 
         // datetime
         'dt_start'                 => 'datetime',
@@ -47,6 +48,7 @@ class Journey extends Model
         'driver_id',
         'logistic_id',
         'state',
+        'plan_version',
 
         // per lo scarico
         'warehouse_id_1',
@@ -89,6 +91,21 @@ class Journey extends Model
     public function driver()
     {
         return $this->belongsTo(User::class, 'driver_id');
+    }
+
+    public function stops(): HasMany
+    {
+        return $this->hasMany(JourneyStop::class);
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(JourneyEvent::class);
+    }
+
+    public function stopOrders(): HasMany
+    {
+        return $this->hasMany(JourneyStopOrder::class);
     }
 
 }

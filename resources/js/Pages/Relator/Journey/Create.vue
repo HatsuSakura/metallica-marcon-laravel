@@ -684,7 +684,7 @@
       logistic_id: '',
       orders_truck: [],
       orders_trailer: [],
-      orders_fullfill: [], 
+      orders_fulfill: [], 
     })
     
     const create = () => {
@@ -694,7 +694,7 @@
       // Map each list to only send IDs
       form.orders_truck    = listMotrice.value.map(order => order.id);
       form.orders_trailer  = listRimorchio.value.map(order => order.id);
-      form.orders_fullfill = listRiempimento.value.map(order => order.id);
+      form.orders_fulfill = listRiempimento.value.map(order => order.id);
       form.logistic_id = user.value.id;
       form.post(route('relator.journey.store'));
     }

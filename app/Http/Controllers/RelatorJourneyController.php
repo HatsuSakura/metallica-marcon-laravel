@@ -100,7 +100,7 @@ class RelatorJourneyController extends Controller
             'logistic_id' => 'required',
             'orders_truck'    => 'nullable|array',
             'orders_trailer'  => 'nullable|array',
-            'orders_fullfill' => 'nullable|array',
+            'orders_fulfill' => 'nullable|array',
         ]);
 
         $journey = Journey::create($validated);
@@ -151,9 +151,9 @@ class RelatorJourneyController extends Controller
             }
         }
 
-        // Repeat for orders_fullfill
-        if (!empty($validated['orders_fullfill'])) {
-            $orders = Order::whereIn('id', $validated['orders_fullfill'])->get();
+        // Repeat for orders_fulfill
+        if (!empty($validated['orders_fulfill'])) {
+            $orders = Order::whereIn('id', $validated['orders_fulfill'])->get();
 
             foreach ($orders as $order) {
                 $currentState = $order->state;

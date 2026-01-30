@@ -5,7 +5,7 @@
 
     <div>
         <Link 
-            :href="route('relator.journey.index')"
+            :href="route('journey.index')"
             class="btn btn-primary"
         >
             Viaggi

@@ -332,7 +332,7 @@ import ListingAddress from '@/Components/ListingAddress.vue';
         download_sequence_trailer: JourneyCargoTrailer.value.download_sequence,
         items_truck: [],
         items_trailer: [],
-        items_fullfill: [], 
+        items_fulfill: [], 
       })
       
       // Computed property for the inverse toggle
@@ -416,7 +416,7 @@ import ListingAddress from '@/Components/ListingAddress.vue';
 
         form.items_truck   = normalizeForPayload(listMotrice.value,   truckWh,   trailerWh);
         form.items_trailer = normalizeForPayload(listRimorchio.value, trailerWh, truckWh);
-        form.items_fullfill = (listRiempimento.value || []).map(x => ({
+        form.items_fulfill = (listRiempimento.value || []).map(x => ({
           id: x.id, is_double_load: 0, warehouse_download_id: truckWh // o trailerWh: decidi tu
         }));
 

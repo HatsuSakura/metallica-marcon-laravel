@@ -317,7 +317,7 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
 
     const totalItemsWeight = computed(() => {
       if (form.items.length){
-        return form.items.reduce((total, element) => total + element.weight_declared, 0);
+        return form.items.reduce((total, element) => total + (Number(element.weight_declared) || 0), 0);
       }
       return 0;
     });
@@ -363,7 +363,7 @@ const addItem = () => {
   form.items.push({
     cer_code_id: null,
     is_bulk: false,
-    holder_id: null,
+    holder_id: '',
     holder_quantity: 1,
 
     // dimensioni custom (solo per holder is_custom)
@@ -372,8 +372,8 @@ const addItem = () => {
     custom_h_cm: null,
 
     description: '',
-    weight_declared: 0,
-    warehouse_id: null,
+    weight_declared: null,
+    warehouse_id: '',
 
     adr: false,
     adr_hp: null,

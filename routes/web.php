@@ -10,6 +10,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\IndexController;
 use Illuminate\Auth\Events\PasswordReset;
 use App\Http\Controllers\RecipeController;
+use App\Http\Controllers\JourneyController;
 use App\Http\Controllers\ListingController;
 use App\Http\Controllers\WorkerJourneyCargo;
 use App\Http\Controllers\API_RecipeController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\UserAccountController;
 use App\Http\Controllers\ListingOfferController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RelatorCargoController;
+use App\Http\Controllers\HolderController;
 use App\Http\Controllers\RelatorOrderController;
 use App\Http\Controllers\DriverJourneyController;
 use App\Http\Controllers\RelatorJourneyController;
@@ -194,7 +196,11 @@ Route::middleware('auth')->get('/home', fn() => Inertia::render('Generic/Home'))
 */
 
 
+Route::resource('journey', JourneyController::class)
+->withTrashed();  
 
+Route::resource('holder', HolderController::class)
+->middleware(['auth', 'verified']);
 
 // Route Grouping
 Route::prefix('relator')

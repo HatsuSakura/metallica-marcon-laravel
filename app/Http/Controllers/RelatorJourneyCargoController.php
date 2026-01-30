@@ -117,7 +117,7 @@ class RelatorJourneyCargoController extends Controller
             'download_sequence_trailer' => 'nullable|numeric',
             'items_truck'    => 'nullable|array',
             'items_trailer'  => 'nullable|array',
-            'items_fullfill' => 'nullable|array',
+            'items_fulfill' => 'nullable|array',
         ]);
 
         $journey = Journey::findOrFail($request->input('journey_id'));

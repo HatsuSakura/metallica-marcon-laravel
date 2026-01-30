@@ -167,7 +167,7 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
           <Link @click="closeDrawer" :href="route('relator.order.index')">Ordini</Link>
         </li>
         <li>
-          <Link @click="closeDrawer" :href="route('relator.journey.index')">Viaggi</Link>
+          <Link @click="closeDrawer" :href="route('journey.index')">Viaggi</Link>
         </li>
         <li>
           <Link @click="closeDrawer" :href="route('map.site.index')">Map View</Link>
@@ -200,6 +200,9 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
               </li>
               <li v-if="currentUser && currentUser.is_admin">
                 <Link @click="closeDrawer" :href="route('relator.cargo.index')">Cassoni</Link>
+              </li>
+              <li>
+                <Link @click="closeDrawer" :href="route('holder.index')">Contenitori</Link>
               </li>
               <li>
                 <Link @click="closeDrawer" :href="route('relator.customer.index')">Clienti</Link>
