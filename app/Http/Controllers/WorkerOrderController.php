@@ -12,6 +12,7 @@ use App\Models\Order;
 use Illuminate\Http\Request;
 use App\Enums\OrdersState;
 use App\Models\Warehouse;
+use App\Services\OrderItemGroupResolver;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Log;
@@ -72,7 +73,7 @@ class WorkerOrderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, OrderItemGroupResolver $groupResolver)
     {
 
         $validatedData = $request->validate([
@@ -85,6 +86,8 @@ class WorkerOrderController extends Controller
             // 'journey_id' => ALLA CREAZIONE, al momento soprattutto, non viene passato e prende il default NULL
             'items' => 'nullable|array', // Make items optional
             'items.*.cer_code_id' => 'required|exists:cer_codes,id',
+            'items.*.order_item_group_id' => 'nullable|exists:order_item_groups,id',
+            'items.*.order_item_group_label' => 'nullable|string|max:120',
             'items.*.holder_id' => 'required|exists:holders,id',
             'items.*.holder_quantity' => 'required|integer|min:1',
             'items.*.description' => 'nullable|string',
@@ -125,7 +128,8 @@ class WorkerOrderController extends Controller
 
         // If there are items, attach them to the order
         if (!empty($validatedData['items'])) {
-            foreach ($validatedData['items'] as $item) {
+            $resolvedItems = $groupResolver->resolveForOrder($order, $validatedData['items']);
+            foreach ($resolvedItems as $item) {
                 $order->items()->create($item);
             }
         }
@@ -156,7 +160,7 @@ class WorkerOrderController extends Controller
             'site.customer','site.internalContacts','site.timetable',
             'items' => function ($q) {
                 $q->with([
-                    'holder','cerCode','warehouse','images',
+                    'holder','cerCode','warehouse','images','orderItemGroup',
                     'explosions' => function ($q2) {
                         $q2->whereNull('parent_explosion_id')
                         ->with(['childrenRecursive','catalogItem']);
@@ -194,7 +198,7 @@ class WorkerOrderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Order $order)
+    public function update(Request $request, Order $order, OrderItemGroupResolver $groupResolver)
     {
         Gate::authorize('redirectAfterUpdate', $order);
 
@@ -215,6 +219,8 @@ class WorkerOrderController extends Controller
             'items' => 'nullable|array', // Make items optional
             'items.*.id' => 'required',
             'items.*.cer_code_id' => 'required|exists:cer_codes,id',
+            'items.*.order_item_group_id' => 'nullable|exists:order_item_groups,id',
+            'items.*.order_item_group_label' => 'nullable|string|max:120',
             'items.*.holder_id' => 'required|exists:holders,id',
             'items.*.holder_quantity' => 'required|integer|min:1',
             'items.*.description' => 'nullable|string',
@@ -254,8 +260,9 @@ class WorkerOrderController extends Controller
 
         // If there are items, update them or create new ones
         if (!empty($validatedData['items'])) {
+            $resolvedItems = $groupResolver->resolveForOrder($order, $validatedData['items']);
             $existingItemIds = $order->items()->pluck('id')->toArray();
-            $newItemIds = array_column($validatedData['items'], 'id');
+            $newItemIds = array_column($resolvedItems, 'id');
             //Log::info($existingItemIds);
             //Log::info($newItemIds);
 
@@ -263,7 +270,7 @@ class WorkerOrderController extends Controller
             $itemsToDelete = array_diff($existingItemIds, $newItemIds);
             $order->items()->whereIn('id', $itemsToDelete)->delete();
 
-            foreach ($validatedData['items'] as $item) {
+            foreach ($resolvedItems as $item) {
                 if (isset($item['id']) && in_array($item['id'], $existingItemIds)) {
                     // Update existing item
                     $order->items()->where('id', $item['id'])->update($item);
@@ -276,6 +283,8 @@ class WorkerOrderController extends Controller
             // If no items are provided, delete all existing items
             $order->items()->delete();
         }
+
+        $groupResolver->cleanupUnusedGroups($order);
 
 
         // If there are holders, update them or create new ones
