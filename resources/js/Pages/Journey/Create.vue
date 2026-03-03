@@ -1,7 +1,7 @@
 <script setup>
     import { computed, watch, ref, onMounted, onUnmounted, toRaw, nextTick } from 'vue';
     import { useStore } from 'vuex';
-    import { Link, useForm, usePage } from '@inertiajs/vue3'
+    import { Link, useForm, usePage, router } from '@inertiajs/vue3'
     import dayjs from 'dayjs';
     import { format } from 'date-fns';
     import { it } from 'date-fns/locale';
@@ -33,8 +33,8 @@
     })
     
     const page = usePage()
-    /*
     const store = useStore();
+    /*
     const currentSite = computed(() => store.state.currentSite || null );
     */
 
@@ -42,6 +42,10 @@
       () => page.props.user
     )
     
+    const goBackToOrders = () => {
+      router.visit(route('journey.index'))
+    }
+
     const extendedMapMode = ref(false);
     const toggleExtendedMapMode = () => {
       extendedMapMode.value = !extendedMapMode.value;
@@ -80,6 +84,7 @@
 
     // array si Fermate (Stop) ordinate (draggable) manualmente
     const manualStopOrder = ref([])
+    const stopMeta = ref({})
     const mainPaneRef = ref(null)
     const stopsDrawerOpen = ref(false)
     const technicalStops = ref([])
@@ -91,12 +96,19 @@
     ])
 
     const stopsEnriched = computed(() => 
-      (allStops.value || []).map(s => ({
-        ...s,
-        customer: s.customer_id ? customerById.value.get(s.customer_id) : null,
-        site: s.customer_id ? siteByCustomerId.value.get(s.customer_id) : null,
-        orders_count: (s.orders || []).length,
-      }))
+      (allStops.value || []).map(s => {
+        const key = stopKey(s)
+        const meta = stopMeta.value[key] ?? {}
+        const site = s.customer_id ? siteByCustomerId.value.get(s.customer_id) : null
+        return {
+          ...s,
+          customer: s.customer_id ? customerById.value.get(s.customer_id) : null,
+          site,
+          orders_count: (s.orders || []).length,
+          description: s.description ?? meta.description ?? '',
+          address_text: s.address_text ?? meta.address_text ?? (site?.indirizzo ?? ''),
+        }
+      })
     )
 
     const stopKey = (s) => {
@@ -207,6 +219,10 @@
         customer_id: s.kind === 'customer' ? (s.customer_id ?? null) : null,
         customer_visit_index: s.kind === 'customer' ? (s.customer_visit_index ?? 1) : null,
         technical_action_id: s.kind === 'technical' ? (s.technical_action_id ?? null) : null,
+        location_lat: getStopCoords(s)?.lat ?? null,
+        location_lng: getStopCoords(s)?.lng ?? null,
+        description: s.description ?? null,
+        address_text: s.address_text ?? null,
         sequence: s.sequence,
         planned_sequence: s.planned_sequence,
         status: s.status ?? 'planned',
@@ -215,7 +231,16 @@
 
       form.logistic_id = user.value.id;
 
-      form.post(route('journey.store'));
+      form.post(route('journey.store'), {
+        onError: (errors) => {
+          const keys = Object.keys(errors || {})
+          if (keys.length) {
+            store.dispatch('flash/queueMessage', { type: 'error', text: errors[keys[0]] })
+          } else {
+            store.dispatch('flash/queueMessage', { type: 'error', text: 'Errore durante il salvataggio del viaggio.' })
+          }
+        },
+      });
     }
 
 
@@ -492,6 +517,28 @@ const manageDate = () => {
   }
 }
 
+const defaultMapLat = Number(import.meta.env.VITE_MAPS_CENTER_DEFAULT_LAT ?? 0)
+const defaultMapLng = Number(import.meta.env.VITE_MAPS_CENTER_DEFAULT_LNG ?? 0)
+
+const getStopCoords = (s) => {
+  if (!s) return null
+  if (s.kind === 'technical') {
+    const lat = Number(s.location_lat ?? s.lat ?? s.latitude ?? NaN)
+    const lng = Number(s.location_lng ?? s.lng ?? s.longitude ?? NaN)
+    if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng }
+    return null
+  }
+  const lat = Number(s.site?.lat ?? NaN)
+  const lng = Number(s.site?.lng ?? NaN)
+  if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng }
+  return null
+}
+
+const getCoordsFromKey = (key) => {
+  const s = stopsByKey.value.get(key)
+  return getStopCoords(s)
+}
+
 const openStopsDrawer = async () => {
   stopsDrawerOpen.value = true
   await nextTick()
@@ -513,6 +560,12 @@ const addTechnicalStop = (actionId) => {
   const action = (props.journeyStopActions || []).find(a => Number(a.id) === idNum)
   if (!action) return
 
+  const prevKey = manualStopOrder.value.length ? manualStopOrder.value[manualStopOrder.value.length - 1] : null
+  const nextKey = !prevKey && manualStopOrder.value.length ? manualStopOrder.value[0] : null
+  const prevCoords = prevKey ? getCoordsFromKey(prevKey) : null
+  const nextCoords = nextKey ? getCoordsFromKey(nextKey) : null
+  const fallbackCoords = prevCoords ?? nextCoords ?? { lat: defaultMapLat, lng: defaultMapLng }
+
   technicalStopCounter.value += 1
   technicalStops.value.push({
     kind: 'technical',
@@ -522,11 +575,38 @@ const addTechnicalStop = (actionId) => {
     status: 'planned',
     orders: [],
     orders_count: 0,
+    open: true,
+    location_lat: fallbackCoords.lat,
+    location_lng: fallbackCoords.lng,
   })
 }
 
 const removeTechnicalStop = (key) => {
   technicalStops.value = (technicalStops.value || []).filter(s => stopKey(s) !== key)
+}
+
+const updateTechnicalStopCoords = ({ key, lat, lng }) => {
+  if (!key) return
+  const target = (technicalStops.value || []).find(s => stopKey(s) === key)
+  if (!target) return
+  target.location_lat = lat
+  target.location_lng = lng
+}
+
+const updateStopFields = ({ key, description, address_text }) => {
+  if (!key) return
+  if (key.startsWith('tech:')) {
+    const target = (technicalStops.value || []).find(s => stopKey(s) === key)
+    if (!target) return
+    if (description !== undefined) target.description = description
+    if (address_text !== undefined) target.address_text = address_text
+    return
+  }
+  stopMeta.value[key] = {
+    ...(stopMeta.value[key] ?? {}),
+    ...(description !== undefined ? { description } : {}),
+    ...(address_text !== undefined ? { address_text } : {}),
+  }
 }
 
 // Set up event listeners on mount and clean up on unmount
@@ -764,10 +844,20 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
 
 <template>
 
+<section class="flex flex-row items-center justify-end gap-4 mb-2">
+  <button
+    type="button"
+    class="btn btn-primary btn-outline btn-sm"
+    @click="goBackToOrders"
+  >
+    <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>
+    Torna a lista Viaggi
+  </button>
+</section>
 
 <button 
     type="button"
-    class="btn btn-primary btn-circle btn-toggle-map"
+    class="btn btn-primary btn-circle btn-toggle-map z-20"
     :class="extendedMapMode? 'btn-error' : 'btn-success'"
     @click.prevent="toggleExtendedMapMode()"
 >
@@ -957,6 +1047,8 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
       :technical-actions="props.journeyStopActions"
       @add-technical-stop="addTechnicalStop"
       @remove-technical-stop="removeTechnicalStop"
+      @update-technical-stop-coords="updateTechnicalStopCoords"
+      @update-stop-fields="updateStopFields"
       @dragging="isDraggingStops = $event"
       @close="stopsDrawerOpen = false"
     />

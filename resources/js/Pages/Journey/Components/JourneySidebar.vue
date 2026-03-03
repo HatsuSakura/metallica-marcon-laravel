@@ -30,6 +30,10 @@ const props = defineProps({
   ordiniCaricoRiempimento: [Number, String],
   manualStopOrder: Array,
   stopsByKey: Object,
+  submitLabel: {
+    type: String,
+    default: 'Crea Viaggio',
+  },
 })
 
 const emit = defineEmits(['update:manualStopOrder', 'dragging', 'open-stops-manager'])
@@ -279,7 +283,7 @@ const stopOrderModel = computed({
           class="btn btn-primary"
         >
           <font-awesome-icon :icon="['fas', 'floppy-disk']" class="text-xl"/>
-          Crea Viaggio
+          {{ submitLabel }}
         </button>
       </div>
     </div>

@@ -1,12 +1,19 @@
 <template>
     <div class="flex flex-col w-full">
     
-        <div class="flex flex-row items-center justify-between mb-2">
+        <div class="flex flex-row items-center justify-between">
 
             <div class="flex flex-row items-center justify-start mb-2 gap-4">
                 <Link v-if="props.backLinkRoute && props.backLinkText"
                     class="btn btn-primary btn-outline btn-sm" 
                     :href="route(props.backLinkRoute)"
+                >
+                    <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>
+                    Torna a {{ props.backLinkText}}
+                </Link>
+                <Link v-else-if="props.backLinkUrl && props.backLinkText"
+                    class="btn btn-primary btn-outline btn-sm"
+                    :href="props.backLinkUrl"
                 >
                     <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>
                     Torna a {{ props.backLinkText}}
@@ -35,6 +42,7 @@ import { Link } from '@inertiajs/vue3';
 
 const props = defineProps({
     backLinkRoute: String,
+    backLinkUrl: String,
     backLinkText: String,
     linkRoute: String,
     linkIcon: String,
@@ -42,4 +50,3 @@ const props = defineProps({
 })
 
 </script>
-

@@ -198,16 +198,29 @@
             :initialOpen=true
             @register="registerSection"
           >
-            <ItemRow
-              v-for="(item, index) in form.items"
-              :key="item.id ?? index"
-              v-model:item="form.items[index]"
-              :index="index"
-              :cerList="cerList"
-              :holders="holders"
-              :warehouses="warehouses"
-              @remove="removeItem(index)"
-            />
+            <div v-for="group in groupedItems" :key="group.key" class="mb-4 border border-base-300 rounded-box">
+              <div class="px-3 py-2 bg-base-200 rounded-box flex items-center gap-2">
+                <div class="badge" :class="group.isUnassigned ? 'badge-warning' : 'badge-primary'">
+                  {{ group.isUnassigned ? 'CER non selezionato' : `CER ${group.cerCode}` }}
+                </div>
+                <div class="font-medium">{{ group.groupLabel }}</div>
+                <div class="text-xs opacity-70">({{ group.items.length }} item)</div>
+              </div>
+
+              <div class="p-2">
+                <ItemRow
+                  v-for="row in group.items"
+                  :key="row.item.id ?? row.index"
+                  v-model:item="form.items[row.index]"
+                  :index="row.index"
+                  :items="form.items"
+                  :cerList="cerList"
+                  :holders="holders"
+                  :warehouses="warehouses"
+                  @remove="removeItem(row.index)"
+                />
+              </div>
+            </div>
               <button type="button" @click="addItem" class="btn btn-primary btn-sm">
                 <font-awesome-icon :icon="['fas', 'diagram-successor']" class="text-2xl"/>
                 <font-awesome-icon :icon="['fas', 'plus']" class="text-2xl"/>
@@ -315,12 +328,43 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
       () => new Date()
     )
 
-    const totalItemsWeight = computed(() => {
+const totalItemsWeight = computed(() => {
       if (form.items.length){
         return form.items.reduce((total, element) => total + (Number(element.weight_declared) || 0), 0);
       }
       return 0;
     });
+
+const groupedItems = computed(() => {
+  const cerById = new Map((props.cerList || []).map((c) => [Number(c.id), c]));
+  const groups = new Map();
+
+  form.items.forEach((item, index) => {
+    const cerId = Number(item.cer_code_id || 0);
+    const cer = cerById.get(cerId);
+    const isUnassigned = !cerId;
+    const fallbackLabel = cer ? `${cer.code}.1` : 'Gruppo 1';
+    const groupLabel = item.order_item_group_label || fallbackLabel;
+
+    const key = isUnassigned
+      ? 'unassigned'
+      : `cer:${cerId}|${item.order_item_group_id ? `id:${item.order_item_group_id}` : `label:${groupLabel}`}`;
+
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        isUnassigned,
+        cerCode: cer?.code ?? '-',
+        groupLabel: isUnassigned ? 'Assegna CER agli item' : groupLabel,
+        items: [],
+      });
+    }
+
+    groups.get(key).items.push({ item, index });
+  });
+
+  return Array.from(groups.values());
+});
 
     // Declare the ref
     const orariApertura = ref('');
@@ -362,6 +406,8 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
 const addItem = () => {
   form.items.push({
     cer_code_id: null,
+    order_item_group_id: null,
+    order_item_group_label: null,
     is_bulk: false,
     holder_id: '',
     holder_quantity: 1,
@@ -383,6 +429,10 @@ const addItem = () => {
     adr_esenzione_parziale: false,
   })
 }
+
+const removeItem = (index) => {
+  form.items.splice(index, 1);
+};
    
 
 

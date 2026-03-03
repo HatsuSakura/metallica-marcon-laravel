@@ -14,6 +14,7 @@ class JourneyStop extends Model
         'customer_id',
         'customer_visit_index',
         'technical_action_id',
+        'description',
         'planned_sequence',
         'sequence',
         'status',
@@ -24,6 +25,7 @@ class JourneyStop extends Model
         'completed_at',
         'reason_code',
         'reason_text',
+        'driver_notes',
         'notes',
     ];
 

@@ -19,6 +19,7 @@ class OrderItem extends Model
         'order_id',
         'journey_cargo_id',
         'cer_code_id',
+        'order_item_group_id',
         'holder_id',
         'holder_quantity',
         'is_bulk',
@@ -113,6 +114,11 @@ class OrderItem extends Model
     public function cerCode()
     {
         return $this->belongsTo(CerCode::class, 'cer_code_id');
+    }
+
+    public function orderItemGroup()
+    {
+        return $this->belongsTo(OrderItemGroup::class, 'order_item_group_id');
     }
 
     public function holder()

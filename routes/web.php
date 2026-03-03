@@ -45,6 +45,7 @@ use App\Http\Controllers\WarehouseManagerOrderItemController;
 use App\Http\Controllers\API_WarehouseJourneyCargosController;
 use App\Http\Controllers\API_RelatorSiteBooleanUpdateController;
 use App\Http\Controllers\API_RelatorUserResetAndresendFunctions;
+use App\Http\Controllers\API_DriverJourneyStopsController;
 use App\Http\Controllers\WarehouseManagerOrderItemImageController;
 
 
@@ -377,6 +378,11 @@ Route::prefix('api')
         Route::put('/site/updateBooleans/{site}', [API_RelatorSiteBooleanUpdateController ::class, 'update']);
         Route::put('/journey/updateState/{journey}', [API_DriverJourneyUpdateController ::class, 'updateState']);
         Route::put('/order/updateState/{order}', [API_DriverOrderUpdateController ::class, 'updateState']);
+        Route::post('/driver/journeys/{journey}/start', [API_DriverJourneyStopsController::class, 'startJourney']);
+        Route::put('/driver/journeys/{journey}/stops/reorder', [API_DriverJourneyStopsController::class, 'reorder']);
+        Route::put('/driver/journeys/{journey}/stops/{stop}/complete', [API_DriverJourneyStopsController::class, 'complete']);
+        Route::put('/driver/journeys/{journey}/stops/{stop}/skip', [API_DriverJourneyStopsController::class, 'skip']);
+        Route::post('/driver/journeys/{journey}/stops/technical', [API_DriverJourneyStopsController::class, 'createTechnical']);
         Route::put('/warehouse-orders/{order}', [API_WarehouseOrdersController::class, 'update'])->name('update');
         Route::post('/warehouse-order-items/move-journey-cargo/{orderItem}', [API_WarehouseOrderItemsController::class, 'moveJourneyCargo'])->name('warehouse-order-items.move-journey-cargo');
         Route::post('/warehouse-order-items/save-items', [API_WarehouseOrderItemsController::class, 'saveItems'])->name('warehouse-order-items.save-items-bulk');

@@ -1,103 +1,243 @@
 <template>
-
-<ul class="timeline timeline-vertical">
-    <li>
-        <div class="timeline-start timeline-box">
-            Partenza
-        </div>
-        <div class="timeline-middle">
-            <font-awesome-icon :icon="['fas', 'circle-check']" />
-        </div>
-        <div class="timeline-end timeline-box">
-            <div class="flex flex-row gap-2 items-center">
-                <span>
-                    <font-awesome-icon :icon="['fas', 'route']" class="text-4xl"/>
-                </span>                
-                <span v-if="journey.state == 'attivo' || journey.state == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
-                    <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
-                </span>
-
+    <ul class="timeline timeline-vertical">
+        <li>
+            <div class="timeline-start timeline-box">
+                Partenza
             </div>
-        </div>
-        <hr />
-    </li>
-
-  <!-- ELENCO AUTOMATICO -->
-  <li v-for="order in props.journey.orders">
-    <hr/>
-    <div class="timeline-start timeline-box">
-        {{ order.customer.ragione_sociale }} <br/>
-        Sede: {{ order.site.indirizzo }} 
-    </div>
-    <div class="timeline-middle">
-        <font-awesome-icon :icon="['fas', 'circle-check']" />
-    </div>
-    <div class="timeline-end timeline-box">
-        <div class="flex flex-row gap-2 items-center">
-            <span v-if="order.truck_location == 'vehicle'">
-                <font-awesome-icon :icon="['fas', 'truck']" class="text-4xl"/>
-            </span>
-            <span v-else-if="order.truck_location == 'trailer'">
-                <font-awesome-icon :icon="['fas', 'trailer']" class="text-4xl"/>
-            </span>
-            <span v-else>
-                <font-awesome-icon :icon="['fas', 'cart-arrow-down']" class="text-4xl"/>
-            </span>
-
-            <div v-if="props.journey.state == 'attivo' || journey.state == 'eseguito'" class="flex flex-row gap-2 items-center">
-                <span v-if="order.state == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
-                    <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
-                </span>
+            <div class="timeline-middle">
+                <font-awesome-icon :icon="['fas', 'circle-check']" />
             </div>
-
-        </div>
-    </div>
-    <hr />
-  </li>
-  <!-- FINE ELENCO AUTOMATICO -->
-
-  <!-- ELENCO MAGAZZINI -->
-  <li>
-        <hr/>
-        <div class="timeline-start timeline-box">
-            <span v-if="props.is_double_load">PRIMO </span>Scarico Magazzino
-        </div>
-        <div class="timeline-middle">
-            <font-awesome-icon :icon="['fas', 'circle-check']" />
-        </div>
-        <div class="timeline-end timeline-box">
-            <div class="flex flex-row gap-2 items-center">
-                <span>
-                    <font-awesome-icon :icon="['fas', 'warehouse']" class="text-4xl"/>
-                </span>
-
-                    <span v-if="journey.state == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
+            <div class="timeline-end timeline-box">
+                <div class="flex flex-row gap-2 items-center">
+                    <span>
+                        <font-awesome-icon :icon="['fas', 'route']" class="text-4xl"/>
+                    </span>
+                    <span v-if="journey.state == 'attivo' || journey.state == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
                         <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
                     </span>
 
+                </div>
             </div>
-        </div>
-    </li>
-</ul>
+            <hr />
+        </li>
 
+        <!-- ELENCO FERMATE (EDIT MODE) -->
+        <li v-if="props.reorderEnabled">
+            <hr/>
+            <div class="timeline-start timeline-box">
+                <div class="text-sm opacity-70">
+                    Trascina le tappe per cambiare l'ordine.
+                </div>
+            </div>
+            <div class="timeline-middle">
+                <font-awesome-icon :icon="['fas', 'circle-check']" />
+            </div>
+            <div class="timeline-end timeline-box w-full">
+                <div class="w-full">
+                    <draggable
+                        v-model="reorderStops"
+                        :item-key="stop => stop.id"
+                        handle=".stop-handle"
+                        :animation="150"
+                        tag="div"
+                        class="space-y-2"
+                        @start="isDragging = true"
+                        @end="onDragEnd"
+                    >
+                        <template #item="{ element: stop, index }">
+                            <Box padding="p-2" class="w-full">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="flex items-start gap-2 min-w-0">
+                                        <font-awesome-icon
+                                            :icon="['fas', 'grip-vertical']"
+                                            class="stop-handle mt-1 cursor-grab select-none opacity-60"
+                                        />
+                                        <div class="min-w-0">
+                                            <div class="font-semibold truncate">
+                                                {{ index + 1 }}. {{ stopTitle(stop) }}
+                                            </div>
+                                            <div v-if="stopSubtitle(stop)" class="text-sm opacity-80 truncate">
+                                                Sede: {{ stopSubtitle(stop) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <span v-if="stopOrdersCount(stop) > 0" class="badge badge-neutral">
+                                            {{ stopOrdersCount(stop) }} ordini
+                                        </span>
+                                    </div>
+                                </div>
+                            </Box>
+                        </template>
+                    </draggable>
+                </div>
+            </div>
+            <hr />
+        </li>
+        <!-- FINE ELENCO FERMATE (EDIT MODE) -->
+
+        <!-- ELENCO FERMATE (VIEW MODE) -->
+        <template v-else>
+            <li v-for="stop in localStops" :key="stop.id">
+                <hr/>
+                <div class="timeline-start timeline-box">
+                    <div>
+                        <div class="font-semibold">
+                            {{ stopTitle(stop) }}
+                        </div>
+                        <div v-if="stopSubtitle(stop)" class="text-sm opacity-80">
+                            Sede: {{ stopSubtitle(stop) }}
+                        </div>
+                    </div>
+                </div>
+                <div class="timeline-middle">
+                    <font-awesome-icon :icon="['fas', 'circle-check']" />
+                </div>
+                <div class="timeline-end timeline-box">
+                    <div class="flex flex-row gap-2 items-center">
+                        <span v-if="stop.kind === 'technical'">
+                            <font-awesome-icon :icon="['fas', 'screwdriver-wrench']" class="text-3xl"/>
+                        </span>
+                        <span v-else>
+                            <font-awesome-icon :icon="['fas', 'map-marker-alt']" class="text-3xl"/>
+                        </span>
+
+                        <div class="flex flex-row gap-2 items-center">
+                            <span
+                                v-for="loc in stopTruckLocations(stop)"
+                                :key="loc"
+                            >
+                                <font-awesome-icon v-if="loc === 'vehicle'" :icon="['fas', 'truck']" class="text-3xl"/>
+                                <font-awesome-icon v-else-if="loc === 'trailer'" :icon="['fas', 'trailer']" class="text-3xl"/>
+                                <font-awesome-icon :icon="['fas', 'cart-arrow-down']" class="text-3xl"/>
+                            </span>
+
+                            <span v-if="stopOrdersCount(stop) > 0" class="badge badge-neutral">
+                                {{ stopOrdersCount(stop) }} ordini
+                            </span>
+
+                            <span v-if="isStopCompleted(stop)" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
+                                <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
+                            </span>
+                        </div>
+
+                    </div>
+                </div>
+                <hr />
+            </li>
+        </template>
+        <!-- FINE ELENCO FERMATE (VIEW MODE) -->
+
+        <!-- ELENCO MAGAZZINI -->
+        <li>
+            <hr/>
+            <div class="timeline-start timeline-box">
+                <span v-if="props.is_double_load">PRIMO </span>Scarico Magazzino
+            </div>
+            <div class="timeline-middle">
+                <font-awesome-icon :icon="['fas', 'circle-check']" />
+            </div>
+            <div class="timeline-end timeline-box">
+                <div class="flex flex-row gap-2 items-center">
+                    <span>
+                        <font-awesome-icon :icon="['fas', 'warehouse']" class="text-4xl"/>
+                    </span>
+
+                        <span v-if="journey.state == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
+                            <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
+                        </span>
+
+                </div>
+            </div>
+        </li>
+    </ul>
 </template>
 
 <script setup>
 
-import { defineProps, reactive } from 'vue'
-import VueDatePicker from '@vuepic/vue-datepicker';
-import '@vuepic/vue-datepicker/dist/main.css';
+import { defineProps, ref, watch } from 'vue'
+import draggable from 'vuedraggable'
+import Box from '@/Components/UI/Box.vue'
 
 const props = defineProps({
     journey : Object,
     warehouses: Object,
+    is_double_load: Boolean,
+    reorderEnabled: Boolean,
 })
 
-const form = reactive({
-    dt_start: Date.now(),
-    warehouse_id_1: '',
-    warehouse_download_dt_1: '',
-    warehouse_id_2: '',
-    warehouse_download_dt_2: '',
-})
+const emit = defineEmits(['reorder-changed'])
+
+const isDragging = ref(false)
+const localStops = ref([])
+const reorderStops = ref([])
+
+const normalizeStops = (stops) => {
+    const list = Array.isArray(stops) ? [...stops] : []
+    return list.sort((a, b) => {
+        const aSeq = a.sequence ?? a.planned_sequence ?? 0
+        const bSeq = b.sequence ?? b.planned_sequence ?? 0
+        return aSeq - bSeq
+    })
+}
+
+watch(
+    () => props.journey?.stops,
+    (stops) => {
+        if (!isDragging.value) {
+            const normalized = normalizeStops(stops)
+            localStops.value = normalized
+            reorderStops.value = normalized.filter((stop) => ['planned', 'in_progress'].includes(stop.status))
+        }
+    },
+    { immediate: true }
+)
+
+const stopOrders = (stop) => {
+    if (!stop) return []
+    if (Array.isArray(stop.orders)) return stop.orders
+    const stopOrdersList = stop.stop_orders ?? stop.stopOrders
+    if (!Array.isArray(stopOrdersList)) return []
+    return stopOrdersList.map((so) => so?.order ?? so).filter(Boolean)
+}
+
+const stopOrdersCount = (stop) => stopOrders(stop).length
+
+const stopTitle = (stop) => {
+    if (!stop) return '-'
+    if (stop.kind === 'technical') {
+        return stop.technical_action?.label ?? stop.technical_action?.name ?? stop.description ?? 'Sosta tecnica'
+    }
+    return stop.customer?.ragione_sociale ?? `Cliente #${stop.customer_id ?? '-'}`
+}
+
+const stopSubtitle = (stop) => {
+    if (!stop) return null
+    if (stop.address_text) return stop.address_text
+    const firstOrder = stopOrders(stop)[0]
+    return firstOrder?.site?.indirizzo ?? null
+}
+
+const stopTruckLocations = (stop) => {
+    const orders = stopOrders(stop)
+    const locations = []
+    for (const order of orders) {
+        const loc = order?.truck_location ?? null
+        if (!loc) continue
+        if (!locations.includes(loc)) locations.push(loc)
+    }
+    return locations
+}
+
+const isStopCompleted = (stop) => {
+    if (!stop) return false
+    if (stop.completed_at) return true
+    const status = String(stop.status ?? '').toLowerCase()
+    return ['completed', 'executed', 'done'].includes(status)
+}
+
+const onDragEnd = () => {
+    isDragging.value = false
+    emit('reorder-changed', reorderStops.value.map((stop) => stop.id))
+}
 </script>

@@ -6,6 +6,7 @@ use App\Enums\JourneysState;
 use Illuminate\Database\Eloquent\Model;
 use Mpociot\Versionable\VersionableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Journey extends Model
@@ -109,4 +110,3 @@ class Journey extends Model
     }
 
 }
-

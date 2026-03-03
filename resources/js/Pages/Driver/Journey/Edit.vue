@@ -1,484 +1,484 @@
 <template>
-
-
-
-        <Link
-            class="btn btn-ghost"
-            :href="route('driver.journey.index')"
+    <section>
+        <HeaderForDashboard
+            :backLinkRoute="'driver.journey.index'"
+            :backLinkText="'Viaggi'"
         >
-            <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>&nbsp;
-            Torna alla lista viaggi
-        </Link>
-    
+            Gestione Viaggio
+        </HeaderForDashboard>
 
-
-<form-wizard
-    @on-complete="onComplete"
-    @on-loading="setLoading"
-    @on-validate="handleValidation"
-    @on-error="handleErrorMessage"
-    @on-change="onTabChange"
-    :start-index="startIndex"
-    step-size="sm"
-    shape="circle"
-    color="grey"
-    error-color="#e74c3c"
->
-
-<div class="loader" v-if="loadingWizard"></div>
-<div v-if="errorMsg" class="bg-error p-2 text-white my-2">
-    <font-awesome-icon :icon="['fas', 'triangle-exclamation']" /> &nbsp;
-    <span class="error">{{ errorMsg }}</span>
-</div>
-
-<!-- PARTENZA -->
-    <tab-content 
-        title="Partenza" 
-        icon="fa fa-route"
-        :before-change="updateJourneyStatus"
-    >
-        <div class="flex flex-row items-center gap-2">
-            <div>
-                <span class="font-medium">Data e ora di partenza: </span>
-            </div>
-            <div>
-                <VueDatePicker
-                    v-model="form.real_dt_start"
-                    locale="it"
-                    format="dd/MM/yyyy HH:mm"
-                    required
-                    placeholder="Data Partenza"
-                    :range=false
-                    time-picker-inline
-                    auto-apply
-                    minutes-increment="5"
-                    minutes-grid-increment="5"
-                    closeOnScroll="false"
-                    @closed="manageDate"
+        <div class="flex flex-row items-center justify-between gap-3 mb-4">
+            <JourneyMainData :journey="journey" />
+            <div class="flex items-center gap-2">
+                <span class="badge badge-outline">
+                    Stato: {{ journey.state }}
+                </span>
+                <button
+                    v-if="journey.state === 'creato'"
+                    type="button"
+                    class="btn btn-success btn-sm"
+                    :disabled="isLoading"
+                    @click="startJourney"
                 >
-                </VueDatePicker>
+                    <font-awesome-icon :icon="['fas', 'play']" class="text-lg"/>
+                    Inizia viaggio
+                </button>
             </div>
         </div>
-    </tab-content>
 
-<!-- TAPPE INTERMEDIE -->
-    <tab-content v-for="order in props.journey.orders" :key="order.id"
-        :title="order.customer.ragione_sociale"
-        :icon="calculateIcon(order)"
-        :before-change="()=>updateOrderStatus(order)"
-    >
-        <div class="flex flex-row gap-2">
-            <Box class="w-1/2 flex flex-col gap-2">
-                <template #header>Ordine #{{ String(order.id).padStart('9', '0') }}</template>
-                 <div>
-                    <span class="font-medium">Zona di carico Autotreno: </span>
-                    <span v-if="order.truck_location == 'vehicle'">
-                        <font-awesome-icon :icon="['fas', 'truck']" class="text-2xl"/>
-                        Motrice
-                    </span>
-                    <span v-else-if="order.truck_location == 'trailer'">
-                        <font-awesome-icon :icon="['fas', 'trailer']" class="text-2xl"/>
-                        Rimorchio
-                    </span>
-                    <span v-else>
-                        <font-awesome-icon :icon="['fas', 'cart-arrow-down']" class="text-2xl"/>
-                        A capienza/Indifferente
-                    </span>
-                </div>
-                <div class="flex flex-row items-center gap-2">
-                    <div>
-                        <span class="font-medium">Data e ora di carico: </span>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Box class="lg:col-span-1">
+                <template #header>
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <div class="font-semibold">Tappe viaggio</div>
+                        <div class="flex items-center gap-2">
+                            <button
+                                v-if="reorderableStops.length > 1"
+                                type="button"
+                                class="btn btn-outline btn-xs"
+                                @click="toggleReorder"
+                            >
+                                <font-awesome-icon
+                                    :icon="['fas', reorderEnabled ? 'xmark' : 'arrows-up-down-left-right']"
+                                    class="text-sm"
+                                />
+                                {{ reorderEnabled ? 'Annulla' : 'Riordina' }}
+                            </button>
+                            <button
+                                v-if="reorderEnabled"
+                                type="button"
+                                class="btn btn-primary btn-xs"
+                                :disabled="isLoading"
+                                @click="saveReorder"
+                            >
+                                <font-awesome-icon :icon="['fas', 'floppy-disk']" class="text-sm"/>
+                                Salva ordine
+                            </button>
+                        </div>
                     </div>
-                    <div>
-                        <VueDatePicker
-                            v-model="(form.orders.find(o => o.id === order.id) || {}).real_withdraw_dt"
-                            locale="it"
-                            format="dd/MM/yyyy HH:mm"
-                            required
-                            placeholder="Data e ora Ritiro"
-                            :range=false
-                            time-picker-inline
-                            auto-apply
-                            minutes-increment="5"
-                            minutes-grid-increment="5"
-                            closeOnScroll="false"
-                            @closed="manageDate"
-                        >
-                        </VueDatePicker>
+                </template>
+
+                <div v-if="reorderEnabled" class="space-y-2">
+                    <div class="text-xs opacity-70">
+                        Solo le tappe pianificate o in corso sono riordinabili.
                     </div>
+                    <draggable
+                        v-model="reorderDraft"
+                        :item-key="stop => stop.id"
+                        handle=".stop-handle"
+                        :animation="150"
+                        tag="div"
+                        class="space-y-2"
+                    >
+                        <template #item="{ element: stop, index }">
+                            <Box padding="p-2">
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="flex items-start gap-2 min-w-0">
+                                        <font-awesome-icon
+                                            :icon="['fas', 'grip-vertical']"
+                                            class="stop-handle mt-1 cursor-grab select-none opacity-60"
+                                        />
+                                        <div class="min-w-0">
+                                            <div class="font-semibold truncate">
+                                                {{ index + 1 }}. {{ stopTitle(stop) }}
+                                            </div>
+                                            <div v-if="stopSubtitle(stop)" class="text-xs opacity-70 truncate">
+                                                Sede: {{ stopSubtitle(stop) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span v-if="stopOrdersCount(stop) > 0" class="badge badge-neutral">
+                                        {{ stopOrdersCount(stop) }} ordini
+                                    </span>
+                                </div>
+                            </Box>
+                        </template>
+                    </draggable>
                 </div>
-                <div>
-                    ADR???
+
+                <div v-else class="space-y-2">
+                    <button
+                        v-for="stop in stops"
+                        :key="stop.id"
+                        type="button"
+                        class="btn btn-ghost w-full justify-start"
+                        :class="selectedStopId === stop.id ? 'btn-active' : ''"
+                        @click="selectedStopId = stop.id"
+                    >
+                        <div class="flex items-start gap-2 w-full">
+                            <span class="badge badge-outline">
+                                {{ stopStatusLabel(stop.status) }}
+                            </span>
+                            <div class="min-w-0 text-left">
+                                <div class="font-semibold truncate">{{ stopTitle(stop) }}</div>
+                                <div v-if="stopSubtitle(stop)" class="text-xs opacity-70 truncate">
+                                    {{ stopSubtitle(stop) }}
+                                </div>
+                            </div>
+                        </div>
+                    </button>
                 </div>
-                <div class="flex flex-row-reverse">
-                    <Link
-                        :href="route('driver.order.edit', {order: order.id} )"
-                        method="get"
-                        as="button"
-                        class="btn btn-primary"
+
+
+
+
+
+<!--
+                    <div class="border-t pt-4 space-y-3">
+                        <div class="font-semibold">Aggiungi sosta tecnica</div>
+                        <select v-model="techForm.technical_action_id" class="select select-bordered w-full">
+                            <option value="" disabled>Tipo di sosta tecnica</option>
+                            <option v-for="action in journeyStopActions" :key="action.id" :value="action.id">
+                                {{ action.label }}
+                            </option>
+                        </select>
+                        <input
+                            v-model="techForm.description"
+                            type="text"
+                            class="input input-bordered w-full"
+                            placeholder="Descrizione breve (opzionale)"
+                        />
+                        <input
+                            v-model="techForm.address_text"
+                            type="text"
+                            class="input input-bordered w-full"
+                            placeholder="Indirizzo (opzionale)"
+                        />
+                        <textarea
+                            v-model="techForm.driver_notes"
+                            class="textarea textarea-bordered w-full"
+                            rows="2"
+                            placeholder="Note driver (opzionali)"
+                        ></textarea>
+                        <button
+                            type="button"
+                            class="btn btn-outline"
+                            :disabled="isLoading"
+                            @click="createTechnicalStop"
                         >
-                        <font-awesome-icon :icon="['fas', 'pen']" class="text-2xl"/>
-                        Modifica Ordine
-                    </Link>
-                </div>
+                            Aggiungi
+                        </button>
+                    </div>
+-->
+
+
             </Box>
 
-            <Box class="w-1/2  flex flex-col gap-2">
-                <template #header>Info sede di carico</template>
-                <div>
-                    <span class="font-medium">Indirizzo: </span>{{ order.site.indirizzo }}
+            <Box class="lg:col-span-2">
+                <template #header>
+                    <div class="flex items-center justify-between">
+                        <div class="font-semibold">Dettaglio tappa</div>
+                        <div v-if="currentStop" class="badge badge-primary">
+                            Tappa corrente
+                        </div>
+                    </div>
+                </template>
+
+                <div v-if="!selectedStop" class="text-sm opacity-70">
+                    Seleziona una tappa per vedere i dettagli.
                 </div>
-                <div>
-                    <span class="font-medium">Mezzi di sollevamento: </span>
-                    <SiteMezziDiSollevamento :site="order.site" />
+
+                <div v-else class="space-y-4">
+                    <div>
+                        <div class="text-lg font-semibold">{{ stopTitle(selectedStop) }}</div>
+                        <div v-if="stopSubtitle(selectedStop)" class="text-sm opacity-80">
+                            {{ stopSubtitle(selectedStop) }}
+                        </div>
+                        <div class="mt-2 flex items-center gap-2">
+                            <span class="badge badge-outline">
+                                Stato: {{ stopStatusLabel(selectedStop.status) }}
+                            </span>
+                            <span v-if="selectedStop.kind === 'technical'" class="badge badge-neutral">
+                                Tecnica
+                            </span>
+                        </div>
+                    </div>
+
+                    <div v-if="stopOrdersCount(selectedStop) > 0" class="space-y-1">
+                        <div class="font-semibold">Ordini collegati</div>
+                        <div class="flex flex-col gap-1">
+                            <div
+                                v-for="order in stopOrders(selectedStop)"
+                                :key="order.id"
+                                class="text-sm"
+                            >
+                                #{{ String(order.id).padStart('9', '0') }} — {{ order.customer?.ragione_sociale ?? 'Cliente' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="isCurrentSelected" class="flex flex-col gap-3">
+                        <div class="font-semibold">Azioni</div>
+                        <div class="flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                class="btn btn-success"
+                                :disabled="isLoading"
+                                @click="completeCurrentStop"
+                            >
+                                <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
+                                Completa
+                            </button>
+                            <button
+                                type="button"
+                                class="btn btn-warning"
+                                :disabled="isLoading"
+                                @click="skipPanelOpen = !skipPanelOpen"
+                            >
+                                <font-awesome-icon :icon="['fas', 'forward']" class="text-lg"/>
+                                Salta
+                            </button>
+                        </div>
+
+                        <div v-if="skipPanelOpen" class="space-y-2">
+                            <select v-model="skipForm.reason_code" class="select select-bordered w-full">
+                                <option value="" disabled>Motivazione</option>
+                                <option v-for="reason in skipReasons" :key="reason.value" :value="reason.value">
+                                    {{ reason.label }}
+                                </option>
+                            </select>
+                            <textarea
+                                v-model="skipForm.driver_notes"
+                                class="textarea textarea-bordered w-full"
+                                rows="3"
+                                placeholder="Note del driver (obbligatorie)"
+                            ></textarea>
+                            <button
+                                type="button"
+                                class="btn btn-warning"
+                                :disabled="isLoading"
+                                @click="confirmSkip"
+                            >
+                                Conferma salto
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </Box>
         </div>
 
-        <div class="flex flex-col gap-2 mt-2">
-            <Box>
-                <template #header>Materiali</template>
-                <JourneyOrderItems :items="order.items" :holders="props.holders" :cerList="props.cerList"/>
-            </Box>
-
-            <Box>
-                <template #header>Contenitori</template>
-                <JourneyOrderHolders :items="order.holders" :holders="props.holders"/>
-            </Box>
-        </div>
-
-
-    </tab-content>
-
-
-<!-- SCARICO A MAGAZZINO -->
-    <tab-content 
-        title="Scarico"
-        icon="fa fa-warehouse"
-    >
-
-        <div class="flex flex-row gap-2 items-center">
-            <div class="flex items-center ">
-                <label class="font-medium" for="is_double_load">Doppio scarico  &nbsp;</label>
-                <input v-model="form.is_double_load" id="is_double_load" type="checkbox" class="toggle" @change="checkThisToggle"/>
+        <Box class="my-4">
+            <template #header>Scarico a magazzino</template>
+            <div class="text-sm opacity-70">
+                Placeholder: in attesa di definizione con il cliente.
             </div>
-        </div>
-        <div class="flex flex-row gap-4 my-4">
-            <Box class="w-1/2">
-                <template #header>
-                    <span v-if="form.is_double_load">PRIMO</span>
-                    <span v-else="form.is_double_load">UNICO</span>
-                    Scarico a Magazzino
-                    <!--
-                    <div class="flex items-center ">
-                        <label class="font-medium" for="is_temporary_storage">Stoccaggio  &nbsp;</label>
-                        <input v-model="form.is_temporary_storage" id="is_temporary_storage" type="checkbox" class="toggle"/>
-                    </div>
-                    -->
-                </template>
-                <div v-if="!form.is_temporary_storage" class="flex flex-row gap-2 mt-4">
-                    <!-- MAGAZZINO Select/Option -->
-                    <select v-model="form.warehouse_id_1" id="warehouse" class="select select-bordered">
-                        <option value="" disabled>Magazzino</option>
-                        <option v-for="warehouse in props.warehouses" :key="warehouse.id" :value="warehouse.id">
-                        {{ warehouse.denominazione }}
-                        </option>
-                    </select>
-
-                    <VueDatePicker
-                        v-model="form.warehouse_download_dt_1"
-                        locale="it"
-                        format="dd/MM/yyyy HH:mm"
-                        required
-                        placeholder="Data & Ora Scarico"
-                        :range=false
-                        time-picker-inline
-                        auto-apply
-                        minutes-increment="5"
-                        minutes-grid-increment="5"
-                        closeOnScroll="false"
-                        class="w-full"
-                    ></VueDatePicker>
-                </div>
-            </Box>
-
-            <Box v-if="form.is_double_load" class="w-1/2">
-                <template #header>
-                    SECONDO Scarico a Magazzino
-                </template>
-                <div class="flex flex-row gap-2 mt-4">
-                    <!-- MAGAZZINO Select/Option -->
-                    <select v-model="form.warehouse_id_2" id="warehouse" class="select select-bordered">
-                        <option value="" disabled>Magazzino</option>
-                        <option v-for="warehouse in props.warehouses" :key="warehouse.id" :value="warehouse.id">
-                        {{ warehouse.denominazione }}
-                        </option>
-                    </select>
-
-                    <VueDatePicker
-                        v-model="form.warehouse_download_dt_2"
-                        locale="it"
-                        format="dd/MM/yyyy HH:mm"
-                        required
-                        placeholder="Data & Ora Scarico"
-                        :range=false
-                        time-picker-inline
-                        auto-apply
-                        minutes-increment="5"
-                        minutes-grid-increment="5"
-                        closeOnScroll="false"
-                        class="w-full"
-                    ></VueDatePicker>
-                </div>
-            </Box>
-        </div>
-    </tab-content>
-
-</form-wizard>
-
+        </Box>
+    </section>
 </template>
 
 <script setup>
-
-import { defineProps, ref, computed, reactive, onMounted, nextTick  } from 'vue';
-import { useForm } from '@inertiajs/vue3'
-import axios from 'axios';
-import dayjs from 'dayjs';
-import VueDatePicker from '@vuepic/vue-datepicker';
-import '@vuepic/vue-datepicker/dist/main.css';
-import {FormWizard, TabContent} from 'vue3-form-wizard';
-import 'vue3-form-wizard/dist/style.css';
-import Box from "@/Components/UI/Box.vue";
-import JourneyOrderItems from "./Components/JourneyOrderItems.vue";
-import JourneyOrderHolders from "./Components/JourneyOrderHolders.vue";
-import SiteMezziDiSollevamento from "@/Pages/Relator/Order/Components/SiteMezziDiSollevamento.vue";
-import { Link } from '@inertiajs/vue3';
-
+import { computed, ref, watch } from 'vue'
+import axios from 'axios'
+import draggable from 'vuedraggable'
+import Box from '@/Components/UI/Box.vue'
+import HeaderForDashboard from '@/Components/UI/HeaderForDashboard.vue'
+import JourneyMainData from './Components/JourneyMainData.vue'
 
 const props = defineProps({
-    journey : Object,
-    holders: Object,
-    cerList: Object,
-    warehouses: Object,
+    journey: Object,
+    journeyStopActions: Object,
 })
 
-const form = useForm({
-    real_dt_start: props.journey.real_dt_start? props.journey.real_dt_start : Date.now(),
-    real_dt_end: props.journey.real_dt_end? props.journey.real_dt_end : '',
-    orders: [],
-    warehouse_id_1: props.journey.warehouse_id_1? props.journey.warehouse_id_1 : '',
-    warehouse_download_dt_1: props.journey.warehouse_download_dt_1? props.journey.warehouse_download_dt_1 : '',
-    warehouse_id_2: props.journey.warehouse_id_2? props.journey.warehouse_id_2 : '',
-    warehouse_download_dt_2: props.journey.warehouse_download_dt_2? props.journey.warehouse_download_dt_2 : '',
-    is_temporary_storage: props.journey.is_temporary_storage? Boolean(props.journey.is_temporary_storage) : false,
-    is_double_load: props.journey.is_double_load? Boolean(props.journey.is_double_load) : false,
+const journey = ref(props.journey)
+const journeyStopActions = computed(() => props.journeyStopActions || [])
+const stops = ref([])
+const selectedStopId = ref(null)
+const reorderEnabled = ref(false)
+const reorderDraft = ref([])
+const isLoading = ref(false)
+const skipPanelOpen = ref(false)
+
+const skipReasons = [
+    { value: 'traffic', label: 'Traffico intenso' },
+    { value: 'over_capacity', label: 'Mezzo sovraccarico' },
+    { value: 'customer_closed', label: 'Cliente chiuso' },
+    { value: 'customer_refused', label: 'Cliente rifiuta' },
+    { value: 'vehicle_issue', label: 'Problema al mezzo' },
+    { value: 'other', label: 'Altro' },
+]
+
+const skipForm = ref({
+    reason_code: '',
+    driver_notes: '',
 })
 
-onMounted( async () => {
-  form.orders = props.journey.orders || []
-  await nextTick()
-  primeDefaultsForTab(startIndex.value)
+const techForm = ref({
+    technical_action_id: '',
+    description: '',
+    address_text: '',
+    driver_notes: '',
 })
 
-const loadingWizard = ref(false);
-const errorMsg = ref(null);
-const count = ref(0);
-
-
-const fmt = (d) => d ? dayjs(d).format('YYYY-MM-DD HH:mm:ss') : null
-
-const onComplete = () => {
-  // Formatto le date prima dell’invio
-  form.real_dt_start = fmt(form.real_dt_start)
-  //form.real_dt_end = fmt(form.real_dt_end)
-  form.real_dt_end = fmt(form.warehouse_download_dt_1)
-  form.warehouse_download_dt_1 = fmt(form.warehouse_download_dt_1)
-
-  if (form.is_double_load) {
-    form.warehouse_download_dt_2 = fmt(form.warehouse_download_dt_2)
-  } else {
-    form.warehouse_id_2 = null
-    form.warehouse_download_dt_2 = null
-  }
-
-  form.put(route('driver.journey.update', { journey: props.journey.id }), {
-    preserveScroll: true,
-    onSuccess: () => {
-      // Torno alla lista viaggi
-      form.reset() // opzionale: reset del form
-      window.location.href = route('driver.journey.index')
-    },
-    onError: (errors) => {
-      const first = Object.values(errors || {})[0]
-      if (first) errorMsg.value = first
-    },
-  })
+const normalizeStops = (list) => {
+    const items = Array.isArray(list) ? [...list] : []
+    return items.sort((a, b) => {
+        const aSeq = a.sequence ?? a.planned_sequence ?? 0
+        const bSeq = b.sequence ?? b.planned_sequence ?? 0
+        return aSeq - bSeq
+    })
 }
 
+const selectedStop = computed(() => stops.value.find((stop) => stop.id === selectedStopId.value) || null)
 
+const currentStop = computed(() => stops.value.find((stop) => stop.status === 'in_progress') || null)
 
+const isCurrentSelected = computed(() => currentStop.value && selectedStop.value?.id === currentStop.value.id)
 
-const setLoading = (value) => {
-  loadingWizard.value = value;
-};
-const handleValidation = (isValid, tabIndex) => {
-  console.log("Tab: " + tabIndex + " valid: " + isValid);
-};
-const handleErrorMessage = (err) => {
-  errorMsg.value = err;
-};
-
-/**
- * Ritorna “adesso” arrotondato al multiplo di 5 minuti più vicino (coerente con il tuo minutes-increment=5)
- */
-const nowRounded5 = () => {
-  const m = dayjs()
-  const rounded = Math.round(m.minute() / 5) * 5
-  return m.minute(rounded).second(0).millisecond(0).toDate()
-}
-
-/**
- * Mappa l’indice tab -> se il campo data è vuoto lo valorizza con sysdate (solo in memoria)
- * Indici:
- *  0 = Partenza
- *  1..N = ordini
- *  N+1 = Scarico
- */
-const primeDefaultsForTab = (tabIndex) => {
-  // assicurati che gli ordini siano disponibili
-  const orders = Array.isArray(form.orders) ? form.orders : []
-
-  if (tabIndex === 0) {
-    // PARTENZA
-    if (!form.real_dt_start) form.real_dt_start = nowRounded5()
-    return
-  }
-
-  const lastIndex = orders.length + 1
-
-  if (tabIndex >= 1 && tabIndex <= orders.length) {
-    // Tappa intermedia per ordine i-esimo
-    const ord = orders[tabIndex - 1]
-    if (ord && !ord.real_withdraw_dt) ord.real_withdraw_dt = nowRounded5()
-    return
-  }
-
-  if (tabIndex === lastIndex) {
-    // SCARICO
-    if (!form.warehouse_download_dt_1) form.warehouse_download_dt_1 = nowRounded5()
-    // se il doppio scarico è attivo, proponi anche per il secondo
-    if (form.is_double_load && !form.warehouse_download_dt_2) {
-      form.warehouse_download_dt_2 = nowRounded5()
-    }
-    return
-  }
-}
-
-/**
- * Evento del wizard: si attiva quando si passa da un tab all’altro
- * (prevIndex, nextIndex) -> proponi i default quando entri nel prossimo tab
- */
-const onTabChange = (prevIndex, nextIndex) => {
-  primeDefaultsForTab(nextIndex)
-}
-
-
-const updateJourneyStatus = () => {
-    return new Promise((resolve, reject) => {
-        if (props.journey.state == 'creato'){
-            if (form.real_dt_start) {
-                axios.put(`/api/journey/updateState/${props.journey.id}`, {
-                    new_state: 'attivo',
-                    real_dt_start: dayjs(form.real_dt_start).format('YYYY-MM-DD HH:mm:ss')
-                })
-                .then(response => {
-                    console.log(response.data);
-                    resolve(true);
-                })
-                .catch(error => {
-                    console.error(error);
-                    reject("Errore API durante l'aggiornamento dello stato del viaggio");
-                });
-            } else {
-                reject("Inserire data e ora di partenza");
-            }
-        }
-        else {
-            resolve(true);
-        }
-    });
-};
-
-const updateOrderStatus = (order) => {
-    return new Promise((resolve, reject) => {
-        const existingOrder = form.orders.find(o => o.id === order.id);
-        if (existingOrder.state == 'pianificato'){
-            if (existingOrder && existingOrder.real_withdraw_dt) {
-                axios.put(`/api/order/updateState/${order.id}`, {
-                    new_state: 'eseguito',
-                    real_withdraw_dt: dayjs(existingOrder.real_withdraw_dt).format('YYYY-MM-DD HH:mm:ss')
-                })
-                .then(response => {
-                    console.log(response.data);
-                    resolve(true);
-                })
-                .catch(error => {
-                    console.error(error);
-                    reject("Errore API durante l'aggiornamento dello stato dell'ordine");
-                });
-            } 
-            else {
-                reject("Inserire data e ora di carico");
-            }
-        }
-        else {
-            resolve(true);
-        }
-    });
-};
-
-const startIndex = computed(
-    () => {
-        const step = props.journey.state == 'creato' ? 0 : 1
-        const plannedOrdersCount = props.journey.orders.filter(order => order.state === 'eseguito').length;
-       
-        return 0 + step + plannedOrdersCount;
-    }
+const reorderableStops = computed(() =>
+    stops.value.filter((stop) => ['planned', 'in_progress'].includes(stop.status))
 )
 
-const calculateIcon = (order) => {
-    if(order.truck_location == 'vehicle'){
-        return 'fa fa-truck'
+const refreshFromJourney = (data) => {
+    journey.value = data
+    stops.value = normalizeStops(data?.stops || [])
+    if (!selectedStopId.value) {
+        const current = stops.value.find((stop) => stop.status === 'in_progress')
+        selectedStopId.value = current?.id ?? stops.value[0]?.id ?? null
     }
-    else if(order.truck_location == 'trailer'){
-        return 'fa fa-trailer'
-    }
-    else return 'fa fa-cart-arrow-down'
-}
-
-const manageDate = (date) => {
-    console.log(date)
-}
-
-const checkThisToggle = (e) => {
-    console.log(e.target.id)
-    if(e.target.id == 'is_double_load' && form.is_double_load == true){
-        form.is_temporary_storage = false
-    }
-    if(e.target.id == 'is_temporary_storage' && form.is_temporary_storage == true){
-        form.is_double_load = false
+    if (reorderEnabled.value) {
+        reorderDraft.value = reorderableStops.value.map((stop) => stop)
     }
 }
 
+watch(
+    () => props.journey,
+    (val) => {
+        refreshFromJourney(val)
+    },
+    { immediate: true }
+)
+
+const stopOrders = (stop) => {
+    if (!stop) return []
+    if (Array.isArray(stop.orders)) return stop.orders
+    const stopOrdersList = stop.stop_orders ?? stop.stopOrders
+    if (!Array.isArray(stopOrdersList)) return []
+    return stopOrdersList.map((so) => so?.order ?? so).filter(Boolean)
+}
+
+const stopOrdersCount = (stop) => stopOrders(stop).length
+
+const stopTitle = (stop) => {
+    if (!stop) return '-'
+    if (stop.kind === 'technical') {
+        return stop.technical_action?.label ?? stop.technical_action?.name ?? stop.description ?? 'Sosta tecnica'
+    }
+    return stop.customer?.ragione_sociale ?? `Cliente #${stop.customer_id ?? '-'}`
+}
+
+const stopSubtitle = (stop) => {
+    if (!stop) return null
+    if (stop.address_text) return stop.address_text
+    const firstOrder = stopOrders(stop)[0]
+    return firstOrder?.site?.indirizzo ?? null
+}
+
+const stopStatusLabel = (status) => {
+    switch (status) {
+        case 'in_progress':
+            return 'In corso'
+        case 'done':
+            return 'Completata'
+        case 'skipped':
+            return 'Saltata'
+        case 'cancelled':
+            return 'Annullata'
+        default:
+            return 'Pianificata'
+    }
+}
+
+const toggleReorder = () => {
+    reorderEnabled.value = !reorderEnabled.value
+    if (reorderEnabled.value) {
+        reorderDraft.value = reorderableStops.value.map((stop) => stop)
+    }
+}
+
+const saveReorder = async () => {
+    if (reorderDraft.value.length === 0) return
+    isLoading.value = true
+    try {
+        const response = await axios.put(`/api/driver/journeys/${journey.value.id}/stops/reorder`, {
+            stop_ids: reorderDraft.value.map((stop) => stop.id),
+        })
+        reorderEnabled.value = false
+        reorderDraft.value = []
+        refreshFromJourney(response.data.journey)
+    } catch (error) {
+        console.error(error)
+    } finally {
+        isLoading.value = false
+    }
+}
+
+const startJourney = async () => {
+    isLoading.value = true
+    try {
+        const response = await axios.post(`/api/driver/journeys/${journey.value.id}/start`)
+        refreshFromJourney(response.data.journey)
+    } catch (error) {
+        console.error(error)
+    } finally {
+        isLoading.value = false
+    }
+}
+
+const completeCurrentStop = async () => {
+    if (!currentStop.value) return
+    isLoading.value = true
+    try {
+        const response = await axios.put(
+            `/api/driver/journeys/${journey.value.id}/stops/${currentStop.value.id}/complete`
+        )
+        refreshFromJourney(response.data.journey)
+        skipPanelOpen.value = false
+    } catch (error) {
+        console.error(error)
+    } finally {
+        isLoading.value = false
+    }
+}
+
+const confirmSkip = async () => {
+    if (!currentStop.value) return
+    if (!skipForm.value.reason_code || !skipForm.value.driver_notes) return
+    isLoading.value = true
+    try {
+        const response = await axios.put(
+            `/api/driver/journeys/${journey.value.id}/stops/${currentStop.value.id}/skip`,
+            skipForm.value
+        )
+        refreshFromJourney(response.data.journey)
+        skipForm.value.reason_code = ''
+        skipForm.value.driver_notes = ''
+        skipPanelOpen.value = false
+    } catch (error) {
+        console.error(error)
+    } finally {
+        isLoading.value = false
+    }
+}
+
+const createTechnicalStop = async () => {
+    if (!techForm.value.technical_action_id) return
+    isLoading.value = true
+    try {
+        const response = await axios.post(
+            `/api/driver/journeys/${journey.value.id}/stops/technical`,
+            techForm.value
+        )
+        refreshFromJourney(response.data.journey)
+        techForm.value = {
+            technical_action_id: '',
+            description: '',
+            address_text: '',
+            driver_notes: '',
+        }
+    } catch (error) {
+        console.error(error)
+    } finally {
+        isLoading.value = false
+    }
+}
 </script>
-
-<style>
-@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css");
-
-.vue-datepicker {
-  box-sizing: content-box !important;
-}
-.dp__input_icons {
-  box-sizing: content-box !important;
-}
-</style>

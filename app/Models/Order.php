@@ -86,6 +86,11 @@ protected static function booted()
         return $this->hasMany(OrderItem::class);
     }
 
+    public function itemGroups()
+    {
+        return $this->hasMany(OrderItemGroup::class);
+    }
+
     public function holders()
     {
         return $this->hasMany(OrderHolder::class);
