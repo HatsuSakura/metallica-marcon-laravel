@@ -10,7 +10,7 @@ class JourneyEvent extends Model
     protected $fillable = [
         'journey_id',
         'journey_stop_id',
-        'type',
+        'state',
         'payload',
         'created_by_user_id',
     ];

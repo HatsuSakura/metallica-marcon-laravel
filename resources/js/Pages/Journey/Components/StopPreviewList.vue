@@ -82,7 +82,7 @@ const hasCoords = (s) => {
             <div class="flex items-start justify-between gap-2">
               <div class="min-w-0">
                 <div class="font-semibold truncate">
-                  <span class="stop-handle cursor-grab select-none opacity-60 mr-2">⋮⋮</span>
+                  <font-awesome-icon :icon="['fas', 'grip-vertical']" class="stop-handle cursor-grab select-none opacity-60 mr-2" />
                   {{ index + 1 }}. {{ stopTitle(resolveStop(key)) }}
                 </div>
 
