@@ -6,10 +6,10 @@
   <div class="drawer-content">
 
     <div class="custom-map-floating-filters drop-shadow-xl">
-        <div class="collapse bg-base-200">
+        <div class="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box">
             <input type="checkbox" />
-            <div class="collapse-title text-xl font-medium">
-                <span class="text-2xl mr-4">
+            <div class="collapse-title text-lg font-medium">
+                <span class="text-lg mr-4">
                     <font-awesome-icon :icon="['fas', 'filter']" />
                 </span>
                 Filtri dinamici
@@ -30,6 +30,26 @@
     </label>
    </div>
 
+    <div class="custom-map-nlp-panel drop-shadow-xl">
+      <button class="btn btn-circle btn-secondary" @click="toggleNlpPanel">
+        <font-awesome-icon :icon="['fas', 'wand-magic-sparkles']" class="text-xl" />
+      </button>
+    </div>
+
+    <div v-if="isNlpPanelOpen" class="custom-map-nlp-drawer bg-base-100 border border-base-300 rounded-lg p-4">
+      <div class="flex justify-between items-center mb-2">
+        <div class="text-sm font-semibold">NLP Query</div>
+        <button class="btn btn-ghost btn-sm btn-circle" @click="isNlpPanelOpen = false">
+          <font-awesome-icon :icon="['fas', 'xmark']" />
+        </button>
+      </div>
+
+      <NlpAssistantPanel
+        :sites="props.sites"
+        @apply-candidates="handleApplyCandidates"
+        @clear-candidates="handleClearCandidates"
+      />
+    </div>
 
 
 
@@ -63,6 +83,7 @@ import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import GoogleMapLoader from './Components/GoogleMapLoader.vue';
 import MapSiteFilters from './Index/Components/MapSiteFilters.vue';
 import MapInfoPanel from './Index/Components/MapInfoPanel.vue';
+import NlpAssistantPanel from './Index/Components/NlpAssistantPanel.vue';
 import eventBus from '@/eventBus';
 
 const mapConfig = null;
@@ -72,8 +93,16 @@ const props = defineProps({
 })
 
 
-// Make selectedSites computed based on props.sites directly
-const selectedSites = computed(() => props.sites);
+const nlpSelectedSiteIds = ref(null);
+const isNlpPanelOpen = ref(false);
+
+const selectedSites = computed(() => {
+  if (!Array.isArray(props.sites)) return [];
+  if (!Array.isArray(nlpSelectedSiteIds.value)) return props.sites;
+
+  const selectedIds = new Set(nlpSelectedSiteIds.value.map((id) => Number(id)));
+  return props.sites.filter((site) => selectedIds.has(Number(site.id)));
+});
 
 watch(selectedSites, (sites) => {
     console.log(sites)    
@@ -90,6 +119,18 @@ const openMapInfoDrawer = () => {
 
 const closeMapInfoDrawer = () => {
     isMapInfoDrawerOpen.value = false;  // Close the drawer when a link is clicked
+};
+
+const toggleNlpPanel = () => {
+  isNlpPanelOpen.value = !isNlpPanelOpen.value;
+};
+
+const handleApplyCandidates = ({ siteIds }) => {
+  nlpSelectedSiteIds.value = Array.isArray(siteIds) ? siteIds : [];
+};
+
+const handleClearCandidates = () => {
+  nlpSelectedSiteIds.value = null;
 };
 
 onMounted(() => {
@@ -118,6 +159,18 @@ const mapApiKey = "AIzaSyB_Q0-uG59EtZ6VpSc77FVuSBvIgpg_79Q"
     transform: translateX(-50%);
 }
 
+.custom-map-floating-filters .collapse > .collapse-title,
+.custom-map-floating-filters .collapse > input[type="checkbox"] {
+    min-height: 2.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.custom-map-floating-filters .collapse-arrow > .collapse-title:after {
+    top: 50%;
+    --tw-translate-y: -50%;
+}
+
 .custom-map-info-panel {
     z-index: 10;
     position: fixed;
@@ -125,6 +178,25 @@ const mapApiKey = "AIzaSyB_Q0-uG59EtZ6VpSc77FVuSBvIgpg_79Q"
     top: 64px;
     right: 0px ;
     padding: 1em;
+}
+
+.custom-map-nlp-panel {
+    z-index: 10;
+    position: fixed;
+    width: auto;
+    top: 64px;
+    right: 72px;
+    padding: 1em;
+}
+
+.custom-map-nlp-drawer {
+    z-index: 30;
+    position: fixed;
+    top: 124px;
+    right: 16px;
+    width: min(460px, calc(100vw - 32px));
+    max-height: calc(100vh - 140px);
+    overflow: auto;
 }
 </style>
 

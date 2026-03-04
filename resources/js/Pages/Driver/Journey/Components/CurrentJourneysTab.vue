@@ -4,11 +4,11 @@
             <div class="flex flex-row justify-between items-start mb-4">
                 <div class="flex items-center gap-4">
                     <JourneyMainData :journey="journey" />
-                    <span class="badge badge-outline">{{ journey.state }}</span>
+                    <span class="badge badge-outline">{{ journey.status }}</span>
                 </div>
-                <div v-if="journey.state != 'eseguito'" class="flex flex-col items-end gap-2">
+                <div v-if="journey.status != 'eseguito'" class="flex flex-col items-end gap-2">
                     <span
-                        v-if="journey.state === 'creato'"
+                        v-if="journey.status === 'creato'"
                         :class="{ tooltip: isBlockedByActiveJourney(journey) } "
                         :data-tip="isBlockedByActiveJourney(journey) ? 'Hai già un viaggio attivo' : null"
                         class="tooltip-warning"

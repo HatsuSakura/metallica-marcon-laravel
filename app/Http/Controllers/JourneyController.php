@@ -22,9 +22,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\ValidationException;
 
 class JourneyController extends Controller
 {
@@ -48,16 +46,16 @@ class JourneyController extends Controller
             ->with('driver')
             ->with('vehicle')
             ->with('trailer')
-            ->where('state', JourneysState::STATE_CREATED->value)
-            ->orderByDesc('dt_start')
+            ->where('status', JourneysState::STATE_CREATED->value)
+            ->orderByDesc('planned_start_at')
             ->get();
 
         $activeJourneys = Journey::query()
             ->with('driver')
             ->with('vehicle')
             ->with('trailer')
-            ->where('state', JourneysState::STATE_ACTIVE->value)
-            ->orderByDesc('dt_start')
+            ->where('status', JourneysState::STATE_ACTIVE->value)
+            ->orderByDesc('planned_start_at')
             ->get();
 
         $allJourneys = Journey::query()
@@ -66,7 +64,7 @@ class JourneyController extends Controller
             ->with('trailer');
         $this->applyJourneyIndexFilters($allJourneys, $request);
         $allJourneys = $allJourneys
-            ->orderByDesc('dt_start')
+            ->orderByDesc('planned_start_at')
             ->paginate(25, ['*'], 'all_page')
             ->appends($request->query());
 
@@ -74,10 +72,10 @@ class JourneyController extends Controller
             ->with('driver')
             ->with('vehicle')
             ->with('trailer')
-            ->where('state', JourneysState::STATE_EXECUTED->value);
+            ->where('status', JourneysState::STATE_EXECUTED->value);
         $this->applyJourneyIndexFilters($executedJourneys, $request);
         $executedJourneys = $executedJourneys
-            ->orderByDesc('dt_start')
+            ->orderByDesc('planned_start_at')
             ->paginate(25, ['*'], 'executed_page')
             ->appends($request->query());
 
@@ -85,10 +83,10 @@ class JourneyController extends Controller
             ->with('driver')
             ->with('vehicle')
             ->with('trailer')
-            ->where('state', JourneysState::STATE_CLOSED->value);
+            ->where('status', JourneysState::STATE_CLOSED->value);
         $this->applyJourneyIndexFilters($closedJourneys, $request);
         $closedJourneys = $closedJourneys
-            ->orderByDesc('dt_start')
+            ->orderByDesc('planned_start_at')
             ->paginate(25, ['*'], 'closed_page')
             ->appends($request->query());
 
@@ -126,11 +124,11 @@ class JourneyController extends Controller
     private function applyJourneyIndexFilters(Builder $query, Request $request): void
     {
         if ($request->filled('date_from')) {
-            $query->whereDate('dt_start', '>=', $request->query('date_from'));
+            $query->whereDate('planned_start_at', '>=', $request->query('date_from'));
         }
 
         if ($request->filled('date_to')) {
-            $query->whereDate('dt_start', '<=', $request->query('date_to'));
+            $query->whereDate('planned_start_at', '<=', $request->query('date_to'));
         }
 
         if ($request->filled('driver_id')) {
@@ -162,11 +160,11 @@ class JourneyController extends Controller
             ->where('is_active', true)
             ->get(['id', 'label']);
         $orders = Order::query()
-            ->where('state', OrdersState::STATE_CREATED->value)
+            ->where('status', OrdersState::STATE_CREATED->value)
             ->with([
                 'logistic:id,name',
-                'customer:id,ragione_sociale', // Load only 'id' and 'ragione_sociale' from customers
-                'site',   // Load 'id' 'indirizzo', 'lat', 'lng' from sites
+                'customer:id,company_name',
+                'site',
                 'items',
                 'items.cerCode:id,code,is_dangerous',
                 'items.holder:id,name,volume,is_custom'
@@ -189,133 +187,19 @@ class JourneyController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-/*    
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'dt_start'    => 'required|date',
-            'dt_end'      => 'required|date',
-            'vehicle_id'  => 'required',
-            'trailer_id'  => 'nullable',
-            'cargo_for_vehicle_id'  => 'required',
-            'cargo_for_trailer_id'  => 'nullable',
-            'driver_id'   => 'required',
-            'logistic_id' => 'required',
-            'orders_truck'    => 'nullable|array',
-            'orders_trailer'  => 'nullable|array',
-            'orders_fulfill' => 'nullable|array',
-
-            'stops' => 'nullable|array',
-            'stops.*.kind' => ['required_with:stops', Rule::in(['customer', 'technical'])],
-            'stops.*.sequence' => 'required_with:stops|integer|min:1',
-            'stops.*.planned_sequence' => 'nullable|integer|min:1',
-            // customer stop
-            'stops.*.customer_id' => 'nullable|integer|exists:customers,id',
-            'stops.*.customer_visit_index' => 'nullable|integer|min:1',
-            // technical stop
-            'stops.*.technical_action_id' => 'nullable|integer|exists:journey_stop_actions,id',
-            'stops.*.location_lat' => 'nullable|numeric',
-            'stops.*.location_lng' => 'nullable|numeric',
-            'stops.*.description' => 'nullable|string',
-            'stops.*.address_text' => 'nullable|string',
-            // orders inside stop (required only for customer stops)
-            'stops.*.orders' => 'nullable|array',
-            'stops.*.orders.*' => 'integer|exists:orders,id',
-
-        ]);
-
-        // Enforce orders only for customer stops
-        if (!empty($validated['stops'])) {
-            foreach ($validated['stops'] as $i => $s) {
-                if (($s['kind'] ?? null) === 'customer' && empty($s['orders'])) {
-                    throw ValidationException::withMessages([
-                        "stops.$i.orders" => "The stops.$i.orders field is required when stop kind is customer.",
-                    ]);
-                }
-            }
-        }
-
-        $journey = Journey::create($validated);
-
-        // Update order states for orders_truck
-        if (!empty($validated['orders_truck'])) {
-            $orders = Order::whereIn('id', $validated['orders_truck'])->get();
-            //Log::info("ORDERS: {$orders}");
-
-            foreach ($orders as $order) {
-                $currentState = $order->state;
-                if ($currentState instanceof OrdersState ){
-                    //Log::info("CURRENT STATE: {$order->state->value}");
-                }
-                //Log::info("Transition check from {$currentState->value} to " . OrdersState::STATE_PLANNED->value);
-
-                $canTransition = $currentState->canTransitionTo(OrdersState::STATE_PLANNED);
-                //Log::info("Can transition? " . ($canTransition ? 'Yes' : 'No'));
-
-
-                if ($currentState->canTransitionTo(OrdersState::STATE_PLANNED)) {
-                    $order->state = OrdersState::STATE_PLANNED;
-                    $order->truck_location = OrdersTruckLocation::TRUCK_MOTRICE->value;
-                    $order->journey_id = $journey->id;
-                    $order->save();
-                } else {
-                    Log::warning("Invalid state transition from {$currentState->value} for order ID {$order->id}");
-                }
-            }
-        }
-
-
-
-        // Repeat for orders_trailer
-        if (!empty($validated['orders_trailer'])) {
-            $orders = Order::whereIn('id', $validated['orders_trailer'])->get();
-
-            foreach ($orders as $order) {
-                $currentState = $order->state;
-                if ($currentState->canTransitionTo(OrdersState::STATE_PLANNED)) {
-                    $order->state = OrdersState::STATE_PLANNED->value;
-                    $order->truck_location = OrdersTruckLocation::TRUCK_RIMORCHIO->value;
-                    $order->journey_id = $journey->id;
-                    $order->save();
-                } else {
-                    Log::warning("Invalid state transition for order ID {$order->id}");
-                }
-            }
-        }
-
-        // Repeat for orders_fulfill
-        if (!empty($validated['orders_fulfill'])) {
-            $orders = Order::whereIn('id', $validated['orders_fulfill'])->get();
-
-            foreach ($orders as $order) {
-                $currentState = $order->state;
-                if ($currentState->canTransitionTo(OrdersState::STATE_PLANNED)) {
-                    $order->state = OrdersState::STATE_PLANNED->value;
-                    $order->truck_location = OrdersTruckLocation::TRUCK_RIEMPIMENTO->value;
-                    $order->journey_id = $journey->id;
-                    $order->save();
-                } else {
-                    Log::warning("Invalid state transition for order ID {$order->id}");
-                }
-            }
-        }
-
-        return redirect()->route('journey.index')->with('success', 'Viaggio inserito con successo!');
-    }
-*/
 public function store(Request $request)
 {
     Gate::authorize('create', Journey::class);
 
     $validated = $request->validate([
-        'dt_start'    => 'required|date',
-        'dt_end'      => 'required|date',
+        'planned_start_at'    => 'required|date',
+        'planned_end_at'      => 'required|date',
         'vehicle_id'  => 'required',
         'trailer_id'  => 'nullable',
-        'cargo_for_vehicle_id'  => 'required',
-        'cargo_for_trailer_id'  => 'nullable',
+        'vehicle_cargo_id'  => 'required',
+        'trailer_cargo_id'  => 'nullable',
         'driver_id'   => 'required',
-        'logistic_id' => 'required',
+        'logistics_user_id' => 'nullable',
 
         'orders_truck'    => 'nullable|array',
         'orders_truck.*'  => 'integer|exists:orders,id',
@@ -346,21 +230,22 @@ public function store(Request $request)
 
         // orders inside stop (required only for customer stops)
         'stops.*.orders' => 'nullable|array',
-        'stops.*.orders.*' => 'integer|exists:orders,id',
-    ]);
+            'stops.*.orders.*' => 'integer|exists:orders,id',
+        ]);
 
-    return DB::transaction(function () use ($validated) {
+        return DB::transaction(function () use ($validated) {
 
         // 1) Create Journey (come prima)
         $journey = Journey::create([
-            'dt_start' => $validated['dt_start'],
-            'dt_end' => $validated['dt_end'],
+            'planned_start_at' => $validated['planned_start_at'],
+            'planned_end_at' => $validated['planned_end_at'],
             'vehicle_id' => $validated['vehicle_id'],
             'trailer_id' => $validated['trailer_id'] ?? null,
-            'cargo_for_vehicle_id' => $validated['cargo_for_vehicle_id'],
-            'cargo_for_trailer_id' => $validated['cargo_for_trailer_id'] ?? null,
+            'vehicle_cargo_id' => $validated['vehicle_cargo_id'],
+            'trailer_cargo_id' => $validated['trailer_cargo_id'] ?? null,
             'driver_id' => $validated['driver_id'],
-            'logistic_id' => $validated['logistic_id'],
+            'logistics_user_id' => $validated['logistics_user_id'] ?? null,
+            'status' => JourneysState::STATE_CREATED->value,
             // status / plan_version se presenti nel model, altrimenti default DB
         ]);
 
@@ -466,14 +351,14 @@ public function store(Request $request)
         }
 
         // redirect nuova o legacy: per ora manteniamo legacy
-        return redirect()
-            ->route('journey.index')
-            ->with('success', 'Viaggio inserito con successo!');
+            return redirect()
+                ->route('journey.index')
+                ->with('success', 'Viaggio inserito con successo!');
     });
 }
 
 /**
- * DRY helper: applica journey + truck_location + state agli ordini selezionati.
+ * DRY helper: applica journey + cargo_location + status agli ordini selezionati.
  */
 private function applyOrdersToJourney(
     Journey $journey,
@@ -487,15 +372,15 @@ private function applyOrdersToJourney(
     $orders = Order::whereIn('id', $orderIds)->get();
 
     foreach ($orders as $order) {
-        $currentState = $order->state;
+        $currentState = $order->status;
 
         $isPlannedInCurrentJourney = $allowAlreadyPlannedForCurrentJourney
             && $currentState === OrdersState::STATE_PLANNED
             && (int) $order->journey_id === (int) $journey->id;
 
         if ($currentState->canTransitionTo(OrdersState::STATE_PLANNED) || $isPlannedInCurrentJourney) {
-            $order->state = OrdersState::STATE_PLANNED->value; // uniformo a value
-            $order->truck_location = $truckLocation;
+            $order->status = OrdersState::STATE_PLANNED->value;
+            $order->cargo_location = $truckLocation;
             $order->journey_id = $journey->id;
             $order->save();
         } else {
@@ -524,12 +409,12 @@ private function applyOrdersToJourney(
 
         $orders = Order::query()
             ->where(function ($q) use ($journey) {
-                $q->where('state', OrdersState::STATE_CREATED->value)
+                $q->where('status', OrdersState::STATE_CREATED->value)
                     ->orWhere('journey_id', $journey->id);
             })
             ->with([
                 'logistic:id,name',
-                'customer:id,ragione_sociale',
+                'customer:id,company_name',
                 'site',
                 'items',
                 'items.cerCode:id,code,is_dangerous',
@@ -567,14 +452,14 @@ private function applyOrdersToJourney(
         Gate::authorize('update', $journey);
 
         $validated = $request->validate([
-            'dt_start'    => 'required|date',
-            'dt_end'      => 'required|date',
+            'planned_start_at'    => 'required|date',
+            'planned_end_at'      => 'required|date',
             'vehicle_id'  => 'required',
             'trailer_id'  => 'nullable',
-            'cargo_for_vehicle_id'  => 'required',
-            'cargo_for_trailer_id'  => 'nullable',
+            'vehicle_cargo_id'  => 'required',
+            'trailer_cargo_id'  => 'nullable',
             'driver_id'   => 'required',
-            'logistic_id' => 'required',
+            'logistics_user_id' => 'nullable',
 
             'orders_truck'    => 'nullable|array',
             'orders_truck.*'  => 'integer|exists:orders,id',
@@ -606,23 +491,32 @@ private function applyOrdersToJourney(
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $journeyState = $journey->state instanceof JourneysState
-                ? $journey->state
-                : JourneysState::from((string) $journey->state);
+            $journeyStatusRaw = $journey->getRawOriginal('status');
+            if ($journeyStatusRaw === null || $journeyStatusRaw === '') {
+                $journeyStatusRaw = JourneysState::STATE_CREATED->value;
+            }
+
+            try {
+                $journeyState = $journey->status instanceof JourneysState
+                    ? $journey->status
+                    : JourneysState::from((string) $journeyStatusRaw);
+            } catch (\ValueError $e) {
+                $journeyState = JourneysState::STATE_CREATED;
+            }
 
             if ($journeyState !== JourneysState::STATE_CREATED) {
                 abort(422, 'Il viaggio puo essere modificato solo quando e in stato creato.');
             }
 
             $journey->update([
-                'dt_start' => $validated['dt_start'],
-                'dt_end' => $validated['dt_end'],
+                'planned_start_at' => $validated['planned_start_at'],
+                'planned_end_at' => $validated['planned_end_at'],
                 'vehicle_id' => $validated['vehicle_id'],
                 'trailer_id' => $validated['trailer_id'] ?? null,
-                'cargo_for_vehicle_id' => $validated['cargo_for_vehicle_id'],
-                'cargo_for_trailer_id' => $validated['cargo_for_trailer_id'] ?? null,
+                'vehicle_cargo_id' => $validated['vehicle_cargo_id'],
+                'trailer_cargo_id' => $validated['trailer_cargo_id'] ?? null,
                 'driver_id' => $validated['driver_id'],
-                'logistic_id' => $validated['logistic_id'],
+                'logistics_user_id' => $validated['logistics_user_id'] ?? null,
             ]);
 
             $idsTruck = $validated['orders_truck'] ?? [];
@@ -658,8 +552,8 @@ private function applyOrdersToJourney(
                     ->whereIn('id', $toDetach)
                     ->update([
                         'journey_id' => null,
-                        'truck_location' => null,
-                        'state' => OrdersState::STATE_CREATED->value,
+                        'cargo_location' => null,
+                        'status' => OrdersState::STATE_CREATED->value,
                     ]);
             }
 
@@ -770,8 +664,8 @@ private function applyOrdersToJourney(
         foreach ($orders as $order) {
             $order->update([
                 'journey_id' => null,
-                'state' => OrdersState::STATE_CREATED,
-                'truck_location' => null,
+                'status' => OrdersState::STATE_CREATED,
+                'cargo_location' => null,
             ]);
         }
 
@@ -796,7 +690,7 @@ public function updateState(Journey $journey, Request $request)
 {
     $newState = JourneysState::from($request->new_state);
 
-    if (!JourneysState::from($journey->state)->canTransitionTo($newState)) {
+    if (!JourneysState::from($journey->status)->canTransitionTo($newState)) {
         abort(403, 'Invalid state transition.');
     }
 
@@ -816,7 +710,7 @@ public function updateState(Journey $journey, Request $request)
             break;
     }
 
-    $journey->state = $newState->value;
+    $journey->status = $newState->value;
     $journey->save();
 
     return redirect()->back()->with('success', "Journey state updated to {$newState->value}.");
@@ -825,3 +719,8 @@ public function updateState(Journey $journey, Request $request)
 
 
 }
+
+
+
+
+

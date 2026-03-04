@@ -58,12 +58,12 @@ class API_DriverJourneyStopsController extends Controller
             ->first();
     }
 
-    private function logEvent(Request $request, Journey $journey, ?JourneyStop $stop, array $payload = [], ?string $state = null): void
+    private function logEvent(Request $request, Journey $journey, ?JourneyStop $stop, array $payload = [], ?string $status = null): void
     {
         JourneyEvent::create([
             'journey_id' => $journey->id,
             'journey_stop_id' => $stop?->id,
-            'state' => $state,
+            'status' => $status,
             'payload' => $payload,
             'created_by_user_id' => $request->user()?->id,
         ]);
@@ -79,14 +79,14 @@ class API_DriverJourneyStopsController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $currentState = $journey->state instanceof JourneysState
-                ? $journey->state
-                : JourneysState::from((string) $journey->state);
+            $currentState = $journey->status instanceof JourneysState
+                ? $journey->status
+                : JourneysState::from((string) $journey->status);
 
             if ($currentState === JourneysState::STATE_CREATED) {
                 $hasOtherActiveJourney = Journey::query()
                     ->where('driver_id', $journey->driver_id)
-                    ->where('state', JourneysState::STATE_ACTIVE->value)
+                    ->where('status', JourneysState::STATE_ACTIVE->value)
                     ->where('id', '!=', $journey->id)
                     ->exists();
 
@@ -96,8 +96,8 @@ class API_DriverJourneyStopsController extends Controller
             }
 
             if ($currentState === JourneysState::STATE_CREATED) {
-                $journey->state = JourneysState::STATE_ACTIVE->value;
-                $journey->real_dt_start = now();
+                $journey->status = JourneysState::STATE_ACTIVE->value;
+                $journey->actual_start_at = now();
                 $journey->save();
             }
 
@@ -328,3 +328,7 @@ class API_DriverJourneyStopsController extends Controller
         });
     }
 }
+
+
+
+

@@ -7,11 +7,11 @@
                 </div>
                 <div class="flex flex-row items-center gap-2">
                     <font-awesome-icon :icon="['fas', 'calendar-day']" class="text-2xl"/>
-                    <span>{{ dayjs(props.journeyCargo.journey.real_dt_start).format('DD-MM-YYYY') }}</span>
+                    <span>{{ dayjs(props.journeyCargo.journey.actual_start_at).format('DD-MM-YYYY') }}</span>
                 </div>
                 <div class="flex flex-row items-center gap-2">
                     <font-awesome-icon :icon="['fas', 'warehouse']" class="text-2xl"/>
-                    <span>{{ props.journeyCargo.warehouse.denominazione }}</span>
+                    <span>{{ props.journeyCargo.warehouse.name }}</span>
                 </div>
             </div>
             <div class="flex flex-row items-center gap-2">

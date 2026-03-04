@@ -25,12 +25,12 @@ class JourneyCargoService
             // Crea sempre il cassone TRUCK
             $truckCargo = JourneyCargo::create([
                 'journey_id'        => $journey->id,
-                'cargo_id'          => $journey->cargo_for_vehicle_id,
-                'truck_location'    => $locTruck,
+                'cargo_id'          => $journey->vehicle_cargo_id,
+                'cargo_location'    => $locTruck,
                 'warehouse_id'      => $truckData['warehouse_id'],
-                'is_grounding'      => (bool) ($truckData['is_grounding'] ?? false),
+                'is_grounded'       => (bool) ($truckData['is_grounded'] ?? false),
                 'download_sequence' => $truckData['download_sequence'],
-                'state'             => 'creato',
+                'status'            => 'creato',
             ]);
 
             // 1) Sincronizza gli item in pivot (crea o aggiorna senza staccare gli altri)
@@ -46,12 +46,12 @@ class JourneyCargoService
             if (!empty($trailerData) && !empty($trailerData['warehouse_id'])) {
                 $trailerCargo = JourneyCargo::create([
                     'journey_id'        => $journey->id,
-                    'cargo_id'          => $journey->cargo_for_trailer_id,
-                    'truck_location'    => $locTrailer,
+                    'cargo_id'          => $journey->trailer_cargo_id,
+                    'cargo_location'    => $locTrailer,
                     'warehouse_id'      => $trailerData['warehouse_id'],
-                    'is_grounding'      => (bool) ($trailerData['is_grounding'] ?? false),
+                    'is_grounded'       => (bool) ($trailerData['is_grounded'] ?? false),
                     'download_sequence' => $trailerData['download_sequence'],
-                    'state'             => 'creato',
+                    'status'            => 'creato',
                 ]);
 
                 $trailerMap = $this->buildPivotMap($trailerData['items'] ?? []);
@@ -79,7 +79,7 @@ class JourneyCargoService
             $truckCargo = JourneyCargo::query()->findOrFail($truckData['journey_cargo_id']);
             $truckCargo->update([
                 'warehouse_id'      => $truckData['warehouse_id'],
-                'is_grounding'      => (bool) ($truckData['is_grounding'] ?? false),
+                'is_grounded'       => (bool) ($truckData['is_grounded'] ?? false),
                 'download_sequence' => $truckData['download_sequence'],
             ]);
 
@@ -96,7 +96,7 @@ class JourneyCargoService
                 $trailerCargo = JourneyCargo::query()->findOrFail($trailerData['journey_cargo_id']);
                 $trailerCargo->update([
                     'warehouse_id'      => $trailerData['warehouse_id'],
-                    'is_grounding'      => (bool) ($trailerData['is_grounding'] ?? false),
+                    'is_grounded'       => (bool) ($trailerData['is_grounded'] ?? false),
                     'download_sequence' => $trailerData['download_sequence'],
                 ]);
 
@@ -114,7 +114,7 @@ class JourneyCargoService
     /**
      * Accetta sia:
      *  - [12, 34]
-     *  - [['id'=>12,'is_double_load'=>true,'warehouse_download_id'=>3], ...]
+     *  - [['id'=>12,'is_double_load'=>true,'download_warehouse_id'=>3], ...]
      *  - [['order_item_id'=>12, ...], ...]
      */
     private function buildPivotMap(array $items): array
@@ -133,9 +133,7 @@ class JourneyCargoService
                         Arr::get($row, 'pivot.is_double_load', 0));
             $isDouble = (int) !!$isDouble;
 
-            // warehouse_download_id: preferisci root-level, altrimenti pivot
-            $wd =   Arr::get($row, 'warehouse_download_id',
-                    Arr::get($row, 'pivot.warehouse_download_id'));
+            $wd = Arr::get($row, 'download_warehouse_id', Arr::get($row, 'pivot.download_warehouse_id'));
 
             if ($wd === '' || $wd === false) {
                 $wd = null;
@@ -145,7 +143,7 @@ class JourneyCargoService
 
             $map[(int)$id] = [
                 'is_double_load'        => $isDouble,
-                'warehouse_download_id' => $wd,
+                'download_warehouse_id' => $wd,
             ];
         }
 
@@ -160,11 +158,11 @@ class JourneyCargoService
     {
         if (empty($ids)) return;
 
-        $items = OrderItem::whereIn('id', $ids)->get(['id','state']);
+        $items = OrderItem::whereIn('id', $ids)->get(['id', 'status']);
         foreach ($items as $item) {
-            $current = OrderItemsState::from($item->state);
+            $current = OrderItemsState::from($item->status);
             if ($current->canTransitionTo(OrderItemsState::STATE_LOADED)) {
-                $item->state = OrderItemsState::STATE_LOADED;
+                $item->status = OrderItemsState::STATE_LOADED;
                 $item->save();
             } else {
                 Log::warning("Invalid state transition from {$current->value} for order_item {$item->id}");

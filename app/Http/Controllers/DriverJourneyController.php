@@ -33,7 +33,7 @@ class DriverJourneyController extends Controller
 
         $currentJourneys = Journey::query()
             ->where('driver_id', $user->id)
-            ->whereIn('state', [
+            ->whereIn('status', [
                 JourneysState::STATE_CREATED->value,
                 JourneysState::STATE_ACTIVE->value,
             ])
@@ -47,26 +47,26 @@ class DriverJourneyController extends Controller
                 'stops.technicalAction',
                 'stops.stopOrders.order.site',
             ])
-            ->orderByRaw("CASE WHEN state = ? THEN 0 ELSE 1 END", [JourneysState::STATE_ACTIVE->value])
-            ->orderByDesc('dt_start')
+            ->orderByRaw("CASE WHEN status = ? THEN 0 ELSE 1 END", [JourneysState::STATE_ACTIVE->value])
+            ->orderByDesc('planned_start_at')
             ->get();
 
         $historyJourneys = Journey::query()
             ->where('driver_id', $user->id)
-            ->where('state', JourneysState::STATE_EXECUTED->value)
+            ->where('status', JourneysState::STATE_EXECUTED->value)
             ->with([
                 'vehicle',
                 'trailer',
                 'driver',
             ])
-            ->orderByDesc('real_dt_end')
+            ->orderByDesc('actual_end_at')
             ->orderByDesc('id')
             ->paginate(15)
             ->appends($request->query());
 
         $hasActiveJourney = Journey::query()
             ->where('driver_id', $user->id)
-            ->where('state', JourneysState::STATE_ACTIVE->value)
+        ->where('status', JourneysState::STATE_ACTIVE->value)
             ->exists();
 
         $warehouses = Warehouse::all();
@@ -169,15 +169,14 @@ class DriverJourneyController extends Controller
 
         $validated = $request->validate([
             // date/ora effettive del viaggio
-            'real_dt_start'            => ['nullable','date'],
-            'real_dt_end'              => ['nullable','date'],
+            'actual_start_at'          => ['nullable','date'],
+            'actual_end_at'            => ['nullable','date'],
 
             // scarico a magazzino (1° e 2°)
-            'warehouse_id_1'           => ['nullable','exists:warehouses,id'],
-            'warehouse_download_dt_1'  => ['nullable','date'],
-
-            'warehouse_id_2'           => ['nullable','exists:warehouses,id'],
-            'warehouse_download_dt_2'  => ['nullable','date'],
+            'primary_warehouse_id'           => ['nullable','exists:warehouses,id'],
+            'primary_warehouse_download_at'  => ['nullable','date'],
+            'secondary_warehouse_id'         => ['nullable','exists:warehouses,id'],
+            'secondary_warehouse_download_at'=> ['nullable','date'],
 
             // flag
             'is_temporary_storage'     => ['required','boolean'],
@@ -190,11 +189,11 @@ class DriverJourneyController extends Controller
 
         // se non è doppio scarico, azzera i campi del secondo scarico
         if (!$validated['is_double_load']) {
-            $validated['warehouse_id_2'] = null;
-            $validated['warehouse_download_dt_2'] = null;
+            $validated['secondary_warehouse_id'] = null;
+            $validated['secondary_warehouse_download_at'] = null;
         }
 
-        $validated['state'] = JourneysState::STATE_EXECUTED;
+        $validated['status'] = JourneysState::STATE_EXECUTED;
 
         // aggiorna
         $journey->update($validated);
@@ -204,8 +203,8 @@ class DriverJourneyController extends Controller
         foreach ($orders as $order) {
             $order->update([
                 'journey_id' => null,
-                'state' => OrdersState::STATE_CREATED,
-                'truck_location' => null,
+                'status' => OrdersState::STATE_CREATED,
+                'cargo_location' => null,
             ]);
         }
         */
@@ -232,8 +231,8 @@ class DriverJourneyController extends Controller
         foreach ($orders as $order) {
             $order->update([
                 'journey_id' => null,
-                'state' => OrdersState::STATE_CREATED,
-                'truck_location' => null,
+                'status' => OrdersState::STATE_CREATED,
+                'cargo_location' => null,
             ]);
         }
 
@@ -250,3 +249,7 @@ class DriverJourneyController extends Controller
 
 
 }
+
+
+
+

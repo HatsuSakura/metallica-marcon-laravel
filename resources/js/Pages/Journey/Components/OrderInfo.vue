@@ -5,11 +5,11 @@
     </div>
     <div>
     <font-awesome-icon :icon="['fas', 'user-tie']" class="text-xl"/>
-    {{props.order.customer.ragione_sociale}}
+    {{props.order.customer.company_name}}
     </div>
     <div>
     <font-awesome-icon :icon="['fas', 'location-dot']" class="text-xl"/>
-    {{props.order.site.indirizzo}}
+    {{props.order.site.address}}
     </div>
     <div>
     <font-awesome-icon :icon="['fas', 'calendar-days']" class="text-xl"/>
@@ -23,10 +23,10 @@
         <div class="flex flex-1" :class="order.site.has_muletto? 'text-error font-medium' : 'font-medium' ">
             <font-awesome-icon :icon="['fas', 'truck-ramp-box']" class="text-2xl"/>
         </div>
-        <div class="flex flex-1" :class="order.site.has_transpallet_el? 'text-error font-medium' : 'font-medium' ">
+        <div class="flex flex-1" :class="(order.site.has_electric_pallet_truck ?? order.site.has_transpallet_el) ? 'text-error font-medium' : 'font-medium' ">
             <font-awesome-icon :icon="['fas', 'cart-flatbed']" class="text-2xl"/>
         </div>
-        <div class="flex flex-1" :class="order.site.has_transpallet_ma? 'text-error font-medium' : 'font-medium' ">
+        <div class="flex flex-1" :class="(order.site.has_manual_pallet_truck ?? order.site.has_transpallet_ma) ? 'text-error font-medium' : 'font-medium' ">
             <font-awesome-icon :icon="['fas', 'dolly']" class="text-2xl"/>
         </div>
     </div>

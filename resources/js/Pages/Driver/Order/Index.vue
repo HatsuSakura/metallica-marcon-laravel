@@ -11,7 +11,7 @@
                     <div>
                         <font-awesome-icon :icon="['fas', 'gauge-simple-high']" class="text-2xl"/>
                         Stato dell'ordine
-                            <span class="font-medium">{{ order.state }} </span>
+                            <span class="font-medium">{{ order.status }} </span>
                     </div>
                     <div>
                         <font-awesome-icon :icon="['fas', 'calendar-check']" class="text-2xl"/>
@@ -21,7 +21,7 @@
                     <div>
                         <font-awesome-icon :icon="['fas', 'calendar-days']" class="text-2xl"/>
                         Data ipotesi ritiro:
-                            <span class="font-medium">{{ order.expected_withdraw_dt? dayjs(order.expected_withdraw_dt).format('YYYY-MM-DD'): 'NON impostata' }} </span>
+                            <span class="font-medium">{{ order.expected_withdraw_at? dayjs(order.expected_withdraw_at).format('YYYY-MM-DD'): 'NON impostata' }} </span>
                     </div>
                     <OrderSummaryItems :items="order.items" :holders="props.holders" />
                     <OrderSummaryHolders :items="order.holders" :holders="props.holders" />
@@ -31,7 +31,7 @@
     
             <div class="flex flex-row justify-end gap-2">
                 <Link
-                :href="route('relator.order.edit', {order: order.id} )"
+                :href="route('order.edit', {order: order.id} )"
                 method="get"
                 as="button"
                 class="btn btn-primary btn-circle btn-sm"
@@ -40,7 +40,7 @@
                 </Link>
     
                 <Link
-                    :href="route('relator.order.destroy', {order: order.id} )"
+                    :href="route('order.destroy', {order: order.id} )"
                     method="delete"
                     as="button"
                     class="btn btn-error btn-circle btn-sm"
@@ -72,3 +72,4 @@ import OrderCustomerFields from './Components/OrderCustomerFields.vue';
     })
     
     </script>
+

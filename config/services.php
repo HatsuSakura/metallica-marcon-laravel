@@ -31,4 +31,8 @@ return [
         ],
     ],
 
+    'nlp' => [
+        'provider' => env('NLP_PROVIDER', 'heuristic'),
+    ],
+
 ];

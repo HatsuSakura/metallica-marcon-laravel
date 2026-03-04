@@ -16,16 +16,16 @@ class Journey extends Model
     protected $keepOldVersions = true; // Keep all versions of the model
 
     protected $casts = [
-        'state' => JourneysState::class,
+        'status' => JourneysState::class,
         'plan_version' => 'integer',
 
         // datetime
-        'dt_start'                 => 'datetime',
-        'dt_end'                   => 'datetime',
-        'real_dt_start'            => 'datetime',
-        'real_dt_end'              => 'datetime',
-        'warehouse_download_dt_1'  => 'datetime',
-        'warehouse_download_dt_2'  => 'datetime',
+        'planned_start_at'         => 'datetime',
+        'planned_end_at'           => 'datetime',
+        'actual_start_at'          => 'datetime',
+        'actual_end_at'            => 'datetime',
+        'primary_warehouse_download_at' => 'datetime',
+        'secondary_warehouse_download_at' => 'datetime',
 
         // boolean
         'is_double_load'           => 'boolean',
@@ -34,28 +34,28 @@ class Journey extends Model
     ];
 
     protected $fillable = [
-        'dt_start',
-        'dt_end',
-        'real_dt_start',
-        'real_dt_end',
+        'planned_start_at',
+        'planned_end_at',
+        'actual_start_at',
+        'actual_end_at',
 
         'is_double_load',
         'is_temporary_storage',
 
         'vehicle_id',
-        'cargo_for_vehicle_id',
+        'vehicle_cargo_id',
         'trailer_id',
-        'cargo_for_trailer_id',
+        'trailer_cargo_id',
         'driver_id',
-        'logistic_id',
-        'state',
+        'logistics_user_id',
+        'status',
         'plan_version',
 
         // per lo scarico
-        'warehouse_id_1',
-        'warehouse_download_dt_1',
-        'warehouse_id_2',
-        'warehouse_download_dt_2',
+        'primary_warehouse_id',
+        'primary_warehouse_download_at',
+        'secondary_warehouse_id',
+        'secondary_warehouse_download_at',
     ];
 
     // Relationship to order items
@@ -71,7 +71,7 @@ class Journey extends Model
     
     public function cargoForVehicle()
     {
-        return $this->belongsTo(Cargo::class, 'cargo_for_vehicle_id');
+        return $this->belongsTo(Cargo::class, 'vehicle_cargo_id');
     }
 
     public function trailer()
@@ -81,7 +81,7 @@ class Journey extends Model
 
     public function cargoForTrailer()
     {
-        return $this->belongsTo(Cargo::class, 'cargo_for_trailer_id');
+        return $this->belongsTo(Cargo::class, 'trailer_cargo_id');
     }
 
     public function journeyCargos()

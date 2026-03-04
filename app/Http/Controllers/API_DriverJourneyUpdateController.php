@@ -16,7 +16,7 @@ class API_DriverJourneyUpdateController extends Controller
     {
         $newState = JourneysState::from($request->new_state);
 
-        if (!JourneysState::from($journey->state->value)->canTransitionTo($newState)) {
+        if (!JourneysState::from($journey->status->value)->canTransitionTo($newState)) {
             abort(403, 'Invalid state transition.');
         }
 
@@ -34,11 +34,11 @@ class API_DriverJourneyUpdateController extends Controller
                 break;
 
             case JourneysState::STATE_ACTIVE:
-                $journey->real_dt_start = $request->real_dt_start;
+                $journey->actual_start_at = $request->actual_start_at;
                 break;
 
             case JourneysState::STATE_EXECUTED:
-                $journey->real_dt_end = $request->real_dt_end;
+                $journey->actual_end_at = $request->actual_end_at;
                 break;
 
             case JourneysState::STATE_CLOSED:
@@ -47,7 +47,7 @@ class API_DriverJourneyUpdateController extends Controller
                 break;
         }
 
-        $journey->state = $newState->value;
+        $journey->status = $newState->value;
         $journey->save();
 
         return response()->json(['type' => 'success','message' => "Journey state updated to {$newState->value}."], 200);
@@ -72,3 +72,7 @@ class API_DriverJourneyUpdateController extends Controller
         return response()->json(['message' => 'Journey saved successfully.', 'journey' => $journey], 200);
     }
 }
+
+
+
+

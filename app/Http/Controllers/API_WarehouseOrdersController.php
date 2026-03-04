@@ -21,9 +21,9 @@ class API_WarehouseOrdersController extends Controller{
 public function update(Request $request, Order $order, OrderItemUpdater $updater)
 {
     $request->validate([
-      'has_ragno'     => 'required|boolean',
-      'ragnista_id'   => 'nullable|exists:users,id',
-      'machinery_time'=> 'required|integer|min:0',
+      'has_crane'     => 'required|boolean',
+      'crane_operator_user_id'   => 'nullable|exists:users,id',
+      'machinery_time_minutes'=> 'required|integer|min:0',
       'items'         => 'array',
       'items.*.id'    => 'required|exists:order_items,id',
       'items.*.updated_at' => 'nullable|date_format:Y-m-d\TH:i:s.u\Z',
@@ -37,7 +37,7 @@ public function update(Request $request, Order $order, OrderItemUpdater $updater
 
     DB::transaction(function() use($request, $order, $updater, &$conflicts, &$saved) {
       // 1) aggiorno l'ordine
-      $order->update($request->only(['has_ragno','ragnista_id','machinery_time']));
+      $order->update($request->only(['has_crane','crane_operator_user_id','machinery_time_minutes']));
 
       // 2) process items
       foreach ($request->input('items', []) as $i => $data) {
@@ -83,3 +83,6 @@ public function update(Request $request, Order $order, OrderItemUpdater $updater
 
 
 }
+
+
+

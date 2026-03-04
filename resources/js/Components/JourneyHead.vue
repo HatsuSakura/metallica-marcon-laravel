@@ -23,11 +23,11 @@
             <div class="flex flex-row items-center gap-2">
                 <div class="flex flex-row items-center gap-2">
                     <font-awesome-icon :icon="['fas', 'person-walking-arrow-right']" class="text-2xl"/>
-                    <span>{{ props.journey.real_dt_start? dayjs(props.journey.real_dt_start).format('DD-MM-YYYY') : 'non ancora partito' }}</span>
+                    <span>{{ props.journey.actual_start_at? dayjs(props.journey.actual_start_at).format('DD-MM-YYYY') : 'non ancora partito' }}</span>
                 </div>
                 <div class="flex flex-row items-center gap-2">
                     <font-awesome-icon :icon="['fas', 'person-walking-arrow-loop-left']" class="text-2xl"/>
-                    <span>{{ props.journey.real_dt_end? dayjs(props.journey.real_dt_end).format('DD-MM-YYYY') : 'non ancora tornato'}}</span>
+                    <span>{{ props.journey.actual_end_at? dayjs(props.journey.actual_end_at).format('DD-MM-YYYY') : 'non ancora tornato'}}</span>
                 </div>
             </div>
         </div>

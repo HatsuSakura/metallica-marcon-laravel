@@ -33,9 +33,9 @@ class WorkerJourneyCargo extends Controller
             'items',
             'items.cerCode:id,code,description,is_dangerous',
             'items.holder:id,name,volume',
-            'items.warehouse:id,denominazione',
+            'items.warehouse:id,name',
             'items.order:id,customer_id',
-            'items.order.customer:id,ragione_sociale'
+            'items.order.customer:id,company_name'
         )
         ->with('cargo')
         ->with('journey')
@@ -109,10 +109,10 @@ class WorkerJourneyCargo extends Controller
         $validatedData = $request->validate([
             'is_urgent' => 'boolean',
             'requested_at' => 'required|date',
-            'expected_withdraw_dt' => 'nullable|date',
+            'expected_withdraw_at' => 'nullable|date',
             'customer_id'=> 'required',
             'site_id'=> 'required',
-            'logistic_id'=> 'required',
+            'logistics_user_id'=> 'required',
             // 'journey_id' => ALLA CREAZIONE, al momento soprattutto, non viene passato e prende il default NULL
             'items' => 'nullable|array', // Make items optional
             'items.*.cer_code_id' => 'required|exists:cer_codes,id',
@@ -124,15 +124,15 @@ class WorkerJourneyCargo extends Controller
             'items.*.weight_tare' => 'required|numeric',
             'items.*.weight_net' => 'required|numeric',
             'items.*.adr' => 'nullable|boolean',
-            'items.*.adr_onu_code' => 'nullable|string',
+            'items.*.adr_un_code' => 'nullable|string',
             'items.*.adr_hp' => 'nullable|string',
             'items.*.adr_lotto' => 'nullable|string',
             'items.*.adr_volume' => 'nullable|numeric',	 
             'items.*.warehouse_id' => 'nullable|numeric',
             'items.*.warehouse_notes' => 'nullable|string',
             'items.*.worker_id' => 'nullable|numeric',
-            'items.*.selection_time' => 'nullable|numeric',
-            'items.*.machinery_time' => 'nullable|numeric',
+            'items.*.selection_duration_minutes' => 'nullable|numeric',
+            'items.*.machinery_time_share' => 'nullable|numeric',
             'items.*.recognized_price' => 'nullable|numeric',
             'items.*.recognized_weight' => 'nullable|numeric',
             'items.*.adr_totale' => 'nullable|boolean',
@@ -140,9 +140,9 @@ class WorkerJourneyCargo extends Controller
             'items.*.adr_esenzione_parziale' => 'nullable|boolean',
             'holders' => 'nullable|array', // Make holders optional
             'holders.*.holder_id' => 'required|exists:holders,id',
-            'holders.*.holder_piene' => 'required|integer',
-            'holders.*.holder_vuote' => 'required|integer',
-            'holders.*.holder_totale' => 'required|integer',
+            'holders.*.filled_holders_count' => 'required|integer',
+            'holders.*.empty_holders_count' => 'required|integer',
+            'holders.*.total_holders_count' => 'required|integer',
         ]);
 
 
@@ -151,7 +151,7 @@ class WorkerJourneyCargo extends Controller
             'requested_at',
             'customer_id',
             'site_id',
-            'logistic_id',
+            'logistics_user_id',
         ]));
 
         // If there are items, attach them to the order
@@ -177,9 +177,9 @@ class WorkerJourneyCargo extends Controller
         ]);
         */
 
-        //return redirect()->route('relator.order.index')->with('success', 'Ritiro inserito con successo!');
+        //return redirect()->route('order.index')->with('success', 'Ritiro inserito con successo!');
         //return redirect()->back()->with('success', 'Ordine inserito con successo!');
-        return redirect()->route('relator.customer.show', ['customer' => $request->customer_id])
+        return redirect()->route('customer.show', ['customer' => $request->customer_id])
                  ->with('success', 'Ordine inserito con successo!');
     }
 
@@ -204,14 +204,14 @@ class WorkerJourneyCargo extends Controller
        ->where('journey_id', $journeyCargo->journey_id)
        ->with([
            'logistic:id,name',
-           'customer:id,ragione_sociale', // Load only 'id' and 'ragione_sociale' from customers
-           'site',   // Load 'id' 'indirizzo', 'lat', 'lng' from sites
+           'customer:id,company_name',
+           'site',
            'items',
            'items.cerCode:id,code,is_dangerous',
            'items.holder:id,name,volume',
-           'items.warehouse:id,denominazione',
+           'items.warehouse:id,name',
            'items.order:id,customer_id',
-           'items.order.customer:id,ragione_sociale'
+           'items.order.customer:id,company_name'
        ])
        ->get();
 
@@ -237,16 +237,16 @@ class WorkerJourneyCargo extends Controller
         $validatedData =$request->validate([
             'is_urgent' => 'boolean',
             'requested_at' => 'required|date',
-            'expected_withdraw_dt' => 'nullable|date',
+            'expected_withdraw_at' => 'nullable|date',
             'customer_id'=> 'required|numeric',
             'site_id'=> 'required|numeric',
-            'logistic_id'=> 'required|numeric',
+            'logistics_user_id' => 'nullable|numeric',
             'journey_id' => 'nullable|numeric',
-            'real_withdraw_dt' => 'nullable|date',
+            'actual_withdraw_at' => 'nullable|date',
             'worker_id' => 'nullable|numeric',
-            'has_ragno' => 'nullable|boolean',
-            'ragnista_id' => 'nullable|numeric',
-            'machinery_time' => 'nullable|numeric',
+            'has_crane' => 'nullable|boolean',
+            'crane_operator_user_id' => 'nullable|numeric',
+            'machinery_time_minutes' => 'nullable|numeric',
             // ITEMS
             'items' => 'nullable|array', // Make items optional
             'items.*.id' => 'required',
@@ -259,15 +259,15 @@ class WorkerJourneyCargo extends Controller
             'items.*.weight_tare' => 'nullable|numeric',
             'items.*.weight_net' => 'nullable|numeric',
             'items.*.adr' => 'nullable|boolean',
-            'items.*.adr_onu_code' => 'nullable|string',
+            'items.*.adr_un_code' => 'nullable|string',
             'items.*.adr_hp' => 'nullable|string',
             'items.*.adr_lotto' => 'nullable|string',
             'items.*.adr_volume' => 'nullable|numeric',	 
             'items.*.warehouse_id' => 'required|numeric',
             'items.*.warehouse_notes' => 'nullable|string',
             'items.*.worker_id' => 'nullable|numeric',
-            'items.*.selection_time' => 'nullable|numeric',
-            'items.*.machinery_time' => 'nullable|numeric',
+            'items.*.selection_duration_minutes' => 'nullable|numeric',
+            'items.*.machinery_time_share' => 'nullable|numeric',
             'items.*.recognized_price' => 'nullable|numeric',
             'items.*.recognized_weight' => 'nullable|numeric',
             'items.*.adr_totale' => 'nullable|boolean',
@@ -276,16 +276,24 @@ class WorkerJourneyCargo extends Controller
             // HOLDERS
             'holders' => 'nullable|array', // Make holders optional
             'holders.*.holder_id' => 'required|exists:holders,id',
-            'holders.*.holder_piene' => 'required|integer',
-            'holders.*.holder_vuote' => 'required|integer',
-            'holders.*.holder_totale' => 'required|integer',
+            'holders.*.filled_holders_count' => 'required|integer',
+            'holders.*.empty_holders_count' => 'required|integer',
+            'holders.*.total_holders_count' => 'required|integer',
         ]);
         
         Log::info($order);
         Log::info($validatedData);
-        $order->update(
-            $validatedData
-        );
+        $order->update(array_merge(
+            $validatedData,
+            [
+                'expected_withdraw_at' => $validatedData['expected_withdraw_at'] ?? null,
+                'actual_withdraw_at' => $validatedData['actual_withdraw_at'] ?? null,
+                'logistics_user_id' => $validatedData['logistics_user_id'] ?? null,
+                'has_crane' => $validatedData['has_crane'] ?? null,
+                'crane_operator_user_id' => $validatedData['crane_operator_user_id'] ?? null,
+                'machinery_time_minutes' => $validatedData['machinery_time_minutes'] ?? null,
+            ]
+        ));
         Log::info($order);
 
         // If there are items, update them or create new ones
@@ -350,7 +358,7 @@ class WorkerJourneyCargo extends Controller
 
         return redirect($redirectRoute)->with('success', 'Ordine aggiornato con successo!');
 
-        //return redirect()->route('relator.order.index')->with('success', 'Ritiro modificato con successo!');
+        //return redirect()->route('order.index')->with('success', 'Ritiro modificato con successo!');
         //return redirect()->back()->with('success', 'Ritiro modificato con successo!');
     }
 
@@ -381,7 +389,7 @@ public function updateState(Order $order, Request $request)
 {
     $newState = OrdersState::from($request->new_state);
 
-    if (!OrdersState::from($order->state)->canTransitionTo($newState)) {
+    if (!OrdersState::from($order->status)->canTransitionTo($newState)) {
         abort(403, 'Invalid state transition.');
     }
 
@@ -401,7 +409,7 @@ public function updateState(Order $order, Request $request)
             break;
     }
 
-    $order->state = $newState->value;
+    $order->status = $newState->value;
     $order->save();
 
     return redirect()->back()->with('success', "Order state updated to {$newState->value}.");
@@ -410,3 +418,11 @@ public function updateState(Order $order, Request $request)
 
 
 }
+
+
+
+
+
+
+
+

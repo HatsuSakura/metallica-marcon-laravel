@@ -38,10 +38,10 @@
                 </div>
 
                 <div>
-                <span v-if="item.adr" class="badge badge-primary badge-lg">Cod. UN = {{ item.adr_onu_code }} con 
-                    <span v-if="item.adr_totale" class="badge badge-primary badge-lg">ADR Totale</span>
-                    <span v-if="item.adr_esenzione_totale" class="badge badge-primary badge-lg">Esenzione Totale</span>
-                    <span v-if="item.adr_esenzione_parziale" class="badge badge-primary badge-lg">Esenzione Parziale</span>
+                <span v-if="item.adr" class="badge badge-primary badge-lg">Cod. UN = {{ item.adr_un_code }} con 
+                    <span v-if="item.is_adr_total" class="badge badge-primary badge-lg">ADR Totale</span>
+                    <span v-if="item.has_adr_total_exemption" class="badge badge-primary badge-lg">Esenzione Totale</span>
+                    <span v-if="item.has_adr_partial_exemption" class="badge badge-primary badge-lg">Esenzione Parziale</span>
                 </span>
                 <span v-else class="badge badge-primary badge-lg">NO ADR</span>
                 </div>
@@ -63,7 +63,7 @@
                         <font-awesome-icon :icon="['fas', 'warehouse']" class="text-2xl text-primary"/>
                         previsto:
                         <div class="badge badge-primary badge-lg">
-                        {{ item.warehouse.denominazione }}
+                        {{ item.warehouse.name }}
                         </div>
                     </div>
 
@@ -72,7 +72,7 @@
                         <font-awesome-icon :icon="['fas', 'warehouse']" class="text-2xl text-primary"/>
                         effettivo: 
                         <div class="badge badge-primary badge-lg">
-                        {{ warehouse.denominazione }}
+                        {{ warehouse.name }}
                         </div>
                     </div>
 

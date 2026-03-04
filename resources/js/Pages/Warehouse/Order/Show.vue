@@ -40,7 +40,7 @@ const props = defineProps({
 const itemsByWarehouse = computed(() => {
   return props.order.items.reduce((acc, item) => {
     // estrai il download_id o usa “none”
-    const downloadWarehouse = item.warehouse_download?.denominazione ?? 'none';
+    const downloadWarehouse = item.warehouse_download?.name ?? 'none';
 
     if (!acc[downloadWarehouse]) {
       acc[downloadWarehouse] = []

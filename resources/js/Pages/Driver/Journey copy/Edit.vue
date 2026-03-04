@@ -43,7 +43,7 @@
             </div>
             <div>
                 <VueDatePicker
-                    v-model="form.real_dt_start"
+                    v-model="form.actual_start_at"
                     locale="it"
                     format="dd/MM/yyyy HH:mm"
                     required
@@ -63,7 +63,7 @@
 
 <!-- TAPPE INTERMEDIE -->
     <tab-content v-for="order in props.journey.orders" :key="order.id"
-        :title="order.customer.ragione_sociale"
+        :title="order.customer.company_name"
         :icon="calculateIcon(order)"
         :before-change="()=>updateOrderStatus(order)"
     >
@@ -72,11 +72,11 @@
                 <template #header>Ordine #{{ String(order.id).padStart('9', '0') }}</template>
                  <div>
                     <span class="font-medium">Zona di carico Autotreno: </span>
-                    <span v-if="order.truck_location == 'vehicle'">
+                    <span v-if="order.cargo_location == 'vehicle'">
                         <font-awesome-icon :icon="['fas', 'truck']" class="text-2xl"/>
                         Motrice
                     </span>
-                    <span v-else-if="order.truck_location == 'trailer'">
+                    <span v-else-if="order.cargo_location == 'trailer'">
                         <font-awesome-icon :icon="['fas', 'trailer']" class="text-2xl"/>
                         Rimorchio
                     </span>
@@ -91,7 +91,7 @@
                     </div>
                     <div>
                         <VueDatePicker
-                            v-model="(form.orders.find(o => o.id === order.id) || {}).real_withdraw_dt"
+                            v-model="(form.orders.find(o => o.id === order.id) || {}).actual_withdraw_at"
                             locale="it"
                             format="dd/MM/yyyy HH:mm"
                             required
@@ -126,7 +126,7 @@
             <Box class="w-1/2  flex flex-col gap-2">
                 <template #header>Info sede di carico</template>
                 <div>
-                    <span class="font-medium">Indirizzo: </span>{{ order.site.indirizzo }}
+                    <span class="font-medium">address: </span>{{ order.site.address }}
                 </div>
                 <div>
                     <span class="font-medium">Mezzi di sollevamento: </span>
@@ -181,7 +181,7 @@
                     <select v-model="form.warehouse_id_1" id="warehouse" class="select select-bordered">
                         <option value="" disabled>Magazzino</option>
                         <option v-for="warehouse in props.warehouses" :key="warehouse.id" :value="warehouse.id">
-                        {{ warehouse.denominazione }}
+                        {{ warehouse.name }}
                         </option>
                     </select>
 
@@ -211,7 +211,7 @@
                     <select v-model="form.warehouse_id_2" id="warehouse" class="select select-bordered">
                         <option value="" disabled>Magazzino</option>
                         <option v-for="warehouse in props.warehouses" :key="warehouse.id" :value="warehouse.id">
-                        {{ warehouse.denominazione }}
+                        {{ warehouse.name }}
                         </option>
                     </select>
 
@@ -251,7 +251,7 @@ import 'vue3-form-wizard/dist/style.css';
 import Box from "@/Components/UI/Box.vue";
 import JourneyOrderItems from "./Components/JourneyOrderItems.vue";
 import JourneyOrderHolders from "./Components/JourneyOrderHolders.vue";
-import SiteMezziDiSollevamento from "@/Pages/Relator/Order/Components/SiteMezziDiSollevamento.vue";
+import SiteMezziDiSollevamento from "@/Pages/Order/Components/SiteMezziDiSollevamento.vue";
 import { Link } from '@inertiajs/vue3';
 
 
@@ -263,8 +263,8 @@ const props = defineProps({
 })
 
 const form = useForm({
-    real_dt_start: props.journey.real_dt_start? props.journey.real_dt_start : Date.now(),
-    real_dt_end: props.journey.real_dt_end? props.journey.real_dt_end : '',
+    actual_start_at: props.journey.actual_start_at? props.journey.actual_start_at : Date.now(),
+    actual_end_at: props.journey.actual_end_at? props.journey.actual_end_at : '',
     orders: [],
     warehouse_id_1: props.journey.warehouse_id_1? props.journey.warehouse_id_1 : '',
     warehouse_download_dt_1: props.journey.warehouse_download_dt_1? props.journey.warehouse_download_dt_1 : '',
@@ -289,9 +289,9 @@ const fmt = (d) => d ? dayjs(d).format('YYYY-MM-DD HH:mm:ss') : null
 
 const onComplete = () => {
   // Formatto le date prima dell’invio
-  form.real_dt_start = fmt(form.real_dt_start)
-  //form.real_dt_end = fmt(form.real_dt_end)
-  form.real_dt_end = fmt(form.warehouse_download_dt_1)
+  form.actual_start_at = fmt(form.actual_start_at)
+  //form.actual_end_at = fmt(form.actual_end_at)
+  form.actual_end_at = fmt(form.warehouse_download_dt_1)
   form.warehouse_download_dt_1 = fmt(form.warehouse_download_dt_1)
 
   if (form.is_double_load) {
@@ -350,7 +350,7 @@ const primeDefaultsForTab = (tabIndex) => {
 
   if (tabIndex === 0) {
     // PARTENZA
-    if (!form.real_dt_start) form.real_dt_start = nowRounded5()
+    if (!form.actual_start_at) form.actual_start_at = nowRounded5()
     return
   }
 
@@ -359,7 +359,7 @@ const primeDefaultsForTab = (tabIndex) => {
   if (tabIndex >= 1 && tabIndex <= orders.length) {
     // Tappa intermedia per ordine i-esimo
     const ord = orders[tabIndex - 1]
-    if (ord && !ord.real_withdraw_dt) ord.real_withdraw_dt = nowRounded5()
+    if (ord && !ord.actual_withdraw_at) ord.actual_withdraw_at = nowRounded5()
     return
   }
 
@@ -386,10 +386,10 @@ const onTabChange = (prevIndex, nextIndex) => {
 const updateJourneyStatus = () => {
     return new Promise((resolve, reject) => {
         if (props.journey.state == 'creato'){
-            if (form.real_dt_start) {
+            if (form.actual_start_at) {
                 axios.put(`/api/journey/updateState/${props.journey.id}`, {
                     new_state: 'attivo',
-                    real_dt_start: dayjs(form.real_dt_start).format('YYYY-MM-DD HH:mm:ss')
+                    actual_start_at: dayjs(form.actual_start_at).format('YYYY-MM-DD HH:mm:ss')
                 })
                 .then(response => {
                     console.log(response.data);
@@ -413,10 +413,10 @@ const updateOrderStatus = (order) => {
     return new Promise((resolve, reject) => {
         const existingOrder = form.orders.find(o => o.id === order.id);
         if (existingOrder.state == 'pianificato'){
-            if (existingOrder && existingOrder.real_withdraw_dt) {
+            if (existingOrder && existingOrder.actual_withdraw_at) {
                 axios.put(`/api/order/updateState/${order.id}`, {
                     new_state: 'eseguito',
-                    real_withdraw_dt: dayjs(existingOrder.real_withdraw_dt).format('YYYY-MM-DD HH:mm:ss')
+                    actual_withdraw_at: dayjs(existingOrder.actual_withdraw_at).format('YYYY-MM-DD HH:mm:ss')
                 })
                 .then(response => {
                     console.log(response.data);
@@ -447,10 +447,10 @@ const startIndex = computed(
 )
 
 const calculateIcon = (order) => {
-    if(order.truck_location == 'vehicle'){
+    if(order.cargo_location == 'vehicle'){
         return 'fa fa-truck'
     }
-    else if(order.truck_location == 'trailer'){
+    else if(order.cargo_location == 'trailer'){
         return 'fa fa-trailer'
     }
     else return 'fa fa-cart-arrow-down'
@@ -482,3 +482,6 @@ const checkThisToggle = (e) => {
   box-sizing: content-box !important;
 }
 </style>
+
+
+

@@ -16,9 +16,9 @@ class OrderHolder extends Model
     protected $fillable = [
         'order_id',
         'holder_id',
-        'holder_piene',
-        'holder_vuote',
-        'holder_totale'
+        'filled_holders_count',
+        'empty_holders_count',
+        'total_holders_count'
     ];
 
 

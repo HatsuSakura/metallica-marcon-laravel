@@ -5,10 +5,13 @@
 Two independent verticals:
 
 1) Logistics NLP (Operational Search)
-- Input: short NL query (filters + geo + date constraints)
+- Input: short NL query for one scenario:
+  - `planning_sites`
+  - `order_requests`
+  - `hybrid`
 - Output: `LogisticsQuery` JSON (strict schema)
-- Backend: deterministic query builder -> candidate pickups
-- Optional: scoring (distance/priority/fill-factor) is deterministic
+- Backend: deterministic query builder -> site candidates, order candidates, or both
+- Optional: scoring (`distance`/`risk`/`urgency`/`mixed`) is deterministic
 
 2) Analytics NLP (BI / Commercial Dashboard)
 - Input: NL query about quantities, margins, charts, breakdowns
@@ -27,6 +30,7 @@ Two independent verticals:
 - Strict JSON schema validation server-side.
 - Field whitelist only (no free-form SQL).
 - Enum validation for material types, statuses, etc.
+- Scenario validation (`planning_sites`/`order_requests`/`hybrid`) and field compatibility checks.
 - Rate-limiting and max time range for analytics.
 - Store all raw queries + parsed output for audit/debug.
 

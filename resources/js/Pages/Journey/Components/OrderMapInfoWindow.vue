@@ -6,7 +6,7 @@
     <div class="name flex justify-between space-x-4">
       <div class="text-lg flex items-center space-x-2">
         <font-awesome-icon :icon="['fas', 'address-card']" class="text-2xl"/>
-        <span>{{props.order.customer.ragione_sociale}}</span>
+        <span>{{props.order.customer.company_name}}</span>
       </div>
     </div>
 
@@ -14,14 +14,14 @@
     <div class="name flex justify-between space-x-4">
       <div class="text-lg space-x-2 flex items-center">
         <font-awesome-icon :icon="siteIcon" class="text-2xl"/>
-        <span v-if="props.order.site.tipologia === 'fully_operative'" class="text-2xl">+</span>
-        <font-awesome-icon v-if="props.order.site.tipologia === 'fully_operative'" :icon="['fas', 'warehouse']"  class="text-2xl"/> 
-        <span>{{props.order.site.denominazione}}</span>   
+        <span v-if="props.order.site.site_type === 'fully_operative'" class="text-2xl">+</span>
+        <font-awesome-icon v-if="props.order.site.site_type === 'fully_operative'" :icon="['fas', 'warehouse']"  class="text-2xl"/> 
+        <span>{{props.order.site.name}}</span>   
       </div>
     </div>
     
-    <!-- RIGA INDIRIZZO -->
-    <div class="address my-2">{{props.order.site.indirizzo}}</div>
+    <!-- RIGA address -->
+    <div class="address my-2">{{props.order.site.address}}</div>
 
     <!-- INFO BOTTOM -->
     <div class="features flex justify-between">
@@ -87,17 +87,17 @@ const props = defineProps({
 console.log('ORDER', props.order)
 
 const options = computed(() => ({
-  position: { lat: props.order.site.lat, lng: props.order.site.lng },
-  title: props.order.site.denominazione,
+  position: { lat: props.order.site.latitude, lng: props.order.site.longitude },
+  title: props.order.site.name,
 }));
 
 
 const siteIcon = computed(() => {
-  return props.order.site.tipologia === 'fully_operative'
+  return props.order.site.site_type === 'fully_operative'
     ? ['fas', 'building-user']
-    : props.order.site.tipologia === 'only_legal'
+    : props.order.site.site_type === 'only_legal'
     ? ['fas', 'building-user']
-    : props.order.site.tipologia === 'only_stock'
+    : props.order.site.site_type === 'only_stock'
     ? ['fas', 'warehouse']
     : ['fas', 'building-user']; // Default icon if none match
 });
@@ -119,3 +119,4 @@ const setToOrders = (order) => {
 }
 
 </script>
+

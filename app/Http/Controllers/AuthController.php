@@ -52,3 +52,6 @@ class AuthController extends Controller
         return redirect()->route('login')->with('success', 'Sessione utente conclusa con successo: Arrivederci!');
     }
 }
+
+
+

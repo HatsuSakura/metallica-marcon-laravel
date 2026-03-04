@@ -10,7 +10,7 @@
         <div class="flex flex-row items-center justify-between gap-3 mb-4">
             <JourneyMainData :journey="journey" />
             <span class="badge badge-outline">
-                Stato: {{ journey.state }}
+                Stato: {{ journey.status }}
             </span>
         </div>
 
@@ -81,7 +81,7 @@
                                 :key="order.id"
                                 class="text-sm"
                             >
-                                #{{ String(order.id).padStart(9, '0') }} - {{ order.customer?.ragione_sociale ?? 'Cliente' }}
+                                #{{ String(order.id).padStart(9, '0') }} - {{ order.customer?.company_name ?? 'Cliente' }}
                             </div>
                         </div>
                     </div>
@@ -152,14 +152,14 @@ const stopTitle = (stop) => {
     if (stop.kind === 'technical') {
         return stop.technical_action?.label ?? stop.technical_action?.name ?? stop.description ?? 'Sosta tecnica';
     }
-    return stop.customer?.ragione_sociale ?? `Cliente #${stop.customer_id ?? '-'}`;
+    return stop.customer?.company_name ?? `Cliente #${stop.customer_id ?? '-'}`;
 };
 
 const stopSubtitle = (stop) => {
     if (!stop) return null;
     if (stop.address_text) return stop.address_text;
     const firstOrder = stopOrders(stop)[0];
-    return firstOrder?.site?.indirizzo ?? null;
+    return firstOrder?.site?.address ?? null;
 };
 
 const stopStatusLabel = (status) => {
@@ -177,3 +177,4 @@ const stopStatusLabel = (status) => {
     }
 };
 </script>
+

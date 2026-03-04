@@ -16,37 +16,37 @@ use App\Http\Controllers\API_RecipeController;
 use App\Http\Controllers\RecipeNodeController;
 use App\Http\Controllers\CatalogItemController;
 use App\Http\Controllers\DriverOrderController;
-use App\Http\Controllers\RelatorSiteController;
-use App\Http\Controllers\RelatorUserController;
+use App\Http\Controllers\SiteController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserAccountController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\RelatorCargoController;
+use App\Http\Controllers\CargoController;
 use App\Http\Controllers\HolderController;
-use App\Http\Controllers\RelatorOrderController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\DriverJourneyController;
-use App\Http\Controllers\RelatorJourneyController;
-use App\Http\Controllers\RelatorTrailerController;
-use App\Http\Controllers\RelatorVehicleController;
-use App\Http\Controllers\RelatorCustomerController;
-use App\Http\Controllers\RelatorWithdrawController;
+use App\Http\Controllers\TrailerController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\WithdrawController;
 use App\Http\Controllers\NotificationSeenController;
-use App\Http\Controllers\RelatorDashboardController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CatalogItemRecipeController;
 use App\Http\Controllers\OrderItemExplosionController;
 use App\Http\Controllers\API_WarehouseOrdersController;
-use App\Http\Controllers\RelatorJourneyCargoController;
+use App\Http\Controllers\JourneyCargoController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\API_DriverOrderUpdateController;
 use App\Http\Controllers\WarehouseManagerOrderController;
 use App\Http\Controllers\API_DriverJourneyUpdateController;
 use App\Http\Controllers\API_WarehouseOrderItemsController;
-use App\Http\Controllers\API_RelatorSiteTimetableController;
+use App\Http\Controllers\API_SiteTimetableController;
 use App\Http\Controllers\WarehouseManagerOrderItemController;
 use App\Http\Controllers\API_WarehouseJourneyCargosController;
-use App\Http\Controllers\API_RelatorSiteBooleanUpdateController;
-use App\Http\Controllers\API_RelatorUserResetAndresendFunctions;
+use App\Http\Controllers\API_SiteBooleanUpdateController;
+use App\Http\Controllers\API_UserResetAndResendController;
 use App\Http\Controllers\API_DriverJourneyStopsController;
 use App\Http\Controllers\WarehouseManagerOrderItemImageController;
+use App\Http\Controllers\API_NlpLogisticsParseController;
 
 
 //Route::get('/', [IndexController::class, 'login']);
@@ -153,32 +153,39 @@ Route::get('/dashboard', fn() => null)
     ->name('dashboard');
 
 // WAREHOUSE
-Route::get('/dashboard-warehouse', fn() => Inertia::render('Warehouse/Dashboard'))
+Route::get('/dashboard-warehouse', fn() => Inertia::render('Dashboard/Warehouse'))
     ->middleware(['auth'])
     //->middleware(['auth', 'can:access-warehouse'])
     ->name('warehouse.home');
 
 // LOGISTIC
-Route::get('/dashboard-logistic', fn() => Inertia::render('Relator/Dashboard'))
-    ->middleware(['auth'])
-    //->middleware(['auth', 'can:access-warehouse'])
+Route::get('/dashboard-logistic', fn() => Inertia::render('Dashboard/Logistic'))
+    ->middleware(['auth', 'verified'])
     ->name('logistic.home');
+Route::get('/dashboard-logistic/full', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.logistic.full');
 
 
 // DRIVER
-Route::get('/dashboard-driver', fn() => Inertia::render('Driver/Dashboard'))
+Route::get('/dashboard-driver', fn() => Inertia::render('Dashboard/Driver'))
     ->middleware(['auth'])
     //->middleware(['auth', 'can:access-warehouse'])
     ->name('driver.home');
 
+// CUSTOMER
+Route::get('/dashboard-customer', fn() => Inertia::render('Dashboard/Customer'))
+    ->middleware(['auth'])
+    ->name('customer.home');
+
 // MANAGER
-Route::get('/dashboard-manager', fn() => Inertia::render('Manager/Dashboard'))
+Route::get('/dashboard-manager', fn() => Inertia::render('Dashboard/Manager'))
     ->middleware(['auth'])
     //->middleware(['auth', 'can:access-warehouse'])
     ->name('manager.home');
 
 // DEVELOPER
-Route::get('/dashboard-developer', fn() => Inertia::render('Developer/Dashboard'))
+Route::get('/dashboard-developer', fn() => Inertia::render('Dashboard/Developer'))
     ->middleware(['auth'])
     //->middleware(['auth', 'can:access-warehouse'])
     ->name('developer.home');
@@ -192,84 +199,71 @@ Route::middleware('auth')->get('/home', fn() => Inertia::render('Generic/Home'))
 Route::resource('journey', JourneyController::class)
 ->withTrashed();  
 
+Route::name('journeyCargo.create')
+->middleware(['auth', 'verified'])
+->get(
+    'journeyCargo/{journey}/create',
+    [JourneyCargoController::class, 'create']
+)->withTrashed();
+Route::name('journeyCargo.edit')
+->middleware(['auth', 'verified'])
+->get(
+    'journeyCargo/{journey}/edit',
+    [JourneyCargoController::class, 'edit']
+)->withTrashed();
+Route::name('journeyCargo.manage')
+->middleware(['auth', 'verified'])
+->get(
+    'journeyCargo/{journeyCargo}/manage',
+    [JourneyCargoController::class, 'manage']
+)->withTrashed();
+Route::resource('journeyCargo', JourneyCargoController::class)
+->middleware(['auth', 'verified'])
+->only(['index', 'show', 'store', 'update', 'destroy'])
+->withTrashed();
+
 Route::resource('holder', HolderController::class)
 ->middleware(['auth', 'verified']);
 
-// Route Grouping
-Route::prefix('relator')
-->name('relator.')
-->middleware(['auth', 'verified'])
-->group(function() {
+// Backoffice resources (canonical, no relator prefix)
+Route::middleware(['auth', 'verified'])->group(function() {
     // listings removed
 
 
-    Route::name('dashboard')
-    ->get(
-        'dashboard', 
-        [RelatorDashboardController::class, 'index']
-    )->middleware(['auth']);
-
     //CUSTOMER
-    Route::name('customer.restore') // non standard routes ABOVE the standard ones
+    Route::name('customer.restore')
     ->put(
         'customer/{customer}/restore',
-        [RelatorCustomerController::class, 'restore']
+        [CustomerController::class, 'restore']
     )->withTrashed(); 
-    Route::resource('customer', RelatorCustomerController::class)
-    //->only(['index', 'edit', 'create', 'store', 'update', 'destroy'])
+    Route::resource('customer', CustomerController::class)
     ->withTrashed();  
 
     // SITE
-    Route::resource('site', RelatorSiteController::class)
-    //->only(['index', 'edit', 'create', 'store', 'update', 'destroy'])
+    Route::resource('site', SiteController::class)
     ->withTrashed();  
 
     // WITHDRAW
-    Route::resource('withdraw', RelatorWithdrawController::class)
+    Route::resource('withdraw', WithdrawController::class)
     ->only(['create', 'store', 'update', 'destroy'])
     ->withTrashed();  
 
-    Route::resource('order', RelatorOrderController::class)
+    Route::resource('order', OrderController::class)
     ->withTrashed();  
 
-    Route::resource('journey', RelatorJourneyController::class)
+    Route::resource('vehicle', VehicleController::class)
     ->withTrashed();  
 
-    Route::name('journeyCargo.create') // non standard routes ABOVE the standard ones
-    ->get(
-        'journeyCargo/{journey}/create',
-        [RelatorJourneyCargoController::class, 'create']
-    )->withTrashed();
-    Route::name('journeyCargo.edit') // Edited JourneyCargos call the STORE method with the updateCargoForJourney SERVICE
-    ->get(
-        'journeyCargo/{journey}/edit',
-        [RelatorJourneyCargoController::class, 'edit']
-    )->withTrashed();
-    Route::name('journeyCargo.manage') // Managed JourneyCargos call the UPDATE
-    ->get(
-        'journeyCargo/{journeyCargo}/manage',
-        [RelatorJourneyCargoController::class, 'manage']
-    )->withTrashed();
-    Route::resource('journeyCargo', RelatorJourneyCargoController::class)
-    ->only(['index', 'show', 'store', 'update', 'destroy'])
+    Route::resource('trailer', TrailerController::class)
     ->withTrashed();  
 
-    Route::resource('vehicle', RelatorVehicleController::class)
-    ->withTrashed();  
-
-    Route::resource('trailer', RelatorTrailerController::class)
-    ->withTrashed();  
-
-    Route::resource('cargo', RelatorCargoController::class)
+    Route::resource('cargo', CargoController::class)
     ->withTrashed();  
 
 
     // USER
-    Route::resource('user', RelatorUserController::class)
-    //->only(['index', 'edit', 'create', 'store', 'update', 'destroy'])
+    Route::resource('user', UserController::class)
     ->withTrashed();
-
-    // offer/listing image routes removed
 });
 
 
@@ -373,9 +367,9 @@ Route::middleware(['auth'])->group(function () {
 Route::prefix('api')
     ->middleware(['auth'])
     ->group(function () {
-        //Route::get('/timetable/{site}', [API_RelatorSiteTimetableController::class, 'show']);
-        Route::post('/timetable/{site}', [API_RelatorSiteTimetableController::class, 'store']);
-        Route::put('/site/updateBooleans/{site}', [API_RelatorSiteBooleanUpdateController ::class, 'update']);
+        //Route::get('/timetable/{site}', [API_SiteTimetableController::class, 'show']);
+        Route::post('/timetable/{site}', [API_SiteTimetableController::class, 'store']);
+        Route::put('/site/updateBooleans/{site}', [API_SiteBooleanUpdateController ::class, 'update']);
         Route::put('/journey/updateState/{journey}', [API_DriverJourneyUpdateController ::class, 'updateState']);
         Route::put('/order/updateState/{order}', [API_DriverOrderUpdateController ::class, 'updateState']);
         Route::post('/driver/journeys/{journey}/start', [API_DriverJourneyStopsController::class, 'startJourney']);
@@ -383,6 +377,7 @@ Route::prefix('api')
         Route::put('/driver/journeys/{journey}/stops/{stop}/complete', [API_DriverJourneyStopsController::class, 'complete']);
         Route::put('/driver/journeys/{journey}/stops/{stop}/skip', [API_DriverJourneyStopsController::class, 'skip']);
         Route::post('/driver/journeys/{journey}/stops/technical', [API_DriverJourneyStopsController::class, 'createTechnical']);
+        Route::post('/nlp/logistics/parse', [API_NlpLogisticsParseController::class, 'parse']);
         Route::put('/warehouse-orders/{order}', [API_WarehouseOrdersController::class, 'update'])->name('update');
         Route::post('/warehouse-order-items/move-journey-cargo/{orderItem}', [API_WarehouseOrderItemsController::class, 'moveJourneyCargo'])->name('warehouse-order-items.move-journey-cargo');
         Route::post('/warehouse-order-items/save-items', [API_WarehouseOrderItemsController::class, 'saveItems'])->name('warehouse-order-items.save-items-bulk');
@@ -390,8 +385,8 @@ Route::prefix('api')
         Route::patch('/warehouse-order-items/not-found/{orderItem}', [API_WarehouseOrderItemsController::class, 'flagNotFound'])->name('api.warehouse-order-items.flag-not-found');
         Route::put('/warehouse-order-items/{orderItem}', [API_WarehouseOrderItemsController::class, 'update'])->name('warehouse-order-items.update');
         Route::put('warehouse-journey-cargos/{journeyCargo}', [API_WarehouseJourneyCargosController::class, 'update'])->name('warehouse-journey-cargos.update');
-        Route::post('/user/resend-verification/{user}', [API_RelatorUserResetAndresendFunctions::class, 'resendVerification'])->name('relator.user.resend.verification');
-        Route::post('/user/send-password-reset/{user}', [API_RelatorUserResetAndresendFunctions::class, 'sendPasswordResetEmail'])->name('relator.user.send.password.reset');
+        Route::post('/user/resend-verification/{user}', [API_UserResetAndResendController::class, 'resendVerification'])->name('user.resend.verification');
+        Route::post('/user/send-password-reset/{user}', [API_UserResetAndResendController::class, 'sendPasswordResetEmail'])->name('user.send.password.reset');
 
         /*
          * ORDER ITEM EXPLOSION (ESPLOSIONE COLLO)
@@ -415,7 +410,7 @@ Route::prefix('api')
 
 
 Route::prefix('withdraws/{withdraw}')->group(function () {
-    Route::put('/update-state', [RelatorWithdrawController::class, 'updateState'])->name('withdraws.update-state');
-    Route::post('/attach-file', [RelatorWithdrawController::class, 'attachFile'])->name('withdraws.attach-file'); // pronta per quando la faremo
+    Route::put('/update-state', [WithdrawController::class, 'updateState'])->name('withdraws.update-state');
+    Route::post('/attach-file', [WithdrawController::class, 'attachFile'])->name('withdraws.attach-file'); // pronta per quando la faremo
     // Other state-related actions
 });

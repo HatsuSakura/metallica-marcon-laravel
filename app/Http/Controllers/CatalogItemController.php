@@ -67,3 +67,6 @@ class CatalogItemController extends Controller
             ->get();
     }
 }
+
+
+

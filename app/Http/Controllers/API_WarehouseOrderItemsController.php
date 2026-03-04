@@ -31,14 +31,14 @@ public function saveItems(
     if ($request->filled('order_id')) {
         $order = Order::findOrFail($request->input('order_id'));
 
-        // normalizza il ragnista: '' => null
-        $ragnista = $request->input('ragnista_id');
-        $ragnista = ($ragnista === '' || $ragnista === null) ? null : (int)$ragnista;
+        // normalizza il gruista: ' => null
+        $craneOperatorUserId = $request->input('crane_operator_user_id');
+        $craneOperatorUserId = ($craneOperatorUserId === '' || $craneOperatorUserId === null) ? null : (int) $craneOperatorUserId;
 
         $order->forceFill([
-            'has_ragno'           => (int) $request->boolean('has_ragno'),
-            'ragnista_id'         => $ragnista,
-            'machinery_time'      => (int) $request->input('machinery_time', 0),
+            'has_crane'              => (int) $request->boolean('has_crane'),
+            'crane_operator_user_id' => $craneOperatorUserId,
+            'machinery_time_minutes' => (int) $request->input('machinery_time_minutes', 0),
             //'updated_by_user_id'  => $userId, // se usi l’audit
         ])->save();
     }
@@ -171,7 +171,7 @@ public function update(
             $pivotAttrs = [
                 'is_double_load'        => (int)($data['is_double_load'] ?? 0),
                 // se non viene passato, usa il warehouse corrente come download
-                'warehouse_download_id' => $data['warehouse_id'],
+                'download_warehouse_id' => $data['warehouse_id'],
             ];
 
             // Mantieni solo questa associazione attiva
@@ -183,7 +183,7 @@ public function update(
             $orderItem->unsetRelation('journeyCargos'); // svuota relazione in cache
             $orderItem->refresh(); // ricarica attributi dal DB (warehouse_id, ecc.)
             $orderItem->load([
-                'journeyCargos' => fn($q) => $q->select('journey_cargos.id')->withPivot('warehouse_download_id'),
+                'journeyCargos' => fn($q) => $q->select('journey_cargos.id')->withPivot('download_warehouse_id'),
                 'warehouse',
                 'holder',         // 👈 quello che OrderItemRow legge
                 'cerCode',   // 👈 idem
@@ -284,3 +284,8 @@ public function update(
 
 
 }
+
+
+
+
+

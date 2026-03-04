@@ -106,7 +106,7 @@
           site,
           orders_count: (s.orders || []).length,
           description: s.description ?? meta.description ?? '',
-          address_text: s.address_text ?? meta.address_text ?? (site?.indirizzo ?? ''),
+          address_text: s.address_text ?? meta.address_text ?? (site?.address ?? ''),
         }
       })
     )
@@ -181,14 +181,14 @@
 
 
     const form = useForm({
-      dt_start: '',
-      dt_end: '',
+      planned_start_at: '',
+      planned_end_at: '',
       vehicle_id: '',
-      cargo_for_vehicle_id: '',
+      vehicle_cargo_id: '',
       trailer_id: '',
-      cargo_for_trailer_id: '',
+      trailer_cargo_id: '',
       driver_id: '',
-      logistic_id: '',
+      logistics_user_id: '',
       orders_truck: [],
       orders_trailer: [],
       orders_fulfill: [],
@@ -202,8 +202,8 @@
     
     const create = () => {
       // Before submitting, format the date correctly
-      form.dt_start = dayjs(form.dt_start).format('YYYY-MM-DD HH:mm:ss');
-      form.dt_end   = dayjs(form.dt_end  ).format('YYYY-MM-DD HH:mm:ss');
+      form.planned_start_at = dayjs(form.planned_start_at).format('YYYY-MM-DD HH:mm:ss');
+      form.planned_end_at   = dayjs(form.planned_end_at  ).format('YYYY-MM-DD HH:mm:ss');
       // Map each list to only send IDs
       form.orders_truck    = listMotrice.value.map(order => order.id);
       form.orders_trailer  = listRimorchio.value.map(order => order.id);
@@ -229,7 +229,7 @@
         orders: s.orders ?? [],
       }))
 
-      form.logistic_id = user.value.id;
+      form.logistics_user_id = user.value.id;
 
       form.post(route('journey.store'), {
         onError: (errors) => {
@@ -360,15 +360,24 @@
     const ordiniCaricoRiempimento   = ref(0);
      
     const setPreferredTrailerAndCargo = () => {
-      const selectedVehicle = props.vehicles.find(vehicle => vehicle.id === form.vehicle_id)
-      capacitaCaricoMotrice.value = selectedVehicle.load_capacity;
+      const selectedVehicle = props.vehicles.find(vehicle => Number(vehicle.id) === Number(form.vehicle_id))
+      if (!selectedVehicle) {
+        capacitaCaricoMotrice.value = 0;
+        capacitaCaricoRimorchio.value = 0;
+        form.trailer_id = '';
+        form.vehicle_cargo_id = '';
+        trailerEnabled.value = false;
+        return;
+      }
+
+      capacitaCaricoMotrice.value = selectedVehicle.load_capacity ?? 0;
       capacitaCaricoRimorchio.value = 0;
       // Verifico se può avere un rimorchio (NON POSSONO Furgoni e Camion con Sponda)
       if (selectedVehicle.has_trailer){
         form.trailer_id = selectedVehicle.trailer_id? selectedVehicle.trailer_id : '';
         trailerEnabled.value = true;
-        const selectedTrailer = props.trailers.find(trailer => trailer.id === form.trailer_id );
-        capacitaCaricoRimorchio.value = selectedTrailer.load_capacity;
+        const selectedTrailer = props.trailers.find(trailer => Number(trailer.id) === Number(form.trailer_id));
+        capacitaCaricoRimorchio.value = selectedTrailer?.load_capacity ?? 0;
       }
       else{
         form.trailer_id = '';
@@ -377,13 +386,13 @@
 
       // Verifico se SPONDA o FURGONE e setto il corretto CASSONE PREDEFINITO
       if (selectedVehicle.type === 'sponda'){
-        form.cargo_for_vehicle_id = props.cargos.find(cargo => cargo.name === 'Sponda').id;
+        form.vehicle_cargo_id = props.cargos.find(cargo => cargo.name === 'Sponda')?.id ?? '';
       }
       else if (selectedVehicle.type === 'furgone') {
-        form.cargo_for_vehicle_id = props.cargos.find(cargo => cargo.name === 'Furgone').id;
+        form.vehicle_cargo_id = props.cargos.find(cargo => cargo.name === 'Furgone')?.id ?? '';
       }
       else{
-        form.cargo_for_vehicle_id = ''
+        form.vehicle_cargo_id = ''
       }
 
       checkCargo({target:'internal'});
@@ -391,21 +400,29 @@
 
     const checkCargo = (evt) => {
       //console.log(evt.target.id);
-      const fieldName = evt.target.id;
-      const selectedVehicle = props.vehicles.find(vehicle => vehicle.id === form.vehicle_id);
-      const selectedVehicleCargo = ref(props.cargos.find(cargo => cargo.id === form.cargo_for_vehicle_id));
-      const selectedTrailerCargo = ref(props.cargos.find(cargo => cargo.id === form.cargo_for_trailer_id));
+      const fieldName = evt?.target?.id;
+      const selectedVehicle = props.vehicles.find(vehicle => Number(vehicle.id) === Number(form.vehicle_id));
+      if (!selectedVehicle) {
+        spaziCasseMotrice.value = 0;
+        spaziBancaleMotrice.value = 0;
+        spaziCasseRimorchio.value = 0;
+        spaziBancaleRimorchio.value = 0;
+        calculateTotalLoad();
+        return;
+      }
+      const selectedVehicleCargo = ref(props.cargos.find(cargo => Number(cargo.id) === Number(form.vehicle_cargo_id)));
+      const selectedTrailerCargo = ref(props.cargos.find(cargo => Number(cargo.id) === Number(form.trailer_cargo_id)));
 
       // Gestisco il caso in cui si sia modificato il rimorchio "TRAILER"
       if (fieldName === 'trailer_id') {
         if (form.trailer_id === '' ){
           selectedTrailerCargo.value = null;
-          form.cargo_for_trailer_id = '';
+          form.trailer_cargo_id = '';
           capacitaCaricoRimorchio.value = 0;
         }
         else{
-          const selectedTrailer = props.trailers.find(trailer => trailer.id === form.trailer_id );
-          capacitaCaricoRimorchio.value = selectedTrailer.load_capacity;
+          const selectedTrailer = props.trailers.find(trailer => Number(trailer.id) === Number(form.trailer_id));
+          capacitaCaricoRimorchio.value = selectedTrailer?.load_capacity ?? 0;
         }
       }
       
@@ -415,13 +432,13 @@
         if (selectedVehicleCargo.value.is_long && selectedTrailerCargo.value.is_long){
           alert('ATTENZIONE: autotreno con combinazione di due cassoni LUNGHI')
           // Reset the correct form field based on the event source
-          if (fieldName === 'cargo_for_vehicle_id') {
+          if (fieldName === 'vehicle_cargo_id') {
             selectedVehicleCargo.value = null;
-            form.cargo_for_vehicle_id = ''; // Reset the form value
+            form.vehicle_cargo_id = ''; // Reset the form value
           } 
-          else if (fieldName === 'cargo_for_trailer_id') {
+          else if (fieldName === 'trailer_cargo_id') {
             selectedTrailerCargo.value = null;
-            form.cargo_for_trailer_id = ''; // Reset the form value
+            form.trailer_cargo_id = ''; // Reset the form value
           }
 
           // Also reset the select element visually
@@ -435,7 +452,7 @@
       ){
         alert('Opzione "' + selectedVehicleCargo.value.name + '" selezionabile solo per motrice di tipo ' + selectedVehicleCargo.value.name);
         selectedVehicleCargo.value = null;
-        form.cargo_for_vehicle_id = ''; // Reset the form value
+        form.vehicle_cargo_id = ''; // Reset the form value
       }
 
       spaziCasseMotrice.value     = 0;
@@ -510,10 +527,10 @@ const moveOrder = (order, targetList) => {
 };
 
 const manageDate = () => {
-  if (form.dt_start) {
-        const startDate = dayjs(form.dt_start);
+  if (form.planned_start_at) {
+        const startDate = dayjs(form.planned_start_at);
         const endDate = startDate.add(1, 'hour'); // Aggiunge un'ora di default
-        form.dt_end = endDate.toDate();
+        form.planned_end_at = endDate.toDate();
   }
 }
 
@@ -528,8 +545,8 @@ const getStopCoords = (s) => {
     if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng }
     return null
   }
-  const lat = Number(s.site?.lat ?? NaN)
-  const lng = Number(s.site?.lng ?? NaN)
+  const lat = Number(s.site?.latitude ?? NaN)
+  const lng = Number(s.site?.longitude ?? NaN)
   if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng }
   return null
 }
@@ -1116,3 +1133,4 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
     }
 
     </style>
+

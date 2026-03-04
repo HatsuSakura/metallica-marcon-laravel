@@ -59,7 +59,7 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
           </div>
           <div class="flex-1">
             <a class="text-xl ml-4">
-              <Link :href="route('relator.customer.index')">Metallica Marcon</Link>&nbsp;
+              <Link :href="route('customer.index')">Metallica Marcon</Link>&nbsp;
             </a>
           </div>
           <div class="flex-none">
@@ -155,10 +155,10 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
           <Link @click="closeDrawer" :href="route('dashboard')">La mia Dashboard</Link>
         </li>
         <li>
-          <Link @click="closeDrawer" :href="route('relator.customer.index')">Clienti</Link>
+          <Link @click="closeDrawer" :href="route('customer.index')">Clienti</Link>
         </li>
         <li>
-          <Link @click="closeDrawer" :href="route('relator.order.index')">Ordini</Link>
+          <Link @click="closeDrawer" :href="route('order.index')">Ordini</Link>
         </li>
         <li>
           <Link @click="closeDrawer" :href="route('journey.index')">Viaggi</Link>
@@ -184,22 +184,22 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
             <summary>Anagrafiche</summary>
             <ul>
               <li v-if="currentUser && currentUser.is_admin">
-                <Link @click="closeDrawer" :href="route('relator.user.index')">Utenti</Link>
+                <Link @click="closeDrawer" :href="route('user.index')">Utenti</Link>
               </li>
               <li v-if="currentUser && currentUser.is_admin">
-                <Link @click="closeDrawer" :href="route('relator.vehicle.index')">Automezzi</Link>
+                <Link @click="closeDrawer" :href="route('vehicle.index')">Automezzi</Link>
               </li>
               <li v-if="currentUser && currentUser.is_admin">
-                <Link @click="closeDrawer" :href="route('relator.trailer.index')">Rimorchi</Link>
+                <Link @click="closeDrawer" :href="route('trailer.index')">Rimorchi</Link>
               </li>
               <li v-if="currentUser && currentUser.is_admin">
-                <Link @click="closeDrawer" :href="route('relator.cargo.index')">Cassoni</Link>
+                <Link @click="closeDrawer" :href="route('cargo.index')">Cassoni</Link>
               </li>
               <li>
                 <Link @click="closeDrawer" :href="route('holder.index')">Contenitori</Link>
               </li>
               <li>
-                <Link @click="closeDrawer" :href="route('relator.customer.index')">Clienti</Link>
+                <Link @click="closeDrawer" :href="route('customer.index')">Clienti</Link>
               </li>
               <li>
                 <details close>
@@ -268,9 +268,7 @@ const isMapPage = computed(
   () => page.url.startsWith('/map/site') 
 )
 */
-const isMapPage = computed(() => {
-  return page.url.startsWith('/map/site') || page.url.startsWith('/relator/journey/create');
-});
+const isMapPage = computed(() => page.url.startsWith('/map/site'));
 
 const removeMessage = (index) => {
   store.dispatch('flash/removeMessageByIndex', index);
@@ -346,3 +344,4 @@ const notificationsCount = computed(
 }
 
 </style>
+

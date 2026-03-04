@@ -73,13 +73,14 @@ class OrderPolicy
     public function redirectAfterUpdate(User $user)
     {
         if ($user->role === 'logistic' || $user->is_admin) {
-            return route('relator.order.index');
+            return route('order.index');
         }
         elseif($user->role === 'driver') {
-            return route('relator.driver.index');
+            return route('driver.order.index');
         }
         else{
             return route('/');
         }
     }
 }
+

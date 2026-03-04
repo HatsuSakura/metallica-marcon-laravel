@@ -16,7 +16,10 @@ class Order extends Model
     protected $keepOldVersions = true; // Keep all versions of the model
 
     protected $casts = [
-        'state' => OrdersState::class,
+        'status' => OrdersState::class,
+        'requested_at' => 'datetime',
+        'expected_withdraw_at' => 'datetime',
+        'actual_withdraw_at' => 'datetime',
     ];
     
     protected $fillable = [
@@ -25,16 +28,16 @@ class Order extends Model
         'requested_at',
         'customer_id',
         'site_id',
-        'logistic_id',
+        'logistics_user_id',
         'journey_id',
-        'state',
-        'truck_location',
-        'expected_withdraw_dt',
-        'real_withdraw_dt',
+        'status',
+        'cargo_location',
+        'expected_withdraw_at',
+        'actual_withdraw_at',
         'worker_id',
-        'has_ragno',
-        'ragnista_id',
-        'machinery_time',
+        'has_crane',
+        'crane_operator_user_id',
+        'machinery_time_minutes',
     ]; 
 
 protected static function booted()
@@ -120,11 +123,17 @@ protected static function booted()
 
     public function logistic()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'logistics_user_id');
+    }
+
+    public function logisticsUser()
+    {
+        return $this->belongsTo(User::class, 'logistics_user_id');
     }
 
     public function site()
     {
         return $this->belongsTo(Site::class);
     }
+
 }

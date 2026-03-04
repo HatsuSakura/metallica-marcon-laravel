@@ -15,7 +15,7 @@
 
       <div>
         <font-awesome-icon :icon="['fas', 'user-tie']" class="text-2xl"/>
-        {{ item.order.customer.ragione_sociale }}
+        {{ item.order.customer.company_name }}
       </div>
       
       <div class="flex flex-row gap-4">
@@ -56,7 +56,7 @@
         <font-awesome-icon :icon="['fas', 'warehouse']" class="text-2xl text-primary"/>
         previsto:
         <div class="badge badge-primary badge-lg">
-          {{ item.warehouse.denominazione }}
+          {{ item.warehouse.name }}
         </div>
       </div>
 
@@ -65,7 +65,7 @@
         <font-awesome-icon :icon="['fas', 'warehouse']" class="text-2xl text-primary"/>
         effettivo: 
         <div class="badge badge-primary badge-lg">
-          {{ warehouse.denominazione }}
+          {{ warehouse.name }}
         </div>
       </div>
 
@@ -109,7 +109,7 @@
           <div class="flex flex-row gap-2">
 
             <div class="flex flex-row items-center gap-2">
-              <input type="checkbox" id="has_ragno" v-model="localIsRagnabile" class="toggle" :disabled="!parentHasRagno" @change="onToggleIsRagnabileChange" >
+              <input type="checkbox" id="has_crane" v-model="localIsRagnabile" class="toggle" :disabled="!parentHasRagno" @change="onToggleIsRagnabileChange" >
               Ragnabile
             </div>
 
@@ -139,7 +139,7 @@
           <div class="flex flex-row gap-2">
 
             <div class="flex flex-row items-center gap-2">
-              <input type="checkbox" id="has_ragno" v-model="has_selection" class="toggle">
+              <input type="checkbox" id="has_crane" v-model="has_selection" class="toggle">
               Selezione
             </div>
 
@@ -227,8 +227,8 @@
             warehouse_manager_id : item.warehouse_manager_id,
             worker_id : item.worker_id,
             has_selection : item.has_selection,
-            selection_time : item.selection_time,
-            is_ragnabile : item.is_ragnabile,
+            selection_duration_minutes : item.selection_duration_minutes,
+            is_crane_eligible : item.is_crane_eligible,
             machinery_time_fraction : item.machinery_time_fraction,
             is_machinery_time_manual : item.is_machinery_time_manual,
             is_transshipment : item.is_transshipment,
@@ -293,38 +293,38 @@
     // Computed property for hours with getter and setter
     const selection_time_hh = computed({
       get() {
-        return Math.floor(props.item.selection_time / 60);
+        return Math.floor(props.item.selection_duration_minutes / 60);
       },
       set(newHour) {
-        // Update item.selection_time based on the new hours and current minutes
-        props.item.selection_time = newHour * 60 + selection_time_mm.value;
+        // Update item.selection_duration_minutes based on the new hours and current minutes
+        props.item.selection_duration_minutes = newHour * 60 + selection_time_mm.value;
       }
     });
 
     // Computed property for minutes with getter and setter
     const selection_time_mm = computed({
       get() {
-        return props.item.selection_time % 60;
+        return props.item.selection_duration_minutes % 60;
       },
       set(newMin) {
-        // Update item.selection_time based on the current hours and new minutes
-        props.item.selection_time = selection_time_hh.value * 60 + newMin;
+        // Update item.selection_duration_minutes based on the current hours and new minutes
+        props.item.selection_duration_minutes = selection_time_hh.value * 60 + newMin;
       }
     });
 
 
     // Local state for the toggle, initialized from the item.
-    //const localIsRagnabile = ref(props.item.is_ragnabile)
+    //const localIsRagnabile = ref(props.item.is_crane_eligible)
     const localIsRagnabile = computed({
       get() {
-        return Boolean(props.item.is_ragnabile);
+        return Boolean(props.item.is_crane_eligible);
       },
-      set(new_is_ragnabile) {
-        props.item.is_ragnabile = new_is_ragnabile;
+      set(newIsCraneEligible) {
+        props.item.is_crane_eligible = newIsCraneEligible;
       }
     });
 
-    // When the user toggles is_ragnabile, you might emit an event if needed.
+    // When the user toggles is_crane_eligible, you might emit an event if needed.
     function onToggleIsRagnabileChange() {
       // For example, you could emit:
        emit('update-is-ragnabile-toggle', {toggle: localIsRagnabile.value} )
@@ -340,7 +340,7 @@
     }
 
 
-    // When the user toggles is_ragnabile, you might emit an event if needed.
+    // When the user toggles is_crane_eligible, you might emit an event if needed.
     function resetManualMachineryTimeInput() {
       // For example, you could emit:
        emit('reset-manual-machinery-time' )
@@ -410,3 +410,4 @@
   }
   </style>
   
+

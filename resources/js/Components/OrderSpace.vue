@@ -20,8 +20,8 @@
                     {{ customer.seller.name }} {{ customer.seller.surname }}
                 </span>
             </div>
-            <div><CustomerRagioneSociale :ragioneSociale="customer.ragione_sociale"/></div>
-            <div><Address :indirizzo="site.indirizzo" label="Sede"/></div>        
+            <div><CustomerRagioneSociale :company_name="customer.company_name"/></div>
+            <div><Address :address="site.address" label="Sede"/></div>        
         </div>
 
         <div class="flex flex-col md:flex-row gap-2 md:items-center justify-between">
@@ -71,3 +71,4 @@ const cargoVehicle = computed(() =>  props.order.journey.journey_cargos.find(c =
 const cargoTrailer = computed(() =>  props.order.journey.journey_cargos.find(c => c.carrier.is_vehicle === false));
 
 </script>
+

@@ -94,7 +94,7 @@
             <select v-model="item.warehouse_id" id="warehouse" class="select select-bordered w-36">
                 <option value="" disabled>Magazzino</option>
                 <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
-                {{ warehouse.denominazione }}
+                {{ warehouse.name }}
                 </option>
             </select>
 
@@ -131,7 +131,7 @@
             </div>
 
             <input 
-            v-model="item.adr_onu_code" 
+            v-model="item.adr_un_code" 
             type="text" 
             class="input input-bordered flex basis-32"
             placeholder="Cod. UN"
@@ -139,29 +139,29 @@
 
             <label class="label" for="adr">ADR Totale</label>
             <input 
-            v-model="item.adr_totale" 
-            id="adr_totale" 
+            v-model="item.is_adr_total" 
+            id="is_adr_total" 
             type="checkbox" 
             class="toggle" 
-            @click="checkAdrEsenzioni('adr_totale')" 
+            @click="checkAdrEsenzioni('is_adr_total')" 
             />
 
             <label class="label" for="adr">Esenzione Totale</label>
             <input 
-            v-model="item.adr_esenzione_totale" 
-            id="adr_esenzione_totale" 
+            v-model="item.has_adr_total_exemption" 
+            id="has_adr_total_exemption" 
             type="checkbox" 
             class="toggle" 
-            @click="checkAdrEsenzioni('adr_esenzione_totale')" 
+            @click="checkAdrEsenzioni('has_adr_total_exemption')" 
             />
 
             <label class="label" for="adr">Esenzione Parziale</label>
             <input 
-            v-model="item.adr_esenzione_parziale" 
-            id="adr_esenzione_parziale" 
+            v-model="item.has_adr_partial_exemption" 
+            id="has_adr_partial_exemption" 
             type="checkbox" 
             class="toggle" 
-            @click="checkAdrEsenzioni('adr_esenzione_parziale')" 
+            @click="checkAdrEsenzioni('has_adr_partial_exemption')" 
             />
 
 
@@ -415,18 +415,18 @@
   };
 
   const checkAdrEsenzioni = (clickedElement) => {
-    props.item.adr_totale = false;
-    props.item.adr_esenzione_totale = false;
-    props.item.adr_esenzione_parziale = false;
+    props.item.is_adr_total = false;
+    props.item.has_adr_total_exemption = false;
+    props.item.has_adr_partial_exemption = false;
     switch(clickedElement){
-      case 'adr_totale':
-        props.item.adr_totale = true;
+      case 'is_adr_total':
+        props.item.is_adr_total = true;
         break;
-      case 'adr_esenzione_totale':
-        props.item.adr_esenzione_totale = true;
+      case 'has_adr_total_exemption':
+        props.item.has_adr_total_exemption = true;
         break;
-      case 'adr_esenzione_parziale':
-        props.item.adr_esenzione_parziale = true;
+      case 'has_adr_partial_exemption':
+        props.item.has_adr_partial_exemption = true;
         break;
     }
   }
@@ -443,3 +443,4 @@
   }
   </style>
   
+

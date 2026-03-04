@@ -26,18 +26,18 @@ const resolveStop = (key) => props.stopsByKey?.get?.(key) ?? null
 const stopTitle = (s) => {
   if (!s) return '-'
   if (s.kind === 'technical') return String(s.action_label ?? s.action_name ?? 'Sosta tecnica').trim()
-  const name = s.customer?.ragione_sociale
+  const name = s.customer?.company_name
   return name ? String(name).trim() : `Cliente #${s.customer_id}`
 }
 
 const stopSubtitle = (s) => {
-  const addr = s?.site?.indirizzo
+  const addr = s?.site?.address
   return addr ? String(addr).trim() : null
 }
 
 const hasCoords = (s) => {
-  const lat = s?.site?.lat
-  const lng = s?.site?.lng
+  const lat = s?.site?.latitude
+  const lng = s?.site?.longitude
   return typeof lat === 'number' && typeof lng === 'number'
 }
 </script>
@@ -113,3 +113,4 @@ const hasCoords = (s) => {
     </div>
   </div>
 </template>
+

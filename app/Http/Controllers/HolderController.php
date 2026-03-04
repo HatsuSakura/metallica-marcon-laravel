@@ -109,3 +109,6 @@ class HolderController extends Controller
             ->with('success', 'Contenitore eliminato');
     }
 }
+
+
+

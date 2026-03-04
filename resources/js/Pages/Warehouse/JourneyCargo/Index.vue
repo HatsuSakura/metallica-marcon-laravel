@@ -6,7 +6,7 @@
         <!--
               <Link
               class="btn btn-ghost" 
-              :href="route('relator.dashboard')"
+              :href="route('dashboard')"
           >
               <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>
               Torna a  Dashboard
@@ -37,7 +37,7 @@
 
                         <div>
                             Uso RAGNO: 
-                            <span v-if="journeyCargo.has_ragno" class="badge badge-primary badge-lg">Richiesto</span>
+                            <span v-if="journeyCargo.has_crane" class="badge badge-primary badge-lg">Richiesto</span>
                             <span v-else class="badge badge-primary badge-lg">NON richiesto</span>   
                         </div>
 
@@ -70,8 +70,8 @@
                         :warehouseWorkers="props.warehouseWorkers"
                         :warehouse="journeyCargo.warehouse"
                         :manualModified="false"
-                        :parentHasRagno="journeyCargo.has_ragno"
-                        :parentMachineryTime="journeyCargo.machinery_time"
+                        :parentHasRagno="journeyCargo.has_crane"
+                        :parentMachineryTime="journeyCargo.machinery_time_minutes"
                     />
                 </div>
 
@@ -116,3 +116,5 @@ import WorkerItemRowEmpty from '../Components/WorkerItemRowEmpty.vue';
 
     
     </script>
+
+

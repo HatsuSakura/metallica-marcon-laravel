@@ -60,18 +60,18 @@
                                     class="checkbox mr-2"
                                     disabled
                                 />
-                                <span>{{ warehouse.denominazione }}</span>
+                                <span>{{ warehouse.name }}</span>
                                 </label>
                             </div>
                         </div>
                     </div>
                 
-                    <div v-if="showRagnista">
+                    <div v-if="showCraneOperator">
                         <label class="label" for="role">
-                            Ragnista
+                            Operatore ragno
                         </label>
                         <div class="input" type="text" disabled>
-                            {{ (Boolean(props.user.is_ragnista))? 'SI' : 'NO' }}
+                            {{ (Boolean(props.user.is_crane_operator))? 'SI' : 'NO' }}
                         </div>
                     </div>
 
@@ -184,7 +184,7 @@ import Box from '@/Components/UI/Box.vue'
         avatarPreview: null,
     })
     
-    const showRagnista = computed(() =>
+    const showCraneOperator = computed(() =>
         ['warehouse_worker', 'warehouse_manager'].includes(props.user.role)
     )
 

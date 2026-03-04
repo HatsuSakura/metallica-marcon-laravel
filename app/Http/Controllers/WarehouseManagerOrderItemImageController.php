@@ -14,7 +14,7 @@ class WarehouseManagerOrderItemImageController extends Controller
     public function create(OrderItem $orderItem) {
         $orderItem->load(['images']);
         return inertia(
-            'Relator/OrderItemImages/Create',
+            'OrderItemImages/Create',
             ['orderItem' => $orderItem]
         );
     }
@@ -78,3 +78,7 @@ class WarehouseManagerOrderItemImageController extends Controller
         return back()->with('success', 'Image was deleted');
     }
 }
+
+
+
+

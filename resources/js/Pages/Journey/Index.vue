@@ -207,7 +207,7 @@ const cleanedFilterQuery = computed(() => {
 const matchFrontendFilters = (journey) => {
     if (!journey) return false;
 
-    const dt = journey.dt_start ? dayjs(journey.dt_start) : null;
+    const dt = journey.planned_start_at ? dayjs(journey.planned_start_at) : null;
     if (appliedFilters.date_from && dt && dt.isBefore(dayjs(appliedFilters.date_from), 'day')) return false;
     if (appliedFilters.date_to && dt && dt.isAfter(dayjs(appliedFilters.date_to), 'day')) return false;
 

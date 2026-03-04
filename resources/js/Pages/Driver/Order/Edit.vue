@@ -75,10 +75,10 @@
                     Produttore
                   </div>
                   <div>
-                    {{ currentSite.customer.ragione_sociale }}
+                    {{ currentSite.customer.company_name }}
                   </div>
                   <div>
-                    {{ currentSite.customer.indirizzo_legale }}
+                    {{ currentSite.customer.legal_address }}
                   </div>
               </div>
             </div>
@@ -86,7 +86,7 @@
             <div class="flex content-center">
               <div>
                 <div class="flex content-center pr-4">
-                  <div class="radial-progress" :style="{ '--value': currentSite.fattore_rischio_calcolato * 100, color: backgroundColor }" role="progressbar">{{ currentSite.fattore_rischio_calcolato * 100 }}%</div>
+                  <div class="radial-progress" :style="{ '--value': currentSite.calculated_risk_factor * 100, color: backgroundColor }" role="progressbar">{{ currentSite.calculated_risk_factor * 100 }}%</div>
                   <font-awesome-icon :icon="['fas', buildingFaIcon]" class="text-4xl p-4" :style="{ color: backgroundColor }" />
                 </div>
                 
@@ -96,10 +96,10 @@
                     Sede di carico
                   </div>
                   <div>
-                    {{ currentSite.denominazione }}
+                    {{ currentSite.name }}
                   </div>
                   <div>
-                    {{ currentSite.indirizzo }}
+                    {{ currentSite.address }}
                   </div>
               </div>
             </div>
@@ -131,11 +131,11 @@
                     <font-awesome-icon v-else :icon="['fas', 'thumbs-down']" class="text-2xl text-error"/>
                   </div>
                   <div class="flex align-middle gap-2">Transpallet Elettrico:
-                    <font-awesome-icon v-if="currentSite.has_transpallet_el":icon="['fas', 'thumbs-up']" class="text-2xl text-success"/>
+                    <font-awesome-icon v-if="currentSite.has_electric_pallet_truck":icon="['fas', 'thumbs-up']" class="text-2xl text-success"/>
                     <font-awesome-icon v-else :icon="['fas', 'thumbs-down']" class="text-2xl text-error"/>
                   </div>
                   <div class="flex align-middle gap-2">Transpallet Manuale:
-                    <font-awesome-icon v-if="currentSite.has_transpallet_ma":icon="['fas', 'thumbs-up']" class="text-2xl text-success"/>
+                    <font-awesome-icon v-if="currentSite.has_manual_pallet_truck":icon="['fas', 'thumbs-up']" class="text-2xl text-success"/>
                     <font-awesome-icon v-else :icon="['fas', 'thumbs-down']" class="text-2xl text-error"/>
                   </div>
                 </div>
@@ -177,17 +177,17 @@
 
                 <div class="mt-2 flex flex-row justify-between align-middle gap-4">
                   <div class="flex w-full">
-                    <label for="expected_withdraw_dt" class="label w-64">Data presunta ritiro</label>
+                    <label for="expected_withdraw_at" class="label w-64">Data presunta ritiro</label>
                     <VueDatePicker 
-                      id="expected_withdraw_dt" 
-                      v-model="form.expected_withdraw_dt" 
+                      id="expected_withdraw_at" 
+                      v-model="form.expected_withdraw_at" 
                       format="dd/MM/yyyy" 
                       auto-apply 
                       :enableTimePicker="false"
                       @update:model-value="manageExpectedDate()">
                     </VueDatePicker> 
-                    <div class="input-error" v-if="form.errors.expected_withdraw_dt">
-                      {{ form.errors.expected_withdraw_dt }}
+                    <div class="input-error" v-if="form.errors.expected_withdraw_at">
+                      {{ form.errors.expected_withdraw_at }}
                     </div>
                   </div>
 
@@ -419,7 +419,7 @@ const groupedItems = computed(() => {
 
     // Watch for changes in currentSite and update orariApertura dynamically
     watchEffect(() => {
-      if (currentSite.value.timetable?.hours_array) {
+      if (currentSite.value.timetable?.hours_json) {
         orariApertura.value = 'Orari compilati automaticamente';
       } else {
         orariApertura.value = 'ATTENZIONE: non ci sono orari salvati per questa sede!';
@@ -440,8 +440,8 @@ const groupedItems = computed(() => {
       id: props.order.id,
       is_urgent: Boolean(props.order.is_urgent),
       requested_at: props.order.created_at,
-      expected_withdraw_dt: new Date(props.order.expected_withdraw_dt),
-      logistic_id: props.order.logistic_id ? props.order.logistic_id : user ? user.value.id : null, // Fallback to null if user is not defined
+      expected_withdraw_at: new Date(props.order.expected_withdraw_at),
+      logistics_user_id: props.order.logistics_user_id ? props.order.logistics_user_id : user ? user.value.id : null, // Fallback to null if user is not defined
       has_adr_consultant: currentSite.value?.has_adr_consultant ?? '',
       customer_id: currentSite.customer_id,
       site_id: props.site.id,
@@ -468,10 +468,10 @@ const groupedItems = computed(() => {
         warehouse_id: '',
         adr: null,
         adr_hp: null,
-        adr_onu_code: null,
-        adr_totale: false,
-        adr_esenzione_totale: false,
-        adr_esenzione_parziale: false
+        adr_un_code: null,
+        is_adr_total: false,
+        has_adr_total_exemption: false,
+        has_adr_partial_exemption: false
       });
     };
     
@@ -496,7 +496,7 @@ const groupedItems = computed(() => {
           const existingHolder = holderCounter.value.find(holder => Number(holder.holder_id) === Number(item.holder_id) );
           console.log('existingHolder = ', existingHolder)
           if (existingHolder) {
-            existingHolder.holder_piene = Number(existingHolder.holder_piene) + Number(item.holder_quantity);
+            existingHolder.filled_holders_count = Number(existingHolder.filled_holders_count) + Number(item.holder_quantity);
           } 
           else {
             countHolder(item.holder_id, item.holder_quantity);
@@ -521,10 +521,10 @@ const groupedItems = computed(() => {
         console.log(countedHolder)
         const existingHolder = form.holders.find(holder => Number(holder.holder_id) === Number(countedHolder.holder_id) );
         if (existingHolder) {
-          existingHolder.holder_piene = countedHolder.holder_piene;
+          existingHolder.filled_holders_count = countedHolder.filled_holders_count;
         }
         else{
-          addHolder(countedHolder.holder_id, countedHolder.holder_piene, countedHolder.holder_vuote)
+          addHolder(countedHolder.holder_id, countedHolder.filled_holders_count, countedHolder.empty_holders_count)
         }
       })
     }
@@ -533,18 +533,18 @@ const groupedItems = computed(() => {
     const countHolder = (holder_id, piene, vuote) => {
       holderCounter.value.push({ 
         holder_id: holder_id? Number(holder_id) : '', 
-        holder_piene: piene? Number(piene) : '', 
-        holder_vuote: '', 
-        holder_totale: '',
+        filled_holders_count: piene? Number(piene) : '', 
+        empty_holders_count: '', 
+        total_holders_count: '',
       });
     }
 
     const addHolder = (holder_id, piene, vuote) => {
       form.holders.push({ 
         holder_id: holder_id? Number(holder_id) : '', 
-        holder_piene: piene? Number(piene) : '', 
-        holder_vuote: vuote? Number(vuote) : '', 
-        holder_totale: '',
+        filled_holders_count: piene? Number(piene) : '', 
+        empty_holders_count: vuote? Number(vuote) : '', 
+        total_holders_count: '',
       });
     };
     
@@ -556,10 +556,10 @@ const groupedItems = computed(() => {
     watch(
       () => form.holders, // Watching the holders array
       (newHolders) => {
-        // Calculate totale for each holder when holder_piene or holder_vuote changes
+        // Calculate totale for each holder when filled_holders_count or empty_holders_count changes
         newHolders.forEach((holder) => {
-          const piene = Number(holder.holder_piene) || 0; // Convert to number or use 0 if empty
-          const vuote = Number(holder.holder_vuote) || 0;
+          const piene = Number(holder.filled_holders_count) || 0; // Convert to number or use 0 if empty
+          const vuote = Number(holder.empty_holders_count) || 0;
           holder.totale = piene + vuote; // Calculate totale
         });
       },
@@ -576,21 +576,22 @@ const groupedItems = computed(() => {
     const parseBooleanValues = () => {
       form.items.forEach((item) => {
         item.adr = item.adr === 1;
-        item.adr_totale = item.adr_totale === 1;
-        item.adr_esenzione_totale = item.adr_esenzione_totale === 1;
-        item.adr_esenzione_parziale = item.adr_esenzione_parziale === 1;
+        item.is_adr_total = item.is_adr_total === 1;
+        item.has_adr_total_exemption = item.has_adr_total_exemption === 1;
+        item.has_adr_partial_exemption = item.has_adr_partial_exemption === 1;
       });
     }
 
     const manageExpectedDate = () => {
       console.log('gestisco la data')
-      if(form.expected_withdraw_dt){
-        console.log('data inserita', form.expected_withdraw_dt)
-        console.log('giorno della settimana', form.expected_withdraw_dt.getDay())
-        console.log('array Orari', currentSite.value.timetable.hours_array)
+      if(form.expected_withdraw_at){
+        console.log('data inserita', form.expected_withdraw_at)
+        console.log('giorno della settimana', form.expected_withdraw_at.getDay())
+        const hours = currentSite.value.timetable.hours_json
+        console.log('array Orari', hours)
     
-        const daySchedule = JSON.parse(currentSite.value.timetable.hours_array).find(
-            (item) => item.position === form.expected_withdraw_dt.getDay()
+        const daySchedule = JSON.parse(hours).find(
+            (item) => item.position === form.expected_withdraw_at.getDay()
         );
           if (daySchedule) {
             orariApertura.value = daySchedule.orarioApM + " - " + daySchedule.orarioChM + " e " + daySchedule.orarioApP + " - " + daySchedule.orarioChP;
@@ -604,7 +605,8 @@ const groupedItems = computed(() => {
 
     const manageCurrentDate = () => {
       const currentDate = new Date();
-      const daySchedule = JSON.parse(currentSite.value.timetable.hours_array).find(
+      const hours = currentSite.value.timetable.hours_json
+      const daySchedule = JSON.parse(hours).find(
         (item) => item.position === currentDate.getDay()
       );
       if (daySchedule) {
@@ -674,24 +676,24 @@ const groupedItems = computed(() => {
     watch(user, (newUser) => {
       if (newUser) {
         form.user_id = newUser.id;
-        form.logistic_id = newUser.id;
+        form.logistics_user_id = newUser.id;
       }
     }, { immediate: true });
     
     const edit = () => {
-      // Ensure holder_piene and holder_vuote is set to 0 if empty
+      // Ensure filled_holders_count and empty_holders_count is set to 0 if empty
       form.holders.forEach(holder => {
-        if (holder.holder_piene === "") {
-          holder.holder_piene = 0;
+        if (holder.filled_holders_count === "") {
+          holder.filled_holders_count = 0;
         }
-        if (holder.holder_vuote === "") {
-          holder.holder_vuote = 0;
+        if (holder.empty_holders_count === "") {
+          holder.empty_holders_count = 0;
         }
       });
       // Before submitting, format the date correctly
       form.requested_at = dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss');
-      form.expected_withdraw_dt = dayjs(form.expected_withdraw_dt).format('YYYY-MM-DD HH:mm:ss');
-      form.put(route('relator.order.update', {order: props.order.id }));
+      form.expected_withdraw_at = dayjs(form.expected_withdraw_at).format('YYYY-MM-DD HH:mm:ss');
+      form.put(route('order.update', {order: props.order.id }));
     }
         
     </script>
@@ -720,3 +722,6 @@ const groupedItems = computed(() => {
       border-radius: 0.375rem;
     }
     </style>
+
+
+

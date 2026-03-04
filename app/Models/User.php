@@ -25,7 +25,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'role',
         'is_admin',
         'user_code',
-        'is_ragnista'
+        'is_crane_operator',
     ];
 
     /**
@@ -100,9 +100,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Warehouse::class, 'user_warehouse')
                     ->withTimestamps();
     }
-
-
-
 
     //
 

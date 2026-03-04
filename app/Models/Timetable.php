@@ -11,7 +11,7 @@ class Timetable extends Model
     protected $dates = ['deleted_at'];
     protected $fillable = [
         'site_id',
-        'hours_array',
+        'hours_json',
     ];
     //
 

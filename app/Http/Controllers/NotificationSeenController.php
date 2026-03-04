@@ -19,3 +19,6 @@ class NotificationSeenController extends Controller
         return redirect()->back()->with('success', 'Notifica segnata come letta');
     }
 }
+
+
+

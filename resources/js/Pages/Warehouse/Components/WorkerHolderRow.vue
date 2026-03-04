@@ -9,26 +9,26 @@
   
       <label class="label" for="holder">Pieni da ritirare:</label>
       <input 
-        v-model.number="holder.holder_piene" 
+        v-model.number="holder.filled_holders_count" 
         type="number" 
         step="1"
         class="input input-bordered w-32"
-        placeholder="Quantità"
+        placeholder="QuantitÃ "
         min="1"
       />
       
       <label class="label" for="holder">Vuoti richieste:</label>
       <input 
-        v-model.number="holder.holder_vuote" 
+        v-model.number="holder.empty_holders_count" 
         type="number" 
         step="1"
         class="input input-bordered w-32"
-        placeholder="+/- quantità"
+        placeholder="+/- quantitÃ "
       />
   
       <label class="label" for="holder">Totale da consegnare:</label>
       <input 
-        v-model.number="holder.holder_totale" 
+        v-model.number="holder.total_holders_count" 
         type="number" 
         class="input input-bordered w-32 font-medium"
         placeholder="Totale"
@@ -49,8 +49,8 @@
     holders: Array, // List of Holder Types taken from DB
   });
   
-  watch(() => [props.holder.holder_piene, props.holder.holder_vuote], () => {
-    props.holder.holder_totale = Number(props.holder.holder_piene || 0) + Number(props.holder.holder_vuote || 0);
+  watch(() => [props.holder.filled_holders_count, props.holder.empty_holders_count], () => {
+    props.holder.total_holders_count = Number(props.holder.filled_holders_count || 0) + Number(props.holder.empty_holders_count || 0);
   }, { immediate: true });
   </script>
   

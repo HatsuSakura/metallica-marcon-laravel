@@ -7,7 +7,7 @@
     <div class="name flex justify-between space-x-4">
       <div class="text-lg flex items-center space-x-2">
         <font-awesome-icon :icon="['fas', 'address-card']" class="text-2xl"/>
-        <span>{{props.site.customer.ragione_sociale}}</span>
+        <span>{{props.site.customer.company_name}}</span>
       </div>
       <div class="action">
         <div class="tooltip tooltip-left" data-tip="Modifica Cliente">
@@ -22,10 +22,10 @@
     <div class="name flex justify-between space-x-4">
       <div class="text-lg space-x-2 flex items-center">
         <font-awesome-icon :icon="siteIcon" class="text-2xl"/>
-        <span v-if="props.site.tipologia === 'fully_operative'" class="text-2xl">+</span>
-        <font-awesome-icon v-if="props.site.tipologia === 'fully_operative'" :icon="['fas', 'warehouse']"  class="text-2xl"/> 
+        <span v-if="props.site.site_type === 'fully_operative'" class="text-2xl">+</span>
+        <font-awesome-icon v-if="props.site.site_type === 'fully_operative'" :icon="['fas', 'warehouse']"  class="text-2xl"/> 
 
-        <span>{{props.site.denominazione}}</span>   
+        <span>{{props.site.name}}</span>   
 
       
       </div>
@@ -40,22 +40,22 @@
       </div>
     </div>
     
-    <!-- RIGA INDIRIZZO -->
-    <div class="address my-2">{{props.site.indirizzo}}</div>
+    <!-- RIGA address -->
+    <div class="address my-2">{{props.site.address}}</div>
 
     <!-- INFO BOTTOM -->
     <div class="features flex justify-between">
       <div class="tooltip" data-tip="Fat. Rischio">
         <div class="flex items-center justify-between space-x-2 ">
           <font-awesome-icon :icon="['fas', 'warning']" class="text-2xl" :style="{ color: props.backgroundColor }"/>
-          <span>{{props.site.fattore_rischio_calcolato}}</span>
+          <span>{{props.site.calculated_risk_factor}}</span>
         </div>
       </div>
 
       <div class="tooltip" data-tip="Giorni al prossimo ritiro">
         <div class="flex items-center justify-between space-x-2 ">
           <font-awesome-icon :icon="['fas', 'calendar-day']" class="text-2xl"/>
-          <span>{{props.site.giorni_prossimo_ritiro}}</span>
+          <span>{{props.site.days_until_next_withdraw}}</span>
         </div>
       </div>
 
@@ -86,17 +86,17 @@ const props = defineProps({
 })
 
 const options = computed(() => ({
-  position: { lat: props.site.lat, lng: props.site.lng },
-  title: props.site.denominazione,
+  position: { lat: props.site.latitude, lng: props.site.longitude },
+  title: props.site.name,
 }));
 
 
 const siteIcon = computed(() => {
-  return props.site.tipologia === 'fully_operative'
+  return props.site.site_type === 'fully_operative'
     ? ['fas', 'building-user']
-    : props.site.tipologia === 'only_legal'
+    : props.site.site_type === 'only_legal'
     ? ['fas', 'building-user']
-    : props.site.tipologia === 'only_stock'
+    : props.site.site_type === 'only_stock'
     ? ['fas', 'warehouse']
     : ['fas', 'building-user']; // Default icon if none match
 });
@@ -112,3 +112,4 @@ const openInfoSite = (site) => {
 };
 
 </script>
+

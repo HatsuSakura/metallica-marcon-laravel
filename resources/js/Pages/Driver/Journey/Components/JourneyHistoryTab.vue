@@ -4,7 +4,7 @@
             <div class="flex flex-row justify-between items-start">
                 <div class="flex items-center gap-4">
                     <JourneyMainData :journey="journey" />
-                    <span class="badge badge-outline">{{ journey.state }}</span>
+                    <span class="badge badge-outline">{{ journey.status }}</span>
                 </div>
                 <Link
                     :href="route('driver.journey.show', {journey: journey.id, return_to: returnTo})"

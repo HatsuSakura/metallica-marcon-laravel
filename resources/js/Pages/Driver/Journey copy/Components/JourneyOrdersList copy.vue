@@ -15,7 +15,7 @@
                 </span>
 
                 <VueDatePicker
-                    v-model="form.dt_start"
+                    v-model="form.planned_start_at"
                     locale="it"
                     format="dd/MM/yyyy HH:mm"
                     required
@@ -44,18 +44,18 @@
   <li v-for="order in props.journey.orders">
     <hr/>
     <div class="timeline-start timeline-box">
-        {{ order.customer.ragione_sociale }} <br/>
-        Sede: {{ order.site.indirizzo }} 
+        {{ order.customer.company_name }} <br/>
+        Sede: {{ order.site.address }} 
     </div>
     <div class="timeline-middle">
         <font-awesome-icon :icon="['fas', 'circle-check']" />
     </div>
     <div class="timeline-end timeline-box">
         <div class="flex flex-row gap-2 items-center">
-            <span v-if="order.truck_location == 'vehicle'">
+            <span v-if="order.cargo_location == 'vehicle'">
                 <font-awesome-icon :icon="['fas', 'truck']" class="text-4xl"/>
             </span>
-            <span v-else-if="order.truck_location == 'trailer'">
+            <span v-else-if="order.cargo_location == 'trailer'">
                 <font-awesome-icon :icon="['fas', 'trailer']" class="text-4xl"/>
             </span>
             <span v-else>
@@ -102,7 +102,7 @@
                     <select v-model="form.warehouse_id_1" id="warehouse" class="select select-bordered">
                         <option value="" disabled>Magazzino</option>
                         <option v-for="warehouse in props.warehouses" :key="warehouse.id" :value="warehouse.id">
-                        {{ warehouse.denominazione }}
+                        {{ warehouse.name }}
                         </option>
                     </select>
 
@@ -154,7 +154,7 @@
                     <select v-model="form.warehouse_id_2" id="warehouse" class="select select-bordered">
                         <option value="" disabled>Magazzino</option>
                         <option v-for="warehouse in props.warehouses" :key="warehouse.id" :value="warehouse.id">
-                        {{ warehouse.denominazione }}
+                        {{ warehouse.name }}
                         </option>
                     </select>
 
@@ -203,7 +203,7 @@ const props = defineProps({
 })
 
 const form = reactive({
-    dt_start: Date.now(),
+    planned_start_at: Date.now(),
     warehouse_id_1: '',
     warehouse_download_dt_1: '',
     warehouse_id_2: '',

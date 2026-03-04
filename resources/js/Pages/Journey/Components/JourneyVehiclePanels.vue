@@ -50,9 +50,9 @@ defineProps({
         </select>
 
         <select
-          v-model="form.cargo_for_vehicle_id"
+          v-model="form.vehicle_cargo_id"
           required
-          id="cargo_for_vehicle_id"
+          id="vehicle_cargo_id"
           class="select select-bordered w-full max-w-xs"
           :disabled="!trailerEnabled"
           @change="checkCargo"
@@ -199,9 +199,9 @@ defineProps({
         </select>
 
         <select
-          v-model="form.cargo_for_trailer_id"
+          v-model="form.trailer_cargo_id"
           :required="form.trailer_id ? true : false"
-          id="cargo_for_trailer_id"
+          id="trailer_cargo_id"
           class="select select-bordered w-full max-w-xs"
           :disabled="!trailerEnabled"
           @change="checkCargo"
@@ -325,3 +325,4 @@ defineProps({
     </Box>
   </div>
 </template>
+

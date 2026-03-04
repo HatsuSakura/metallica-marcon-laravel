@@ -10,6 +10,14 @@ class Warehouse extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'name',
+        'address',
+        'latitude',
+        'longitude',
+        'notes',
+    ];
+
 
 
 
@@ -51,7 +59,6 @@ class Warehouse extends Model
                     ->where('role', UserRole::WAREHOUSE_WORKER->value)
                     ->withTimestamps();
     }
-
 
 }
 

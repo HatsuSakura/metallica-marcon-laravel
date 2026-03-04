@@ -82,12 +82,12 @@ const currentJourneysList = computed(() => Array.isArray(props.currentJourneys) 
 const activeTab = computed(() => (props.activeTab === 'storico' ? 'storico' : 'correnti'));
 
 const canStartJourney = (journey) => {
-    if (journey.state !== 'creato') return false;
+    if (journey.status !== 'creato') return false;
     return !hasActiveJourney.value;
 };
 
 const isBlockedByActiveJourney = (journey) => {
-    if (journey.state !== 'creato') return false;
+    if (journey.status !== 'creato') return false;
     return !canStartJourney(journey);
 };
 

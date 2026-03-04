@@ -1,5 +1,5 @@
 <template>
-    <Address :indirizzo = "customer.indirizzo_legale" />
+    <Address :address="customer.legal_address" />
 </template>
     
 <script setup>
@@ -9,3 +9,4 @@
         customer: Object,
     })
 </script>
+

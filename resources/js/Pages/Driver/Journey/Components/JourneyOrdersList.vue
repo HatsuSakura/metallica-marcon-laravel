@@ -12,7 +12,7 @@
                     <span>
                         <font-awesome-icon :icon="['fas', 'route']" class="text-4xl"/>
                     </span>
-                    <span v-if="journey.state == 'attivo' || journey.state == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
+                    <span v-if="journey.status == 'attivo' || journey.status == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
                         <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
                     </span>
 
@@ -143,7 +143,7 @@
                         <font-awesome-icon :icon="['fas', 'warehouse']" class="text-4xl"/>
                     </span>
 
-                        <span v-if="journey.state == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
+                        <span v-if="journey.status == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
                             <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
                         </span>
 
@@ -208,21 +208,21 @@ const stopTitle = (stop) => {
     if (stop.kind === 'technical') {
         return stop.technical_action?.label ?? stop.technical_action?.name ?? stop.description ?? 'Sosta tecnica'
     }
-    return stop.customer?.ragione_sociale ?? `Cliente #${stop.customer_id ?? '-'}`
+    return stop.customer?.company_name ?? `Cliente #${stop.customer_id ?? '-'}`
 }
 
 const stopSubtitle = (stop) => {
     if (!stop) return null
     if (stop.address_text) return stop.address_text
     const firstOrder = stopOrders(stop)[0]
-    return firstOrder?.site?.indirizzo ?? null
+    return firstOrder?.site?.address ?? null
 }
 
 const stopTruckLocations = (stop) => {
     const orders = stopOrders(stop)
     const locations = []
     for (const order of orders) {
-        const loc = order?.truck_location ?? null
+        const loc = order?.cargo_location ?? null
         if (!loc) continue
         if (!locations.includes(loc)) locations.push(loc)
     }
@@ -241,3 +241,4 @@ const onDragEnd = () => {
     emit('reorder-changed', reorderStops.value.map((stop) => stop.id))
 }
 </script>
+

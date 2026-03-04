@@ -41,10 +41,11 @@
   
   const options = computed(() => ({
     id: props.order.site.id,
-    position: { lat: props.order.site.lat, lng: props.order.site.lng },
+    position: { lat: props.order.site.latitude, lng: props.order.site.longitude },
     content: pinSvg.value,
-    title: props.order.site.customer ? `${props.order.site.customer.ragione_sociale} - ${props.order.site.denominazione}` : props.order.site.denominazione,
+    title: props.order.site.customer ? `${props.order.site.customer.company_name} - ${props.order.site.name}` : props.order.site.name,
     gmpClickable: true, // Ensures the marker is clickable
   }));
   
   </script>
+

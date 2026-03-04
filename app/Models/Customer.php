@@ -15,20 +15,21 @@ class Customer extends Model
     use SoftDeletes;
 
     protected $dates = ['deleted_at'];
+
     protected $fillable = [
-        'customerOccasionale',
-        'ragioneSociale',
-        'partitaIva',
-        'codiceFiscale',
+        'is_occasional_customer',
+        'company_name',
+        'vat_number',
+        'tax_code',
         'seller_id',
-        'indirizzoLegale',
-        'codiceSdi',
-        'jobType',
-        'emailCommerciale',
-        'emailAmministrativa',
-        'pec',
-        'responsabileSmaltimenti',
-        'telefonoPrincipale'
+        'legal_address',
+        'sdi_code',
+        'business_type',
+        'sales_email',
+        'administrative_email',
+        'certified_email',
+        'responsabile_smaltimenti',
+        'telefono_principale',
     ];
 
     public function seller(): BelongsTo{
@@ -48,7 +49,7 @@ class Customer extends Model
     }
 
     public function scopeAlphabetic(Builder $query): Builder{
-        return $query->orderBy('ragione_sociale', 'asc');
+        return $query->orderBy('company_name', 'asc');
     }
 
     public function scopeClienteContinuativo(Builder $query): Builder {
@@ -71,12 +72,12 @@ class Customer extends Model
 
                 // If occasionale is true and continuativo is false, return only "occasionale" customers
                 if ($filters['occasionale'] && !$filters['continuativo']) {
-                    return $query->where('customer_occasionale', '1');
+                    return $query->where('is_occasional_customer', '1');
                 }
 
                 // If continuativo is true and occasionale is false, return only "continuativo" customers
                 if (!$filters['occasionale'] && $filters['continuativo']) {
-                    return $query->where('customer_occasionale', '0');
+                    return $query->where('is_occasional_customer', '0');
                 }
 
                 // If both occasionale and continuativo are false, return an empty set
@@ -91,7 +92,7 @@ class Customer extends Model
             $filters['chiave'] ?? false,
             fn ($query, $value) => $query->whereRaw(
                 "MATCH(
-                    ragione_sociale, partita_iva, codice_fiscale, indirizzo_legale, email_commerciale, email_amministrativa, pec
+                    company_name, vat_number, tax_code, legal_address, sales_email, administrative_email, certified_email
                 ) 
                 AGAINST(? IN BOOLEAN MODE)", 
                 ["$value*"]
@@ -107,14 +108,34 @@ class Customer extends Model
         ;
     }
     
-    public function setEmailCommercialeAttribute($emailCommerciale){
-        $this->attributes['emailCommerciale'] = strtolower($emailCommerciale);
+    public function setSalesEmailAttribute($salesEmail): void
+    {
+        $this->attributes['sales_email'] = strtolower($salesEmail);
     }
-    public function setEmailAmministrativaAttribute($emailAmministrativa){
-        $this->attributes['emailAmministrativa'] = strtolower($emailAmministrativa);
+
+    public function setAdministrativeEmailAttribute($administrativeEmail): void
+    {
+        $this->attributes['administrative_email'] = strtolower($administrativeEmail);
     }
-    public function setPecAttribute($pec){
-        $this->attributes['pec'] = strtolower($pec);
+
+    public function setCertifiedEmailAttribute($certifiedEmail): void
+    {
+        $this->attributes['certified_email'] = strtolower($certifiedEmail);
+    }
+
+    public function setEmailCommercialeAttribute($value): void
+    {
+        $this->setSalesEmailAttribute($value);
+    }
+
+    public function setEmailAmministrativaAttribute($value): void
+    {
+        $this->setAdministrativeEmailAttribute($value);
+    }
+
+    public function setPecAttribute($value): void
+    {
+        $this->setCertifiedEmailAttribute($value);
     }
 
     /**

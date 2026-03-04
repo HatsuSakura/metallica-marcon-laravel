@@ -14,11 +14,11 @@ class JourneyCargo extends Model
     protected $fillable = [
         'cargo_id',
         'journey_id',
-        'truck_location',
-        'is_grounding',
+        'cargo_location',
+        'is_grounded',
         'warehouse_id',
         'download_sequence',
-        'state',
+        'status',
     ];
 
     protected $appends = ['carrier'];
@@ -31,13 +31,15 @@ class JourneyCargo extends Model
             return null;
         }
         
-        if ($this->truck_location === OrdersTruckLocation::TRUCK_MOTRICE->value) {
+        $truckLocation = $this->cargo_location;
+
+        if ($truckLocation === OrdersTruckLocation::TRUCK_MOTRICE->value) {
             //return $this->journey ? $this->journey->vehicle : null;
             return [
                 'is_vehicle' => true,
                 'carrier_data'    => $journey->vehicle,
             ];
-        } elseif ($this->truck_location === OrdersTruckLocation::TRUCK_RIMORCHIO->value) {
+        } elseif ($truckLocation === OrdersTruckLocation::TRUCK_RIMORCHIO->value) {
             //return $this->journey ? $this->journey->trailer : null;
             return [
                 'is_vehicle' => false,
@@ -75,7 +77,7 @@ class JourneyCargo extends Model
     public function items()
     {
         return $this->belongsToMany(OrderItem::class, 'journey_cargo_order_item')
-                    ->withPivot('is_double_load', 'warehouse_download_id')
+                    ->withPivot('is_double_load', 'download_warehouse_id')
                     ->withTimestamps();
     }
     
@@ -85,40 +87,6 @@ class JourneyCargo extends Model
     }
 
 
-
-    /**
-     * Get the carrier type and the associated carrier model instance.
-     *
-     * @return array|null Returns an associative array with keys:
-     *                    - 'is_vehicle': boolean indicating if it's a vehicle.
-     *                    - 'carrier': the carrier model instance (vehicle or trailer).
-     *                    Returns null if the truck_location is not recognized.
-     */
-    /*
-    public function carrier()
-    {
-        // Retrieve the journey with its vehicle and trailer in one query.
-        $journey = $this->journey()->with(['vehicle', 'trailer'])->first();
-        if (!$journey) {
-            return null;
-        }
-        
-        if ($this->truck_location === OrdersTruckLocation::TRUCK_MOTRICE->value) {
-            return [
-                'is_vehicle' => true,
-                'carrier_data'    => $journey->vehicle,
-            ];
-        } elseif ($this->truck_location === OrdersTruckLocation::TRUCK_RIMORCHIO->value) {
-            return [
-                'is_vehicle' => false,
-                'carrier_data'    => $journey->trailer,
-            ];
-        }
-        
-        return null;
-    }
-    
-*/
 
     /**
      * Get the other JourneyCargo associated with the same Journey.
@@ -131,6 +99,5 @@ class JourneyCargo extends Model
             ->where('id', '!=', $this->id)
             ->first();
     }
-
 
 }

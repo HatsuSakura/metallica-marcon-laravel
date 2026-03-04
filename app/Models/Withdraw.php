@@ -12,14 +12,14 @@ class Withdraw extends Model
     
     protected $dates = ['deleted_at'];
     protected $fillable = [
-        'withdraw_date',
-        'percentuale_residua',
+        'withdrawn_at',
+        'residue_percentage',
         'customer_id',
         'site_id',
-        'user_id',
+        'created_by_user_id',
         'vehicle_id',
         'driver_id',
-        'insManuale'
+        'is_manual_entry',
     ];
 
     public function driver(): BelongsTo{
@@ -31,7 +31,4 @@ class Withdraw extends Model
     }
 
 }
-
-
-
 

@@ -4,7 +4,7 @@
         <div class="flex flex-col items-start">
             <div>
                 <font-awesome-icon :icon="['fas', 'grip-vertical']" class="stop-handle cursor-grab select-none opacity-60 mr-2" />
-                <span class="text-sm font-medium">{{props.element.customer.ragione_sociale}}</span>
+                <span class="text-sm font-medium">{{props.element.customer.company_name}}</span>
             </div>
             <div class="text-xs text-gray-500">{{props.element.legacy_code }}</div>
         </div>

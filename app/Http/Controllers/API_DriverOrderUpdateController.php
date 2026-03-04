@@ -16,7 +16,7 @@ class API_DriverOrderUpdateController extends Controller
     {
         $newState = OrdersState::from($request->new_state);
 
-        if (!OrdersState::from($order->state->value)->canTransitionTo($newState)) {
+        if (!OrdersState::from($order->status->value)->canTransitionTo($newState)) {
             abort(403, 'Invalid state transition.');
         }
 
@@ -35,7 +35,7 @@ class API_DriverOrderUpdateController extends Controller
                 break;
 
             case OrdersState::STATE_EXECUTED:
-                $order->real_withdraw_dt = $request->real_withdraw_dt;
+                $order->actual_withdraw_at = $request->actual_withdraw_at;
                 break;
 
             case OrdersState::STATE_CLOSED:
@@ -44,7 +44,7 @@ class API_DriverOrderUpdateController extends Controller
                 break;
         }
 
-        $order->state = $newState->value;
+        $order->status = $newState->value;
         $order->save();
 
         return response()->json(['type' => 'success','message' => "Order state updated to {$newState->value}."], 200);
@@ -69,3 +69,7 @@ class API_DriverOrderUpdateController extends Controller
         return response()->json(['message' => 'Order saved successfully.', 'order' => $order], 200);
     }
 }
+
+
+
+

@@ -8,7 +8,7 @@
             Per visualizzare i contenuti devi essere un <span class="font-medium">utente verificato</span>. 
         </p>
         <p>
-            Controlla la tua casella di <span class="font-medium">posta elettronica</span> per verificare il tuo indirizzo email.
+            Controlla la tua casella di <span class="font-medium">posta elettronica</span> per verificare il tuo address email.
         </p>
         <p>
             Se non trovi una <span class="font-medium">mail con un link di verifica</span> richiedine una nuova con il pulsante qui sotto.

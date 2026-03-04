@@ -23,8 +23,8 @@ class WarehouseManagerOrderController extends Controller
         
         // Retrieve orderItems assigned to this warehouse manager
         $orders = Order::query()
-        ->where('state', OrdersState::STATE_EXECUTED->value) // for DEBUG PURPOSES ONLY
-        //->where('state', OrdersState::STATE_DOWNLOADED->value)
+        ->where('status', OrdersState::STATE_EXECUTED->value) // for DEBUG PURPOSES ONLY
+        //->where('status', OrdersState::STATE_DOWNLOADED->value)
         ->get();
 
         return inertia(
@@ -131,7 +131,7 @@ class WarehouseManagerOrderController extends Controller
     public function update(Request $request, Order $order, OrderItemUpdater $updater)
     {
         $validated = $request->validate([
-            'state' => 'required|in:' . implode(',', OrdersState::getValues()),
+            'status' => 'required|in:' . implode(',', OrdersState::getValues()),
         ]);
 
         foreach ($request->input('items', []) as $itemData) {
@@ -150,3 +150,6 @@ class WarehouseManagerOrderController extends Controller
     }
 
 }
+
+
+

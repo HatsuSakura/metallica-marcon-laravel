@@ -106,7 +106,7 @@
           site,
           orders_count: (s.orders || []).length,
           description: s.description ?? meta.description ?? '',
-          address_text: s.address_text ?? meta.address_text ?? (site?.indirizzo ?? ''),
+          address_text: s.address_text ?? meta.address_text ?? (site?.address ?? ''),
         }
       })
     )
@@ -181,14 +181,14 @@
 
 
     const form = useForm({
-      dt_start: '',
-      dt_end: '',
+      planned_start_at: '',
+      planned_end_at: '',
       vehicle_id: '',
-      cargo_for_vehicle_id: '',
+      vehicle_cargo_id: '',
       trailer_id: '',
-      cargo_for_trailer_id: '',
+      trailer_cargo_id: '',
       driver_id: '',
-      logistic_id: '',
+      logistics_user_id: '',
       orders_truck: [],
       orders_trailer: [],
       orders_fulfill: [],
@@ -202,8 +202,8 @@
     
     const updateJourney = () => {
       // Before submitting, format the date correctly
-      form.dt_start = dayjs(form.dt_start).format('YYYY-MM-DD HH:mm:ss');
-      form.dt_end   = dayjs(form.dt_end  ).format('YYYY-MM-DD HH:mm:ss');
+      form.planned_start_at = dayjs(form.planned_start_at).format('YYYY-MM-DD HH:mm:ss');
+      form.planned_end_at   = dayjs(form.planned_end_at  ).format('YYYY-MM-DD HH:mm:ss');
       // Map each list to only send IDs
       form.orders_truck    = listMotrice.value.map(order => order.id);
       form.orders_trailer  = listRimorchio.value.map(order => order.id);
@@ -376,13 +376,13 @@
 
       // Verifico se SPONDA o FURGONE e setto il corretto CASSONE PREDEFINITO
       if (selectedVehicle.type === 'sponda'){
-        form.cargo_for_vehicle_id = props.cargos.find(cargo => cargo.name === 'Sponda').id;
+        form.vehicle_cargo_id = props.cargos.find(cargo => cargo.name === 'Sponda')?.id ?? '';
       }
       else if (selectedVehicle.type === 'furgone') {
-        form.cargo_for_vehicle_id = props.cargos.find(cargo => cargo.name === 'Furgone').id;
+        form.vehicle_cargo_id = props.cargos.find(cargo => cargo.name === 'Furgone')?.id ?? '';
       }
       else{
-        form.cargo_for_vehicle_id = ''
+        form.vehicle_cargo_id = ''
       }
 
       checkCargo({});
@@ -392,8 +392,8 @@
       //console.log(evt.target.id);
       const fieldName = evt?.target?.id ?? '';
       const selectedVehicle = props.vehicles.find(vehicle => Number(vehicle.id) === Number(form.vehicle_id));
-      const selectedVehicleCargo = ref(props.cargos.find(cargo => Number(cargo.id) === Number(form.cargo_for_vehicle_id)));
-      const selectedTrailerCargo = ref(props.cargos.find(cargo => Number(cargo.id) === Number(form.cargo_for_trailer_id)));
+      const selectedVehicleCargo = ref(props.cargos.find(cargo => Number(cargo.id) === Number(form.vehicle_cargo_id)));
+      const selectedTrailerCargo = ref(props.cargos.find(cargo => Number(cargo.id) === Number(form.trailer_cargo_id)));
 
       if (!selectedVehicle) return
 
@@ -401,7 +401,7 @@
       if (fieldName === 'trailer_id') {
         if (form.trailer_id === '' ){
           selectedTrailerCargo.value = null;
-          form.cargo_for_trailer_id = '';
+          form.trailer_cargo_id = '';
           capacitaCaricoRimorchio.value = 0;
         }
         else{
@@ -416,13 +416,13 @@
         if (selectedVehicleCargo.value.is_long && selectedTrailerCargo.value.is_long){
           alert('ATTENZIONE: autotreno con combinazione di due cassoni LUNGHI')
           // Reset the correct form field based on the event source
-          if (fieldName === 'cargo_for_vehicle_id') {
+          if (fieldName === 'vehicle_cargo_id') {
             selectedVehicleCargo.value = null;
-            form.cargo_for_vehicle_id = ''; // Reset the form value
+            form.vehicle_cargo_id = ''; // Reset the form value
           } 
-          else if (fieldName === 'cargo_for_trailer_id') {
+          else if (fieldName === 'trailer_cargo_id') {
             selectedTrailerCargo.value = null;
-            form.cargo_for_trailer_id = ''; // Reset the form value
+            form.trailer_cargo_id = ''; // Reset the form value
           }
 
           // Also reset the select element visually
@@ -436,7 +436,7 @@
       ){
         alert('Opzione "' + selectedVehicleCargo.value.name + '" selezionabile solo per motrice di tipo ' + selectedVehicleCargo.value.name);
         selectedVehicleCargo.value = null;
-        form.cargo_for_vehicle_id = ''; // Reset the form value
+        form.vehicle_cargo_id = ''; // Reset the form value
       }
 
       spaziCasseMotrice.value     = 0;
@@ -466,8 +466,8 @@
       const selectedTrailer = props.trailers.find(trailer => Number(trailer.id) === Number(form.trailer_id))
       capacitaCaricoRimorchio.value = Number(selectedTrailer?.load_capacity ?? 0)
 
-      const selectedVehicleCargo = props.cargos.find(cargo => Number(cargo.id) === Number(form.cargo_for_vehicle_id))
-      const selectedTrailerCargo = props.cargos.find(cargo => Number(cargo.id) === Number(form.cargo_for_trailer_id))
+      const selectedVehicleCargo = props.cargos.find(cargo => Number(cargo.id) === Number(form.vehicle_cargo_id))
+      const selectedTrailerCargo = props.cargos.find(cargo => Number(cargo.id) === Number(form.trailer_cargo_id))
 
       spaziCasseMotrice.value = Number(selectedVehicleCargo?.spazi_casse ?? 0)
       spaziBancaleMotrice.value = Number(selectedVehicleCargo?.spazi_bancale ?? 0)
@@ -532,10 +532,10 @@ const moveOrder = (order, targetList) => {
 };
 
 const manageDate = () => {
-  if (form.dt_start) {
-        const startDate = dayjs(form.dt_start);
+  if (form.planned_start_at) {
+        const startDate = dayjs(form.planned_start_at);
         const endDate = startDate.add(1, 'hour'); // Aggiunge un'ora di default
-        form.dt_end = endDate.toDate();
+        form.planned_end_at = endDate.toDate();
   }
 }
 
@@ -550,8 +550,8 @@ const getStopCoords = (s) => {
     if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng }
     return null
   }
-  const lat = Number(s.site?.lat ?? NaN)
-  const lng = Number(s.site?.lng ?? NaN)
+  const lat = Number(s.site?.latitude ?? NaN)
+  const lng = Number(s.site?.longitude ?? NaN)
   if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng }
   return null
 }
@@ -636,14 +636,14 @@ const hydrateFromJourney = () => {
   const journeyOrders = Array.isArray(journey.orders) ? journey.orders : []
   const allOrdersById = new Map((props.orders || []).map((o) => [o.id, o]))
 
-  form.dt_start = journey.dt_start ? dayjs(journey.dt_start).toDate() : ''
-  form.dt_end = journey.dt_end ? dayjs(journey.dt_end).toDate() : ''
+  form.planned_start_at = journey.planned_start_at ? dayjs(journey.planned_start_at).toDate() : ''
+  form.planned_end_at = journey.planned_end_at ? dayjs(journey.planned_end_at).toDate() : ''
   form.vehicle_id = journey.vehicle_id ? Number(journey.vehicle_id) : ''
-  form.cargo_for_vehicle_id = journey.cargo_for_vehicle_id ? Number(journey.cargo_for_vehicle_id) : ''
+  form.vehicle_cargo_id = journey.vehicle_cargo_id ? Number(journey.vehicle_cargo_id) : ''
   form.trailer_id = journey.trailer_id ? Number(journey.trailer_id) : ''
-  form.cargo_for_trailer_id = journey.cargo_for_trailer_id ? Number(journey.cargo_for_trailer_id) : ''
+  form.trailer_cargo_id = journey.trailer_cargo_id ? Number(journey.trailer_cargo_id) : ''
   form.driver_id = journey.driver_id ? Number(journey.driver_id) : ''
-  form.logistic_id = journey.logistic_id ? Number(journey.logistic_id) : (user.value?.id ?? '')
+  form.logistics_user_id = journey.logistics_user_id ? Number(journey.logistics_user_id) : (user.value?.id ?? '')
 
   const selectedByLocation = {
     vehicle: [],
@@ -653,7 +653,7 @@ const hydrateFromJourney = () => {
 
   for (const order of journeyOrders) {
     const source = allOrdersById.get(order.id) || order
-    const location = order.truck_location || source.truck_location
+    const location = order.cargo_location || source.cargo_location
     if (location === 'vehicle') selectedByLocation.vehicle.push(source)
     else if (location === 'trailer') selectedByLocation.trailer.push(source)
     else if (location === 'fulfill') selectedByLocation.fulfill.push(source)
@@ -1212,3 +1212,4 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
     }
 
     </style>
+

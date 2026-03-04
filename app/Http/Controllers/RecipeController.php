@@ -83,3 +83,6 @@ class RecipeController extends Controller
         return back()->with('success', 'Ricetta eliminata');
     }
 }
+
+
+

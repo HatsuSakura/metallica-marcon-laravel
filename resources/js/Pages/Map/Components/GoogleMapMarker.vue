@@ -38,9 +38,9 @@ watchEffect(() => {
 
 const options = computed(() => ({
   id: props.site.id,
-  position: { lat: props.site.lat, lng: props.site.lng },
+  position: { lat: props.site.latitude, lng: props.site.longitude },
   content: pinSvg.value,
-  title: props.site.customer ? `${props.site.customer.ragioneSociale} - ${props.site.denominazione}` : props.site.denominazione,
+  title: props.site.customer ? `${props.site.customer.company_name} - ${props.site.name}` : props.site.name,
   gmpClickable: true, // Ensures the marker is clickable
 }));
 

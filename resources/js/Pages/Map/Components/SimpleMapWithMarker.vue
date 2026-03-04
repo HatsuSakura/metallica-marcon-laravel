@@ -24,7 +24,7 @@ const props = defineProps({
 })
 
 watchEffect(() => {
-  if (props.site && props.site.lat && props.site.lng) {
+  if (props.site && props.site.latitude && props.site.longitude) {
     console.log('Valid site data:', props.site);
   } else {
     console.warn('Invalid site data:', props.site);
@@ -35,8 +35,8 @@ watchEffect(() => {
 // Set the map center
 // Computed property per aggiornare automaticamente il centro della mappa
 const mapCenter = computed(() => ({
-  lat: props.site.lat,
-  lng: props.site.lng,
+  lat: props.site.latitude,
+  lng: props.site.longitude,
 }));
 
 //const theSite = computed(() => props.site);

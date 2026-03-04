@@ -1,5 +1,5 @@
 <template>
-Viaggio #{{ String(props.journey.id).padStart('9', '0') + ' del ' + dayjs(props.journey.dt_start).format('DD-MM-YYYY') }}
+Viaggio #{{ String(props.journey.id).padStart('9', '0') + ' del ' + dayjs(props.journey.planned_start_at).format('DD-MM-YYYY') }}
 <span class="font-bold"> | </span>
 {{ props.journey.orders_count }} tappa/e 
 <span class="font-bold"> | </span>

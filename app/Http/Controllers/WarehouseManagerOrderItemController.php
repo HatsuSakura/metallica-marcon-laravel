@@ -24,9 +24,9 @@ class WarehouseManagerOrderItemController extends Controller
         ->with(
             'cerCode:id,code,is_dangerous',
             'holder:id,name,volume',
-            'warehouse:id,denominazione',
+            'warehouse:id,name',
             'order:id,customer_id',
-            'order.customer:id,ragione_sociale'
+            'order.customer:id,company_name'
         )
         ->get();
 
@@ -81,11 +81,11 @@ class WarehouseManagerOrderItemController extends Controller
         $item = $order->items()->create($itemData);
 
         // 4) aggancia la pivot su journey_cargo_order_item
-        //    con `warehouse_download_id` preso da `warehouse_id`
+        //    con `download_warehouse_id` preso da `warehouse_id`
         $item->journeyCargos()->attach(
             $validated['journey_cargo_id'],
             [
-                'warehouse_download_id' => $validated['warehouse_id'],
+                'download_warehouse_id' => $validated['warehouse_id'],
                 // 'is_double_load' => 0, // se vuoi forzare un default diverso dal valore di default in DB
             ]
         );
@@ -98,3 +98,6 @@ class WarehouseManagerOrderItemController extends Controller
 
 
 }
+
+
+

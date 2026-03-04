@@ -24,7 +24,7 @@
           name="tablist_warehouses"
           role="tab"
           class="tab inline-flex items-center whitespace-nowrap"
-          :aria-label="`${group.denominazione} [ ${group.count} ]`"
+          :aria-label="`${group.name} [ ${group.count} ]`"
           :value="Number(warehouseId)"
           :checked="Number(warehouseId) === currentWarehouse"
           :class="Number(warehouseId) === currentWarehouse ? 'current-warehouse' : ''"
@@ -53,14 +53,14 @@
             <div v-if="Number(warehouseId) === currentWarehouse" class="flex flex-row justify-start items-center gap-4">
               <div class="flex flex-row gap-4 justify-between">
                 <label class="font-medium">Uso ragno:</label>
-                <input type="checkbox" v-model="form.has_ragno" class="toggle"/>
+                <input type="checkbox" v-model="form.has_crane" class="toggle"/>
               </div>
 
-              <div v-if="form.has_ragno" class="flex flex-row justify-between items-center gap-4">
+              <div v-if="form.has_crane" class="flex flex-row justify-between items-center gap-4">
                 <label class="font-medium">Ragnista:</label>
-                <select v-model="form.ragnista_id" class="select select-bordered">
+                <select v-model="form.crane_operator_user_id" class="select select-bordered">
                   <option value="" disabled>Seleziona un Ragnista</option>
-                  <option v-for="w in warehouseWorkers.filter(w => w.is_ragnista)" :key="w.id" :value="w.id">
+                  <option v-for="w in warehouseWorkers.filter(w => w.is_crane_operator)" :key="w.id" :value="w.id">
                     {{ w.name }} {{ w.surname }}
                   </option>
                 </select>
@@ -104,8 +104,8 @@
                 :warehouseChiefs="filteredChiefs"
                 :warehouseManagers="filteredManagers"
                 :warehouseWorkers="filteredWorkers"
-                :parentHasRagno="form.has_ragno"
-                :parentMachineryTime="form.machinery_time"
+                :parentHasRagno="form.has_crane"
+                :parentMachineryTime="form.machinery_time_minutes"
                 :saving="savingItems.includes(item.id)"
                 :recipes="props.recipes"
                 :catalog="props.catalog"
@@ -165,7 +165,7 @@
               :class="canCloseOrder ? '' : 'btn-disabled'"
             >
               <font-awesome-icon :icon="['fas','check']" class="text-2xl"/>
-              CHIUDI ordine per "{{ group.denominazione }}"
+              CHIUDI ordine per "{{ group.name }}"
             </button>
           </div>
         </div>
@@ -235,11 +235,11 @@ function hasDirtyScalars(id) {
 
 /* ========= ORDER form (ragno) ========= */
 const form = useForm({
-  has_ragno: props.order.has_ragno === 1,
-  ragnista_id: props.order.ragnista_id || '',
-  machinery_time: props.order.machinery_time || 0,
-  machinery_time_hh: Math.floor((props.order.machinery_time || 0) / 60),
-  machinery_time_mm: (props.order.machinery_time || 0) % 60,
+  has_crane: props.order.has_crane === 1,
+  crane_operator_user_id: props.order.crane_operator_user_id || '',
+  machinery_time_minutes: props.order.machinery_time_minutes || 0,
+  machinery_time_hh: Math.floor((props.order.machinery_time_minutes || 0) / 60),
+  machinery_time_mm: (props.order.machinery_time_minutes || 0) % 60,
 })
 
 const currentWarehouse = computed(() =>
@@ -267,8 +267,8 @@ function serializeItemForApi(it) {
     weight_gross: it.weight_gross,
     weight_tare: it.weight_tare,
     weight_net: it.weight_net,
-    is_ragnabile: it.is_ragnabile ? 1 : 0,
-    machinery_time_fraction: it.is_ragnabile
+    is_crane_eligible: it.is_crane_eligible ? 1 : 0,
+    machinery_time_fraction: it.is_crane_eligible
       ? ((Number(it.machinery_time_fraction_hh) || 0) * 60) + (Number(it.machinery_time_fraction_mm) || 0)
       : 0,
     is_holder_dirty: it.is_holder_dirty ? 1 : 0,
@@ -276,11 +276,11 @@ function serializeItemForApi(it) {
     is_holder_broken: it.is_holder_broken ? 1 : 0,
     total_broken_holders: it.total_broken_holders,
     has_selection: it.has_selection ? 1 : 0,
-    selection_time: it.has_selection
+    selection_duration_minutes: it.has_selection
       ? ((Number(it.selection_time_hh) || 0) * 60) + (Number(it.selection_time_mm) || 0)
       : 0,
-    warehouse_downaload_worker_id: it.warehouse_downaload_worker_id,
-    warehouse_downaload_dt: formatDate(it.warehouse_downaload_dt),
+    warehouse_download_worker_id: it.warehouse_download_worker_id,
+    warehouse_download_at: formatDate(it.warehouse_download_at),
     warehouse_weighing_worker_id: it.warehouse_weighing_worker_id,
     warehouse_weighing_dt: formatDate(it.warehouse_weighing_dt),
     warehouse_selection_worker_id: it.warehouse_selection_worker_id,
@@ -296,14 +296,14 @@ function serializeItemForApi(it) {
 /* ========= Items per warehouse (SSOT: order.items) ========= */
 const itemsByWarehouse = computed(() => {
   const map = (props.warehouses || []).reduce((acc, w) => {
-    acc[w.id] = { id: w.id, denominazione: w.denominazione, items: [], count: 0 }
+    acc[w.id] = { id: w.id, name: w.name, items: [], count: 0 }
     return acc
   }, {})
 
   for (const it of (order.items || [])) {
     const wid   = it?.warehouse_download?.id ?? 0
-    const denom = it?.warehouse_download?.denominazione ?? 'none'
-    if (!map[wid]) map[wid] = { id: wid, denominazione: denom, items: [], count: 0 }
+    const denom = it?.warehouse_download?.name ?? 'none'
+    if (!map[wid]) map[wid] = { id: wid, name: denom, items: [], count: 0 }
     map[wid].items.push(it)
   }
 
@@ -506,8 +506,8 @@ async function onImportItem({ id }) {
     const updated = res.data?.orderItem ?? res.data
     const wh = (props.warehouses || []).find(w => Number(w.id) === Number(currentWarehouse.value))
     updated.warehouse_download = wh
-      ? { id: wh.id, denominazione: wh.denominazione }
-      : { id: Number(currentWarehouse.value), denominazione: '—' }
+      ? { id: wh.id, name: wh.name }
+      : { id: Number(currentWarehouse.value), name: '—' }
 
     const idx = order.items.findIndex(i => i.id === updated.id)
     if (idx !== -1) {
@@ -643,21 +643,21 @@ function handleItemUpdate(updatedItem) {
 
 /* ========= Ragno: ridistribuzione ========= */
 const initialOrder = {
-  has_ragno: props.order.has_ragno,
-  ragnista_id: props.order.ragnista_id,
-  machinery_time: props.order.machinery_time,
+  has_crane: props.order.has_crane,
+  crane_operator_user_id: props.order.crane_operator_user_id,
+  machinery_time_minutes: props.order.machinery_time_minutes,
 }
 const orderDirty = computed(() => {
   const currentMachinery = form.machinery_time_hh * 60 + form.machinery_time_mm
   return (
-    form.has_ragno !== initialOrder.has_ragno ||
-    String(form.ragnista_id) !== String(initialOrder.ragnista_id) ||
-    currentMachinery !== initialOrder.machinery_time
+    form.has_crane !== initialOrder.has_crane ||
+    String(form.crane_operator_user_id) !== String(initialOrder.crane_operator_user_id) ||
+    currentMachinery !== initialOrder.machinery_time_minutes
   )
 })
 const manualRows = ref({})
 function recalcMachineryFractions() {
-  const active = (order.items || []).filter(i => i.is_ragnabile)
+  const active = (order.items || []).filter(i => i.is_crane_eligible)
   if (!active.length) return
   const manualSum = Object.values(manualRows.value).reduce((a, b) => a + b, 0)
   const leftover  = Math.max(0, (form.machinery_time_hh * 60 + form.machinery_time_mm) - manualSum)
@@ -695,7 +695,7 @@ const canCloseOrder = computed(() => {
   if (!group) return false
   const items = group.items || []
   if (!items.length) return false
-  return items.every(it => !!it.warehouse_downaload_dt && !!it.warehouse_weighing_dt && !!it.warehouse_selection_dt)
+  return items.every(it => !!it.warehouse_download_at && !!it.warehouse_weighing_dt && !!it.warehouse_selection_dt)
 })
 
 /* ========= Helpers FormData ========= */
@@ -721,11 +721,11 @@ function appendItemToFormData(fd, item, index = null) {
   const scalarKeys = [
     'holder_quantity','cer_code_id',
     'weight_gross','weight_tare','weight_net',
-    'is_ragnabile','machinery_time_fraction',
+    'is_crane_eligible','machinery_time_fraction',
     'is_holder_dirty','total_dirty_holders',
     'is_holder_broken','total_broken_holders',
-    'has_selection','selection_time',
-    'warehouse_downaload_worker_id','warehouse_downaload_dt',
+    'has_selection','selection_duration_minutes',
+    'warehouse_download_worker_id','warehouse_download_at',
     'warehouse_weighing_worker_id','warehouse_weighing_dt',
     'warehouse_selection_worker_id','warehouse_selection_dt',
     'warehouse_notes','warehouse_non_conformity',
@@ -829,9 +829,9 @@ async function saveAll() {
   const fd = new FormData()
   // campi ordine
   fd.append('order_id', String(order.id))
-  fd.append('has_ragno', form.has_ragno ? '1' : '0')
-  fd.append('ragnista_id', form.ragnista_id ?? '')
-  fd.append('machinery_time', String(form.machinery_time_hh * 60 + form.machinery_time_mm))
+  fd.append('has_crane', form.has_crane ? '1' : '0')
+  fd.append('crane_operator_user_id', form.crane_operator_user_id ?? '')
+  fd.append('machinery_time_minutes', String(form.machinery_time_hh * 60 + form.machinery_time_mm))
 
   // items modificati (restituiti già normalizzati lato explosions)
   const items = Object.values(modifiedItems.value).map(patch => {
@@ -873,9 +873,9 @@ async function saveAll() {
 
     // SE ho salvato anche dati relativi all'ORDINE, aggiorna l’SSOT anche per l'Order
     if (res.data?.order) {
-      order.has_ragno      = !!res.data.order.has_ragno
-      order.ragnista_id    = res.data.order.ragnista_id
-      order.machinery_time = res.data.order.machinery_time
+      order.has_crane      = !!res.data.order.has_crane
+      order.crane_operator_user_id    = res.data.order.crane_operator_user_id
+      order.machinery_time_minutes = res.data.order.machinery_time_minutes
     }
 
 
@@ -920,3 +920,5 @@ function getRange(start, stop, step = 1) {
   margin-left: 0.25rem; vertical-align: middle;
 }
 </style>
+
+

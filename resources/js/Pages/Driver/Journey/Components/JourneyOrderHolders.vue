@@ -6,11 +6,11 @@
         <span class="font-medium">{{ props.holders.find(holder => holder.id === item.holder_id).name }}</span>
         &nbsp;<font-awesome-icon :icon="['fas', 'arrow-right']" />&nbsp;
         Piene da ritirare:
-        <span class="font-medium">{{ item.holder_piene }} | </span>
+        <span class="font-medium">{{ item.filled_holders_count }} | </span>
         Differenza richiesta:
-        <span class="font-medium">{{ item.holder_vuote }} | </span>
+        <span class="font-medium">{{ item.empty_holders_count }} | </span>
         Vuote da consegnare:
-        <span class="font-medium">{{ item.holder_totale }}</span>
+        <span class="font-medium">{{ item.total_holders_count }}</span>
     </div>
 </div>
 

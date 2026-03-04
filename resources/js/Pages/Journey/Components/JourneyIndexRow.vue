@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-row justify-between items-center">
     <div>
-      Viaggio # {{ journey.id }} previsto il {{ dayjs(journey.dt_start).format('DD/MM/YYYY HH:mm') }}
+      Viaggio # {{ journey.id }} previsto il {{ dayjs(journey.planned_start_at).format('DD/MM/YYYY HH:mm') }}
       <br>
       Autista: {{ journey.driver?.name }} {{ journey.driver?.surname }}
       <br>

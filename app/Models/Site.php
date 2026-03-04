@@ -17,37 +17,35 @@ class Site extends Model
     protected $dates = ['deleted_at'];
     protected $fillable = [
         'customer_id',
-        'denominazione',
+        'name',
         'is_main',
-        'tipologia',
-        'indirizzo',
-        'lat',
-        'lng',
-        'fattore_rischioCalcolato',
-        'giorniProssimoRitiro',
+        'site_type',
+        'address',
+        'latitude',
+        'longitude',
+        'calculated_risk_factor',
+        'days_until_next_withdraw',
         'has_muletto',
-        'has_transpallet_el',
-        'has_transpallet_ma',
+        'has_electric_pallet_truck',
+        'has_manual_pallet_truck',
         'other_machines',
         'has_adr_consultant'
     ];
 
     /*
-    It ensures that whenever you access the tipologia field, it will return an instance of the SiteTipologia enum rather than just a string (e.g., 'fully_operative').
-    if ($site->tipologia === SiteTipologia::FULLY_OPERATIVE)
+    Accessing `site_type` returns a SiteTipologia enum instance.
+    Example: if ($site->site_type === SiteTipologia::FULLY_OPERATIVE)
     */
     protected $casts = [
-        'tipologia' => SiteTipologia::class,
+        'site_type' => SiteTipologia::class,
     ];
 
 
     /*
-    It ensures that when you create a new instance of the Site model, 
-    if you do not set the tipologia field, 
-    it will automatically be assigned the value SiteTipologia::FULLY_OPERATIVE.
+    Default site type for new records.
     */
     protected $attributes = [
-        'tipologia' => SiteTipologia::FULLY_OPERATIVE,
+        'site_type' => SiteTipologia::FULLY_OPERATIVE,
     ];
 
     public function scopeFilter(Builder $query, array $filters): Builder{
@@ -57,10 +55,10 @@ class Site extends Model
             $filters['rischioBasso'] || $filters['rischioMedio'] || $filters['rischioAlto'] || $filters['rischioCritico'],
             function ($query) use ($filters) {
                 $query->where(function ($query) use ($filters) {
-                    $query->when($filters['rischioBasso'] ?? false, fn ($q) => $q->orWhere('fattore_rischio_calcolato', '<', 0.50))
-                          ->when($filters['rischioMedio'] ?? false, fn ($q) => $q->orWhereBetween('fattore_rischio_calcolato', [0.50, 0.75]))
-                          ->when($filters['rischioAlto'] ?? false, fn ($q) => $q->orWhereBetween('fattore_rischio_calcolato', [0.75, 0.85]))
-                          ->when($filters['rischioCritico'] ?? false, fn ($q) => $q->orWhere('fattore_rischio_calcolato', '>', 0.85));
+                    $query->when($filters['rischioBasso'] ?? false, fn ($q) => $q->orWhere('calculated_risk_factor', '<', 0.50))
+                          ->when($filters['rischioMedio'] ?? false, fn ($q) => $q->orWhereBetween('calculated_risk_factor', [0.50, 0.75]))
+                          ->when($filters['rischioAlto'] ?? false, fn ($q) => $q->orWhereBetween('calculated_risk_factor', [0.75, 0.85]))
+                          ->when($filters['rischioCritico'] ?? false, fn ($q) => $q->orWhere('calculated_risk_factor', '>', 0.85));
                 });
             }
         ) 
@@ -75,13 +73,13 @@ class Site extends Model
                 // Apply `occasionale` or `continuativo` filters on the `customer` relationship
                 if ($filters['occasionale'] && !$filters['continuativo']) {
                     return $query->whereHas('customer', function ($q) {
-                        $q->where('customer_occasionale', '1');
+                        $q->where('is_occasional_customer', '1');
                     });
                 }
 
                 if (!$filters['occasionale'] && $filters['continuativo']) {
                     return $query->whereHas('customer', function ($q) {
-                        $q->where('customer_occasionale', '0');
+                        $q->where('is_occasional_customer', '0');
                     });
                 }
 
@@ -96,23 +94,13 @@ class Site extends Model
         ->when(
             $filters['chiave'] ?? false,
             fn ($query, $value) => $query->whereHas('customer', function ($q) use ($value) {
-                $q->where('ragione_sociale', 'LIKE', "%{$value}%");
+                $q->where('company_name', 'LIKE', "%{$value}%");
             })
         )
         /*
-        ->when(
-            $filters['chiave'] ?? false,
-            fn ($query, $value) => $query->whereHas('customer', function ($q) use ($value) {
-                $q->whereRaw(
-                    "MATCH(
-                        ragione_sociale, partita_iva, codice_fiscale, indirizzo_legale, email_commerciale, email_amministrativa, pec
-                    ) 
-                    AGAINST(? IN BOOLEAN MODE)", 
-                    ["$value*"]
-                );
-            })
-        ) 
-            */ 
+        Optional full-text search example:
+        MATCH(company_name, vat_number, tax_code, legal_address, sales_email, administrative_email, certified_email)
+        */
         ;
     }
     
@@ -125,7 +113,7 @@ class Site extends Model
     }
 
     public function withdraws(): HasMany{
-        return $this->hasMany(Withdraw::class, 'site_id')->orderBy('withdraw_date', 'desc');
+        return $this->hasMany(Withdraw::class, 'site_id')->orderBy('withdrawn_at', 'desc');
     }
 
     public function timetable(): HasOne{
@@ -148,6 +136,5 @@ class Site extends Model
     {
         return $this->areas()->wherePivot('is_preferred', true);
     }
-
 
 }

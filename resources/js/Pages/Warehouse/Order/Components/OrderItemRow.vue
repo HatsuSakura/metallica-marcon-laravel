@@ -45,7 +45,7 @@
       <div class="mr-6 flex flex-row gap-1">
 
         <div class="w-8 h-8 rounded-full flex items-center justify-center"
-            :class="localItem.warehouse_downaload_dt
+            :class="localItem.warehouse_download_at
           ? 'bg-success text-success-content'
           : 'bg-error text-error-content'"
         >
@@ -84,10 +84,10 @@
       <div class="flex flex-row justify-between items-center mb-2">
         <div class="flex flex-row items-center gap-8">
           <div class="flex flex-row items-center gap-2">
-            <input type="checkbox" v-model="localItem.is_ragnabile" :true-value="1" :false-value="0" class="toggle"
+            <input type="checkbox" v-model="localItem.is_crane_eligible" :true-value="1" :false-value="0" class="toggle"
               :disabled="!parentHasRagno" @change="toggleIsRagnabileInput" />
             Ragnabile
-            <div v-if="localItem.is_ragnabile" class="flex flex-row items-center gap-2">
+            <div v-if="localItem.is_crane_eligible" class="flex flex-row items-center gap-2">
               <select id="machinery_time_fraction_hh" v-model="localItem.machinery_time_fraction_hh"
                 class="select select-bordered" @change="onManualMachineryTimeInput">
                 <option value="0" selected>0</option>
@@ -150,7 +150,7 @@
           </div>
 
           <div v-else class="tooltip" data-tip="Non trovato">
-            <button v-if="!localItem.warehouse_downaload_dt" class="btn btn-primary btn-circle btn-outline btn-error" @click="itemNotFound()">
+            <button v-if="!localItem.warehouse_download_at" class="btn btn-primary btn-circle btn-outline btn-error" @click="itemNotFound()">
               <font-awesome-icon :icon="['fas', 'eye-slash']" class="text-2xl" />
             </button>
           </div>
@@ -178,17 +178,17 @@
             <div class="w-full flex justify-between items-center gap-0">
               <font-awesome-icon :icon="['fas', 'warehouse']" class="text-2xl text-primary" />
               <span class="badge badge-primary badge-md">previsto</span>
-              <span>{{ localItem.warehouse.denominazione }}</span>
+              <span>{{ localItem.warehouse.name }}</span>
             </div>
             <div class="w-full flex justify-between items-center gap-0">
               <font-awesome-icon :icon="['fas', 'warehouse']" class="text-2xl text-primary" />
               <span class="badge badge-primary badge-md">effettivo</span>
-              <span>{{ localItem.warehouse_download.denominazione }}</span>
+              <span>{{ localItem.warehouse_download.name }}</span>
             </div>
           </div>
           <div>
             <span class="font-medium">Operatore:</span>
-            <select v-model="localItem.warehouse_downaload_worker_id" class="select select-bordered">
+            <select v-model="localItem.warehouse_download_worker_id" class="select select-bordered">
               <option value="" disabled>Seleziona Operatore</option>
               <option v-for="w in downloadWorkers" :key="w.id" :value="w.id">
                 {{ w.name }} {{ w.surname }} - {{ w.role }}
@@ -197,7 +197,7 @@
           </div>
           <div>
             <span class="font-medium">Data operazione:</span>
-            <VueDatePicker v-model="localItem.warehouse_downaload_dt" format="dd/MM/yyyy, HH:mm" :teleport="true" />
+            <VueDatePicker v-model="localItem.warehouse_download_at" format="dd/MM/yyyy, HH:mm" :teleport="true" />
           </div>
         </Box>
 
@@ -443,11 +443,11 @@ function runAsParentPatch(fn) {
 const SCALAR_KEYS = [
   'holder_quantity','cer_code_id',
   'weight_gross','weight_tare','weight_net',
-  'is_ragnabile','machinery_time_fraction_hh','machinery_time_fraction_mm',
+  'is_crane_eligible','machinery_time_fraction_hh','machinery_time_fraction_mm',
   'is_holder_dirty','total_dirty_holders',
   'is_holder_broken','total_broken_holders',
   'has_selection','selection_time_hh','selection_time_mm',
-  'warehouse_downaload_worker_id','warehouse_downaload_dt',
+  'warehouse_download_worker_id','warehouse_download_at',
   'warehouse_weighing_worker_id','warehouse_weighing_dt',
   'warehouse_selection_worker_id','warehouse_selection_dt',
   'warehouse_notes','warehouse_non_conformity',
@@ -522,7 +522,7 @@ watch(
 
 // quando viene modificato il selection time, aggiorna i campi in ore e minuti
 watch(
-  () => props.item.selection_time,
+  () => props.item.selection_duration_minutes,
   (totalMinutes) => {
     localItem.selection_time_hh = Math.floor(totalMinutes / 60)
     localItem.selection_time_mm = totalMinutes % 60
@@ -683,7 +683,7 @@ function dateInfo(type, text){
 // - se SELEZIONE esiste ed è < PESATURA -> riallineo dopo che ho sistemato PESATURA
 let lockingDL = false
 watch(
-  () => localItem.warehouse_downaload_dt,
+  () => localItem.warehouse_download_at,
   (newDl) => {
     if (lockingDL) { lockingDL = false; return }
     const dDL = toDayjs(newDl)
@@ -726,7 +726,7 @@ watch(
   (newWg) => {
     if (lockingWG) { lockingWG = false; return }
 
-    const dDL = toDayjs(localItem.warehouse_downaload_dt)
+    const dDL = toDayjs(localItem.warehouse_download_at)
     if (!dDL) {
       lockingWG = true
       localItem.warehouse_weighing_dt = null
@@ -830,8 +830,10 @@ function resetManualMachineryTimeInput() {
 
 // 4) reset this row back to auto-split
 function toggleIsRagnabileInput() {
-  emit('update-is-ragnabile-toggle', { id: localItem.id, isRagnabile: localItem.is_ragnabile ? 1 : 0 })
+  emit('update-is-ragnabile-toggle', { id: localItem.id, isRagnabile: localItem.is_crane_eligible ? 1 : 0 })
 }
 
 
 </script>
+
+

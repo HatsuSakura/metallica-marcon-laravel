@@ -72,26 +72,26 @@ function calculateCentroid() {
     const totVal = ref(0);
 
   if (props.orders.length) {
-    sumLat.value = props.orders.reduce((sum, order) => sum + order.site.lat, 0);
-    sumLng.value = props.orders.reduce((sum, order) => sum + order.site.lng, 0);
+    sumLat.value = props.orders.reduce((sum, order) => sum + order.site.latitude, 0);
+    sumLng.value = props.orders.reduce((sum, order) => sum + order.site.longitude, 0);
     totVal.value = props.orders.length;
   }
 
   if (props.listMotrice.length) {
-    sumLat.value = props.listMotrice.reduce((sum, order) => sum + order.site.lat, 0);
-    sumLng.value = props.listMotrice.reduce((sum, order) => sum + order.site.lng, 0);
+    sumLat.value = props.listMotrice.reduce((sum, order) => sum + order.site.latitude, 0);
+    sumLng.value = props.listMotrice.reduce((sum, order) => sum + order.site.longitude, 0);
     totVal.value = props.listMotrice.length;
   }
 
   if (props.listRimorchio.length) {
-    sumLat.value = props.listRimorchio.reduce((sum, order) => sum + order.site.lat, 0);
-    sumLng.value = props.listRimorchio.reduce((sum, order) => sum + order.site.lng, 0);
+    sumLat.value = props.listRimorchio.reduce((sum, order) => sum + order.site.latitude, 0);
+    sumLng.value = props.listRimorchio.reduce((sum, order) => sum + order.site.longitude, 0);
     totVal.value = props.listRimorchio.length;
   }
 
   if (props.listRiempimento.length) {
-    sumLat.value = props.listRiempimento.reduce((sum, order) => sum + order.site.lat, 0);
-    sumLng.value = props.listRiempimento.reduce((sum, order) => sum + order.site.lng, 0);
+    sumLat.value = props.listRiempimento.reduce((sum, order) => sum + order.site.latitude, 0);
+    sumLng.value = props.listRiempimento.reduce((sum, order) => sum + order.site.longitude, 0);
     totVal.value = props.listRiempimento.length;
   }
 
@@ -146,22 +146,22 @@ onMounted(() => {
 <template>
 ORDERS
 <div v-for="order in props.orders">
-    ordine {{ order.id }} - {{ order.site.lat }} ; {{ order.site.lng }}
+    ordine {{ order.id }} - {{ order.site.latitude }} ; {{ order.site.longitude }}
 </div>
 <br>
 MOTRICE
 <div v-for="order in props.listMotrice">
-    ordine {{ order.id }} - {{ order.site.lat }} ; {{ order.site.lng }}
+    ordine {{ order.id }} - {{ order.site.latitude }} ; {{ order.site.longitude }}
 </div>
 <br>
 RIMORCHIO
 <div v-for="order in props.listRimorchio">
-    ordine {{ order.id }} - {{ order.site.lat }} ; {{ order.site.lng }}
+    ordine {{ order.id }} - {{ order.site.latitude }} ; {{ order.site.longitude }}
 </div>
 <br>
 RIEMPIMENTO
 <div v-for="order in props.listRiempimento">
-    ordine {{ order.id }} - {{ order.site.lat }} ; {{ order.site.lng }}
+    ordine {{ order.id }} - {{ order.site.latitude }} ; {{ order.site.longitude }}
 </div>
 
 
@@ -172,3 +172,4 @@ RIEMPIMENTO
     <p>RIEMPIMENTO: {{ listRiempimento }}</p>
   </div>
 -->
+

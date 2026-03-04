@@ -1,0 +1,45 @@
+<template>
+    <h2 class="text-center mb-4 text-xl">Ordini in Corso</h2>
+    <ul v-if="props.orders.length" class="">
+        <li v-for="order in props.orders" :key="order.id" class="flex flex-row gap-2 items-center mb-2">
+            Ord. #{{String( order.id ).padStart(6, '0')}} del {{ dayjs(order.requested_at).format('DD-MM-YYYY HH:mm') }}
+            <Link
+                :href="route('order.edit', {order: order.id} )"
+                method="get"
+                as="button"
+                class="btn btn-primary btn-circle btn-sm"
+            >
+                <font-awesome-icon :icon="['fas', 'pencil']" />
+            </Link>
+            
+            <button
+                class="btn btn-error btn-circle btn-sm"
+                @click="destroyOrder(order.id)"
+            >
+                <font-awesome-icon :icon="['fas', 'trash-can']" />
+            </button>
+        </li>
+    </ul>
+    <EmptyState v-else>Nessun ordine attivo per questo Cliente</EmptyState>
+</template>
+
+<script setup>
+import dayjs from 'dayjs';
+import EmptyState from '@/Components/UI/EmptyState.vue';
+import { Link, router } from '@inertiajs/vue3';
+
+
+const props = defineProps({
+    orders: Array
+})
+
+function destroyOrder(orderId) {
+  router.delete(route('order.destroy', { order: orderId }), {
+    preserveScroll: true,
+    onSuccess: () => {
+      router.reload({ only: ['orders'], preserveScroll: true })
+    },
+  })
+}
+
+</script>

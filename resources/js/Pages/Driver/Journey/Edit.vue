@@ -11,10 +11,10 @@
             <JourneyMainData :journey="journey" />
             <div class="flex items-center gap-2">
                 <span class="badge badge-outline">
-                    Stato: {{ journey.state }}
+                    Stato: {{ journey.status }}
                 </span>
                 <button
-                    v-if="journey.state === 'creato'"
+                    v-if="journey.status === 'creato'"
                     type="button"
                     class="btn btn-success btn-sm"
                     :disabled="isLoading"
@@ -142,7 +142,7 @@
                             v-model="techForm.address_text"
                             type="text"
                             class="input input-bordered w-full"
-                            placeholder="Indirizzo (opzionale)"
+                            placeholder="address (opzionale)"
                         />
                         <textarea
                             v-model="techForm.driver_notes"
@@ -202,7 +202,7 @@
                                 :key="order.id"
                                 class="text-sm"
                             >
-                                #{{ String(order.id).padStart('9', '0') }} — {{ order.customer?.ragione_sociale ?? 'Cliente' }}
+                                #{{ String(order.id).padStart('9', '0') }} — {{ order.customer?.company_name ?? 'Cliente' }}
                             </div>
                         </div>
                     </div>
@@ -363,14 +363,14 @@ const stopTitle = (stop) => {
     if (stop.kind === 'technical') {
         return stop.technical_action?.label ?? stop.technical_action?.name ?? stop.description ?? 'Sosta tecnica'
     }
-    return stop.customer?.ragione_sociale ?? `Cliente #${stop.customer_id ?? '-'}`
+    return stop.customer?.company_name ?? `Cliente #${stop.customer_id ?? '-'}`
 }
 
 const stopSubtitle = (stop) => {
     if (!stop) return null
     if (stop.address_text) return stop.address_text
     const firstOrder = stopOrders(stop)[0]
-    return firstOrder?.site?.indirizzo ?? null
+    return firstOrder?.site?.address ?? null
 }
 
 const stopStatusLabel = (status) => {
@@ -482,3 +482,4 @@ const createTechnicalStop = async () => {
     }
 }
 </script>
+

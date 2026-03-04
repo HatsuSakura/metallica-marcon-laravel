@@ -66,7 +66,7 @@ const stopOrderModel = computed({
       <div class="flex flex-row justify-between items-center gap-2 mb-1">
         <font-awesome-icon :icon="['fas', 'person-walking-arrow-right']" class="text-xl"/>
         <VueDatePicker
-          v-model="form.dt_start"
+          v-model="form.planned_start_at"
           locale="it"
           format="dd/MM/yyyy HH:mm"
           required
@@ -79,15 +79,15 @@ const stopOrderModel = computed({
           closeOnScroll="false"
           @closed="manageDate"
         ></VueDatePicker>
-        <div class="input-error" v-if="form.errors.dt_start">
-          {{ form.errors.dt_start }}
+        <div class="input-error" v-if="form.errors.planned_start_at">
+          {{ form.errors.planned_start_at }}
         </div>
       </div>
 
       <div class="flex flex-row justify-between items-center gap-2 mb-1">
         <font-awesome-icon :icon="['fas', 'person-walking-arrow-loop-left']" class="text-xl"/>
         <VueDatePicker
-          v-model="form.dt_end"
+          v-model="form.planned_end_at"
           locale="it"
           format="dd/MM/yyyy HH:mm"
           required
@@ -99,8 +99,8 @@ const stopOrderModel = computed({
           minutes-grid-increment="5"
           closeOnScroll="false"
         ></VueDatePicker>
-        <div class="input-error" v-if="form.errors.dt_end">
-          {{ form.errors.dt_end }}
+        <div class="input-error" v-if="form.errors.planned_end_at">
+          {{ form.errors.planned_end_at }}
         </div>
       </div>
     </Box>
@@ -289,3 +289,4 @@ const stopOrderModel = computed({
     </div>
   </div>
 </template>
+

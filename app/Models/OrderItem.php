@@ -30,9 +30,11 @@ class OrderItem extends Model
         'weight_tare',
         'weight_net',
         'adr',
-        'adr_onu_code',
+        'has_adr',
+        'adr_un_code',
         'adr_hp',
         'adr_lotto',
+        'adr_lot_code',
         'adr_volume',
         'warehouse_id',
         'warehouse_manager_id',
@@ -45,23 +47,28 @@ class OrderItem extends Model
         'has_non_conformity',
         'warehouse_non_conformity',
         'has_exploded_children',
-        'warehouse_downaload_worker_id',
-        'warehouse_downaload_dt',
+        'warehouse_download_worker_id',
+        'warehouse_download_at',
         'warehouse_weighing_worker_id',
         'warehouse_weighing_dt',
         'warehouse_selection_worker_id',
         'warehouse_selection_dt',
         'has_selection',
-        'selection_time',
-        'is_ragnabile',
+        'selection_duration_minutes',
+        'is_crane_eligible',
         'machinery_time_fraction',
+        'machinery_time_share',
         'is_machinery_time_manual',
         'is_transshipment',
         'recognized_price',
         'recognized_weight',
         'adr_totale',
+        'is_adr_total',
         'adr_esenzione_totale',
+        'has_adr_total_exemption',
         'adr_esenzione_parziale',
+        'has_adr_partial_exemption',
+        'status',
     ];
 
     protected $appends = [
@@ -87,20 +94,28 @@ class OrderItem extends Model
                 ->sortByDesc(fn($jc) => optional($jc->pivot)->updated_at)
                 ->first()?->pivot;
                 
-            $wid = $pivot?->warehouse_download_id;
+            $wid = $pivot?->download_warehouse_id;
         } else {
             // 2) Altrimenti leggi la pivot "corrente" direttamente (1 query)
             $wid = DB::table('journey_cargo_order_item')
                 ->where('order_item_id', $this->id)
                 ->orderByDesc('id')            // oppure created_at/updated_at se preferisci
-                ->value('warehouse_download_id');
+                ->value('download_warehouse_id');
+
         }
 
         if (!$wid) return null;
 
         // 3) Ritorna solo ciò che serve alla UI
-        $wh = Warehouse::select('id', 'denominazione')->find($wid);
-        return $wh ? ['id' => $wh->id, 'denominazione' => $wh->denominazione] : null;
+        $wh = Warehouse::select('id', 'name')->find($wid);
+        if (!$wh) {
+            return null;
+        }
+
+        return [
+            'id' => $wh->id,
+            'name' => $wh->name,
+        ];
     }
 
 
@@ -140,7 +155,7 @@ class OrderItem extends Model
     public function journeyCargos()
     {
         return $this->belongsToMany(JourneyCargo::class, 'journey_cargo_order_item')
-                    ->withPivot('is_double_load', 'warehouse_download_id')
+                    ->withPivot('is_double_load', 'download_warehouse_id')
                     ->withTimestamps();
     }
 

@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class JourneyEvent extends Model
 {
+
     protected $fillable = [
         'journey_id',
         'journey_stop_id',
-        'state',
+        'status',
         'payload',
         'created_by_user_id',
     ];
@@ -33,4 +34,5 @@ class JourneyEvent extends Model
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
     }
+
 }

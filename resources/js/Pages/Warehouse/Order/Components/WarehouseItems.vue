@@ -1,5 +1,5 @@
 <template>
-        <h3 class="font-bold">Item scaricati in {{ warehouse.denominazione }}</h3>
+        <h3 class="font-bold">Item scaricati in {{ warehouse.name }}</h3>
 
         <div v-if="itemsWarehouse.length === 0" class="text-gray-500">
             Nessun item scaricato in questo magazzino
@@ -13,7 +13,7 @@
                     </div>
                     <div class="card-body">
                         <p>Data: {{ item.created_at }}</p>
-                        <p>Stato: {{ item.state }}</p>
+                        <p>Stato: {{ item.status }}</p>
                         <p>Warehouse: {{ item.warehouse_id }}</p>
                     </div>
                 </div>
@@ -35,7 +35,7 @@
                     </div>
                     <div class="card-body">
                         <p>Data: {{ item.created_at }}</p>
-                        <p>Stato: {{ item.state }}</p>
+                        <p>Stato: {{ item.status }}</p>
                         <p>Warehouse: {{ item.warehouse_id }}</p>
                     </div>
                 </div>
@@ -54,14 +54,14 @@
 // Filtra gli item del magazzino corrente
 const itemsWarehouse = computed(() =>
   props.items.filter(item =>
-    item.journey_cargos[0]?.pivot?.warehouse_download_id === props.warehouse.id
+    item.journey_cargos[0]?.pivot?.download_warehouse_id === props.warehouse.id
   )
 );
 
 // Filtra tutti gli altri
 const itemsOthers = computed(() =>
   props.items.filter(item =>
-    item.journey_cargos[0]?.pivot?.warehouse_download_id !== props.warehouse.id
+    item.journey_cargos[0]?.pivot?.download_warehouse_id !== props.warehouse.id
   )
 );
 

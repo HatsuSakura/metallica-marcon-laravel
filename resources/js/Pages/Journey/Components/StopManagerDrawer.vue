@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, ref, watchEffect } from 'vue'
 import draggable from 'vuedraggable'
 import { GoogleMap, AdvancedMarker } from 'vue3-google-map'
@@ -30,12 +30,12 @@ const resolveStop = (key) => props.stopsByKey?.get?.(key) ?? null
 const stopTitle = (s) => {
   if (!s) return '-'
   if (s.kind === 'technical') return String(s.action_label ?? s.action_name ?? 'Sosta tecnica').trim()
-  const name = s.customer?.ragione_sociale
+  const name = s.customer?.company_name
   return name ? String(name).trim() : `Cliente #${s.customer_id}`
 }
 
 const stopSubtitle = (s) => {
-  const addr = s?.site?.indirizzo
+  const addr = s?.site?.address
   return addr ? String(addr).trim() : null
 }
 
@@ -61,8 +61,8 @@ const stopCoords = (s) => {
     const lng = Number(s.location_lng ?? defaultLng)
     return { lat, lng }
   }
-  const lat = Number(s.site?.lat ?? defaultLat)
-  const lng = Number(s.site?.lng ?? defaultLng)
+  const lat = Number(s.site?.latitude ?? defaultLat)
+  const lng = Number(s.site?.longitude ?? defaultLng)
   return { lat, lng }
 }
 
@@ -175,7 +175,7 @@ const onMapClick = (evt, s, key) => {
                     <input
                       type="text"
                       class="input input-bordered input-sm w-1/2"
-                      placeholder="Indirizzo"
+                      placeholder="address"
                       :value="resolveStop(key)?.address_text ?? ''"
                       @input="(e) => emit('update-stop-fields', { key, address_text: e.target.value })"
                     />

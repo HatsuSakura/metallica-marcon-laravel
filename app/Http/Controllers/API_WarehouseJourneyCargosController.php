@@ -13,9 +13,9 @@ class API_WarehouseJourneyCargosController extends Controller{
 
     public function update(Request $request, JourneyCargo $journeyCargo) {
         $validated = $request->validate([
-            'has_ragno' => 'required|boolean',
-            'ragnista_id' => 'required|integer',
-            'machinery_time' => 'nullable|integer',
+            'has_crane' => 'required|boolean',
+            'crane_operator_user_id' => 'required|integer',
+            'machinery_time_minutes' => 'nullable|integer',
         ]);
     
         $journeyCargo->update(
@@ -26,3 +26,7 @@ class API_WarehouseJourneyCargosController extends Controller{
     }
 
 }
+
+
+
+

@@ -17,7 +17,7 @@ Ordini scaricati
             </div>
             <div class="card-body">
                 <p>Data: {{ dayjs(order.created_at).format('DD-MM-YYYY') }}</p>
-                <p>Stato: {{ order.state }}</p>
+                <p>Stato: {{ order.status }}</p>
                 <div class="flex flex-row gap-2">
                     <Link 
                         class="btn btn-outline text-xs font-medium" 

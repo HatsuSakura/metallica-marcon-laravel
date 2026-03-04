@@ -6,7 +6,7 @@
       <div class="mb-4 flex flex-row items-center gap-4">
               <Link
               class="btn btn-ghost" 
-              :href="route('relator.dashboard')"
+              :href="route('dashboard')"
           >
               <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>
               Torna a  Dashboard
@@ -14,7 +14,7 @@
   
           <div class="flex flex-row justify-between items-center w-full">
               <div class="text-lg font-medium">
-                  Gestione Materiali Scaricati in {{ props.journeyCargo.warehouse.denominazione }} da cassone {{ props.journeyCargo.truck_location === 'vehicle'? 'Motrice': 'Rimorchio' }}
+                  Gestione Materiali Scaricati in {{ props.journeyCargo.warehouse.name }} da cassone {{ props.journeyCargo.cargo_location === 'vehicle'? 'Motrice': 'Rimorchio' }}
               </div>
               <div>
                   <JourneyCargoHead :journeyCargo="props.journeyCargo"/>
@@ -32,20 +32,20 @@
             </div>
   
             <div class="flex flex-row items-center gap-2 justify-evenly">
-                <label for="has_ragno" class="font-medium">Uso del Ragno:</label>
-                <input type="checkbox" id="has_ragno" v-model="form.has_ragno" class="toggle">
+                <label for="has_crane" class="font-medium">Uso del Ragno:</label>
+                <input type="checkbox" id="has_crane" v-model="form.has_crane" class="toggle">
             </div>
   
-            <div v-if="form.has_ragno" class="flex flex-row items-center gap-2 justify-evenly">
-              <label for="ragnista_id" class="font-medium">Ragnista:</label>
-              <select id="ragnista_id" v-model="form.ragnista_id" class="select select-bordered">
+            <div v-if="form.has_crane" class="flex flex-row items-center gap-2 justify-evenly">
+              <label for="crane_operator_user_id" class="font-medium">Ragnista:</label>
+              <select id="crane_operator_user_id" v-model="form.crane_operator_user_id" class="select select-bordered">
                 <option value="" selected disabled>Seleziona un Ragnista</option>
-                <option v-for="worker in props.warehouseWorkers.filter(worker => worker.is_ragnista)" :key="worker.id" :value="worker.id">
+                <option v-for="worker in props.warehouseWorkers.filter(worker => worker.is_crane_operator)" :key="worker.id" :value="worker.id">
                   {{ worker.name }} {{ worker.surname }}
                 </option>
               </select>
   
-              <label for="machinery_time" class="font-medium">Tempo uso ragno:</label>
+              <label for="machinery_time_minutes" class="font-medium">Tempo uso ragno:</label>
               <select id="machinery_time_hh" v-model="machinery_time_hh" class="select select-bordered">
                 <option value="0" selected>00</option>
                 <option v-for="hour in 23" :key="hour" :value="hour">{{ String(hour).padStart(2, '0') }}</option>
@@ -102,8 +102,8 @@
   )
   
   const form = useForm({
-      has_ragno: false,
-      ragnista_id: null,
+      has_crane: false,
+      crane_operator_user_id: null,
       machinery_time_hh: 0,
       machinery_time_mm: 0,
       user_id: user ? user.id : null, // Fallback to null if user is not defined
@@ -115,3 +115,5 @@
   
   </script>
   
+
+

@@ -17,8 +17,10 @@
 
 ## Acceptance tests (examples)
 Logistics:
-- "entro 40 km" returns only pickups with computed distance <= 40
-- "non pericolosi" excludes hazardous pickups
+- `planning_sites`: "siti critici entro 40 km da Rossi" returns only sites with risk >= 0.85 and distance <= 40
+- `planning_sites`: "entro 7 giorni" applies `days_to_next_pickup_max = 7`
+- `order_requests`: "ordini richiesti non pericolosi questa settimana" returns order candidates only with requested status/date window/hazardous=false
+- `hybrid`: mixed query returns deterministic merged candidates and explicit scoring metadata (`distance/risk/urgency`)
 
 Analytics:
 - "rame ultimi tre mesi" returns metric sum_weight_kg with correct time_range

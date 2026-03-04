@@ -60,7 +60,7 @@
                 <select v-model="form.warehouse_id" id="warehouse" class="select select-bordered">
                     <option disabled value="">Seleziona un magazzino</option>
                     <option v-for="warehouse in props.warehouses" :key="warehouse.id" :value="warehouse.id">
-                    {{ warehouse.denominazione }}
+                    {{ warehouse.name }}
                     </option>
                 </select>
             </div>
@@ -137,3 +137,4 @@ function submit() {
 }
 
 </script>
+

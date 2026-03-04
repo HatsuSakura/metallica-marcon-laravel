@@ -3,7 +3,10 @@
 This folder contains the operational documentation to implement Natural Language Queries (NLP) for Metallica Marcon.
 
 We support two separate NLP flows:
-- Logistics NLP: builds a candidate set of pickups for trip planning (filters + geo constraints).
+- Logistics NLP: builds candidate sets for trip planning using one unified query model:
+  - `planning_sites` (risk + days-to-next-pickup signals)
+  - `order_requests` (explicit order demand)
+  - `hybrid` (combined planning + demand)
 - Analytics NLP: builds analytical queries (aggregations, metrics, breakdowns) used by the commercial dashboard.
 
 Key rule:
