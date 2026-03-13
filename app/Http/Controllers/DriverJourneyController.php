@@ -34,8 +34,8 @@ class DriverJourneyController extends Controller
         $currentJourneys = Journey::query()
             ->where('driver_id', $user->id)
             ->whereIn('status', [
-                JourneysState::STATE_CREATED->value,
-                JourneysState::STATE_ACTIVE->value,
+                JourneysState::STATUS_CREATED->value,
+                JourneysState::STATUS_ACTIVE->value,
             ])
             ->withCount('stops')
             ->with([
@@ -46,14 +46,17 @@ class DriverJourneyController extends Controller
                 'stops.customer',
                 'stops.technicalAction',
                 'stops.stopOrders.order.site',
+                'stops.stopOrders.order.customer',
+                'stops.stopOrders.order.items',
+                'stops.stopOrders.order.items.cerCode',
             ])
-            ->orderByRaw("CASE WHEN status = ? THEN 0 ELSE 1 END", [JourneysState::STATE_ACTIVE->value])
+            ->orderByRaw("CASE WHEN status = ? THEN 0 ELSE 1 END", [JourneysState::STATUS_ACTIVE->value])
             ->orderByDesc('planned_start_at')
             ->get();
 
         $historyJourneys = Journey::query()
             ->where('driver_id', $user->id)
-            ->where('status', JourneysState::STATE_EXECUTED->value)
+            ->where('status', JourneysState::STATUS_EXECUTED->value)
             ->with([
                 'vehicle',
                 'trailer',
@@ -66,7 +69,7 @@ class DriverJourneyController extends Controller
 
         $hasActiveJourney = Journey::query()
             ->where('driver_id', $user->id)
-        ->where('status', JourneysState::STATE_ACTIVE->value)
+        ->where('status', JourneysState::STATUS_ACTIVE->value)
             ->exists();
 
         $warehouses = Warehouse::all();
@@ -116,7 +119,10 @@ class DriverJourneyController extends Controller
                     'orders.holders',
                     'stops.customer',
                     'stops.technicalAction',
-                    'stops.stopOrders.order.site'
+                    'stops.stopOrders.order.site',
+                    'stops.stopOrders.order.customer',
+                    'stops.stopOrders.order.items',
+                    'stops.stopOrders.order.items.cerCode'
                 )->loadCount('stops'),
                 'returnTo' => $returnTo,
             ]
@@ -150,7 +156,10 @@ class DriverJourneyController extends Controller
                     'orders.holders',
                     'stops.customer',
                     'stops.technicalAction',
-                    'stops.stopOrders.order.site'
+                    'stops.stopOrders.order.site',
+                    'stops.stopOrders.order.customer',
+                    'stops.stopOrders.order.items',
+                    'stops.stopOrders.order.items.cerCode'
                 )->loadCount('stops'),
                 'holders' => $holders, 
                 'cerList' => $cerList,
@@ -193,7 +202,7 @@ class DriverJourneyController extends Controller
             $validated['secondary_warehouse_download_at'] = null;
         }
 
-        $validated['status'] = JourneysState::STATE_EXECUTED;
+        $validated['status'] = JourneysState::STATUS_EXECUTED;
 
         // aggiorna
         $journey->update($validated);
@@ -203,7 +212,7 @@ class DriverJourneyController extends Controller
         foreach ($orders as $order) {
             $order->update([
                 'journey_id' => null,
-                'status' => OrdersState::STATE_CREATED,
+                'status' => OrdersState::STATUS_CREATED,
                 'cargo_location' => null,
             ]);
         }
@@ -231,7 +240,7 @@ class DriverJourneyController extends Controller
         foreach ($orders as $order) {
             $order->update([
                 'journey_id' => null,
-                'status' => OrdersState::STATE_CREATED,
+                'status' => OrdersState::STATUS_CREATED,
                 'cargo_location' => null,
             ]);
         }

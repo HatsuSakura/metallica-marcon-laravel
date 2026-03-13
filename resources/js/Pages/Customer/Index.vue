@@ -28,12 +28,14 @@
             </div>
             <div class="navbar-end space-x-2">
                 <Link @click="selectSite(props.site)" :href="route('customer.create')"
-                    class="btn btn-circle btn-primary">
+                    class="btn btn-circle btn-ghost">
                 <font-awesome-icon :icon="['fas', 'plus']" class="h-5 w-5" stroke="currentColor" />
                 </Link>
+                <!--
                 <button class="btn btn-ghost btn-circle">
                     <font-awesome-icon :icon="['fas', 'cog']" class="h-5 w-5" stroke="currentColor" />
                 </button>
+                -->
             </div>
         </div>
 

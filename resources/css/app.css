@@ -61,6 +61,21 @@ html, body {
     transition: background-color var(--transition-duration), color var(--transition-duration);
 }
 
+/* Keep filter search input theme-consistent when browser autofill is applied */
+.filter-search-input:-webkit-autofill,
+.filter-search-input:-webkit-autofill:hover,
+.filter-search-input:-webkit-autofill:focus,
+.filter-search-input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--fallback-bc, oklch(var(--bc) / 1));
+    -webkit-box-shadow: 0 0 0 1000px var(--fallback-b1, oklch(var(--b1) / 1)) inset;
+    box-shadow: 0 0 0 1000px var(--fallback-b1, oklch(var(--b1) / 1)) inset;
+    caret-color: var(--fallback-bc, oklch(var(--bc) / 1));
+}
+
+.filter-search-input:-moz-autofill {
+    box-shadow: 0 0 0 1000px var(--fallback-b1, oklch(var(--b1) / 1)) inset;
+}
+
 /* Style for the Info Window in Google MAP */
 .gm-style .gm-style-iw-c {
     color: #222!important;

@@ -10,7 +10,7 @@ services:
     ports:
       - 3306:3306
   adminer:
-    image: adminer
+    image: adminer:4.8.1
     restart: always
     ports:
       - 8080:8080

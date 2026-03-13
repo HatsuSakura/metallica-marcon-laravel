@@ -161,8 +161,8 @@ class JourneyCargoService
         $items = OrderItem::whereIn('id', $ids)->get(['id', 'status']);
         foreach ($items as $item) {
             $current = OrderItemsState::from($item->status);
-            if ($current->canTransitionTo(OrderItemsState::STATE_LOADED)) {
-                $item->status = OrderItemsState::STATE_LOADED;
+            if ($current->canTransitionTo(OrderItemsState::STATUS_LOADED)) {
+                $item->status = OrderItemsState::STATUS_LOADED;
                 $item->save();
             } else {
                 Log::warning("Invalid state transition from {$current->value} for order_item {$item->id}");

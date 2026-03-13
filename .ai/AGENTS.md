@@ -29,3 +29,8 @@ Responsibilities:
 - Never allow dynamic SQL from AI.
 - Always keep changes testable.
 - Always update DECISIONS.md when making structural changes.
+
+## YouTrack Rules
+
+- For issue creation/update conventions in this project, follow:
+  - `.ai/youtrack_project_specs.md`

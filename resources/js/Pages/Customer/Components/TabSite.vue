@@ -112,6 +112,26 @@
                                 @update:preferred_area="form.preferred_area = $event"
                             />
 
+
+                        <div class="flex flex-row gap-2 justify-stretch items-stretch w-1/2">
+                            <Box class="w-full">
+                                <template #header>Note Sede</template>
+                                <textarea
+                                    v-if="isToggleEditable"
+                                    v-model="form.notes"
+                                    class="textarea textarea-bordered w-full"
+                                    rows="3"
+                                    placeholder="Inserisci eventuali note operative sulla sede"
+                                />
+                                <div v-else-if="form.notes" class="whitespace-pre-line">
+                                    {{ form.notes }}
+                                </div>
+                                <div v-else class="opacity-70">
+                                    Nessuna nota sede
+                                </div>
+                            </Box>
+                        </div>
+
                         </div>
 
                         <!-- BOOLEAN PARAMETERS -->
@@ -150,6 +170,8 @@
                             />
 
                         </div>
+
+
                     </div>
                     <!-- PULSANTI EDIT/SAVE-->
                     <div>
@@ -318,6 +340,7 @@ const form = useForm({
     has_muletto: Boolean(props.site.has_muletto),
     has_electric_pallet_truck: Boolean(props.site.has_electric_pallet_truck),
     has_manual_pallet_truck: Boolean(props.site.has_manual_pallet_truck),
+    notes: props.site.notes ?? '',
 })
     
 

@@ -38,6 +38,7 @@ class Order extends Model
         'has_crane',
         'crane_operator_user_id',
         'machinery_time_minutes',
+        'notes',
     ]; 
 
 protected static function booted()

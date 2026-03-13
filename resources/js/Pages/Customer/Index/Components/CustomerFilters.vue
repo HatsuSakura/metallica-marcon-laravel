@@ -1,5 +1,5 @@
 <template>
-    <form>
+    <form @submit.prevent="applyFilters">
         <div class="mb-4 mt-4 flex flex-wrap gap-4">
             <div class="flex flex-nowrap items-center gap-1">
 <!--
@@ -40,13 +40,16 @@
                         id="chiave" 
                         v-model="filterForm.chiave"
                         type="text" 
-                        class="grow"
+                        class="grow filter-search-input"
                         placeholder="Ricerca..." 
                     />
-                    <font-awesome-icon :icon="['fas', 'magnifying-glass']" class="text-2xl"/>
+                    <font-awesome-icon :icon="['fas', 'user-tie']" class="text-2xl"/>
                 </label>
-                <button @click="resetChiave" class="btn btn-ghost btn-circle ml-1">
+                <button type="button" @click="resetChiave" class="btn btn-ghost btn-circle ml-1" title="Resetta">
                     <font-awesome-icon :icon="['fas', 'arrows-rotate']" class="text-2xl"/>
+                </button>
+                <button type="submit" class="btn btn-ghost btn-circle" title="Cerca">
+                    <font-awesome-icon :icon="['fas', 'magnifying-glass']" class="h-5 w-5" />
                 </button>
             </div>
         </div>
@@ -54,9 +57,8 @@
 </template>
 
 <script setup>
-import {reactive, watch, computed} from 'vue'
+import {reactive} from 'vue'
 import { router } from '@inertiajs/vue3'
-import { debounce } from 'lodash'
 
 const props = defineProps({
     filters: Object,
@@ -70,16 +72,16 @@ const filterForm = reactive({
     chiave: props.filters.chiave ?? null,
 })
 
-// in this case we don't need to know the value, it's important to know that something has changed
-watch(
-    filterForm, debounce( () => router.get(
+const applyFilters = () => {
+    router.get(
         route('customer.index'),
         filterForm,
         {preserveState: true, preserveScroll: true},
-    ), 1000 ),  
-)
+    )
+}
 
 const resetChiave = () => {
     filterForm.chiave = null
+    applyFilters()
 }
 </script>

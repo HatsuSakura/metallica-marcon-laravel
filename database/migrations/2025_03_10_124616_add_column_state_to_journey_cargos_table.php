@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::table('journey_cargos', function (Blueprint $table) {
             $table->enum('state', array_column(JourneyCargosState::cases(), 'value'))
-            ->default(JourneyCargosState::STATE_CREATED->value);
+            ->default(JourneyCargosState::STATUS_CREATED->value);
         });
     }
 

@@ -22,7 +22,7 @@ class WorkerOrderController extends Controller
 
     public function index(Request $request){
 
-        $query = Order::where('status', OrdersState::STATE_DOWNLOADED->value)
+        $query = Order::where('status', OrdersState::STATUS_DOWNLOADED->value)
         //->alphabetic()
         //->withCount('orders')
         //->filter($filters)
@@ -80,6 +80,7 @@ class WorkerOrderController extends Controller
             'is_urgent' => 'boolean',
             'requested_at' => 'required|date',
             'expected_withdraw_at' => 'nullable|date',
+            'notes' => 'nullable|string',
             'customer_id'=> 'required',
             'site_id'=> 'required',
             'logistics_user_id' => 'nullable',
@@ -122,6 +123,7 @@ class WorkerOrderController extends Controller
             'is_urgent' => $validatedData['is_urgent'] ?? false,
             'requested_at' => $validatedData['requested_at'],
             'expected_withdraw_at' => $validatedData['expected_withdraw_at'] ?? null,
+            'notes' => $validatedData['notes'] ?? null,
             'customer_id' => $validatedData['customer_id'],
             'site_id' => $validatedData['site_id'],
             'logistics_user_id' => $validatedData['logistics_user_id'] ?? null,
@@ -207,6 +209,7 @@ class WorkerOrderController extends Controller
             'is_urgent' => 'boolean',
             'requested_at' => 'required|date',
             'expected_withdraw_at' => 'nullable|date',
+            'notes' => 'nullable|string',
             'customer_id'=> 'required|numeric',
             'site_id'=> 'required|numeric',
             'logistics_user_id' => 'nullable|numeric',
@@ -369,15 +372,15 @@ public function updateState(Order $order, Request $request)
 
     // Add lifecycle-specific logic
     switch ($newState) {
-        case OrdersState::STATE_PLANNED:
+        case OrdersState::STATUS_PLANNED:
             $order->planned_date = $request->planned_date;
             break;
 
-        case OrdersState::STATE_EXECUTED:
+        case OrdersState::STATUS_EXECUTED:
             $order->executed_at = now();
             break;
 
-        case OrdersState::STATE_DOWNLOADED:
+        case OrdersState::STATUS_DOWNLOADED:
             // Attachments or warehouse updates
             $order->downloaded_files = $request->file('attachments')->store('orders');
             break;

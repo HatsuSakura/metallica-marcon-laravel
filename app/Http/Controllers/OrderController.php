@@ -103,6 +103,7 @@ class OrderController extends Controller
             'is_urgent' => 'boolean',
             'requested_at' => 'required|date',
             'expected_withdraw_at' => 'nullable|date',
+            'notes' => 'nullable|string',
             'customer_id'=> 'required',
             'site_id'=> 'required',
             'logistics_user_id' => 'nullable',
@@ -173,6 +174,7 @@ class OrderController extends Controller
             'is_urgent' => $validatedData['is_urgent'] ?? false,
             'requested_at' => $validatedData['requested_at'],
             'expected_withdraw_at' => $validatedData['expected_withdraw_at'] ?? null,
+            'notes' => $validatedData['notes'] ?? null,
             'customer_id' => $validatedData['customer_id'],
             'site_id' => $validatedData['site_id'],
             'logistics_user_id' => $validatedData['logistics_user_id'] ?? null,
@@ -204,8 +206,9 @@ class OrderController extends Controller
 
         //return redirect()->route('order.index')->with('success', 'Ritiro inserito con successo!');
         //return redirect()->back()->with('success', 'Ordine inserito con successo!');
-        return redirect()->route('customer.show', ['customer' => $request->customer_id])
-                 ->with('success', 'Ordine inserito con successo!');
+        // Force a full client-side location visit to avoid stale Inertia page state
+        // after create flow started from customer list/modal context.
+        return \Inertia\Inertia::location(route('customer.show', ['customer' => $order->customer_id]));
     }
 
     /**
@@ -253,6 +256,7 @@ class OrderController extends Controller
             'is_urgent' => 'boolean',
             'requested_at' => 'required|date',
             'expected_withdraw_at' => 'nullable|date',
+            'notes' => 'nullable|string',
             'customer_id'=> 'required',
             'site_id'=> 'required',
             'logistics_user_id' => 'nullable',
@@ -401,15 +405,15 @@ public function updateState(Order $order, Request $request)
 
     // Add lifecycle-specific logic
     switch ($newState) {
-        case OrdersState::STATE_PLANNED:
+        case OrdersState::STATUS_PLANNED:
             $order->planned_date = $request->planned_date;
             break;
 
-        case OrdersState::STATE_EXECUTED:
+        case OrdersState::STATUS_EXECUTED:
             $order->executed_at = now();
             break;
 
-        case OrdersState::STATE_DOWNLOADED:
+        case OrdersState::STATUS_DOWNLOADED:
             // Attachments or warehouse updates
             $order->downloaded_files = $request->file('attachments')->store('orders');
             break;

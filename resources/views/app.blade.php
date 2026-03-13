@@ -12,7 +12,7 @@
 
         <title>Metallica Marcon</title>
         @routes
-        @vite(['resources/js/app.js', 'resources/css/tailwind.css'])
+        @vite(['resources/js/app.js', 'resources/css/tailwind.css', 'resources/css/theme-overrides.css'])
         @inertiaHead
 
     </head>
@@ -21,3 +21,4 @@
 
     </body>
 </html>
+

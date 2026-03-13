@@ -1,0 +1,7 @@
+[mcp_servers]
+
+[mcp_servers.youtrack]
+enabled = true
+required = false
+url = "https://metallicamarcon.youtrack.cloud/mcp"
+bearer_token_env_var = "YOUTRACK_PERM_TOKEN"

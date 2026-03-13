@@ -395,15 +395,15 @@ public function updateState(Order $order, Request $request)
 
     // Add lifecycle-specific logic
     switch ($newState) {
-        case OrdersState::STATE_PLANNED:
+        case OrdersState::STATUS_PLANNED:
             $order->planned_date = $request->planned_date;
             break;
 
-        case OrdersState::STATE_EXECUTED:
+        case OrdersState::STATUS_EXECUTED:
             $order->executed_at = now();
             break;
 
-        case OrdersState::STATE_DOWNLOADED:
+        case OrdersState::STATUS_DOWNLOADED:
             // Attachments or warehouse updates
             $order->downloaded_files = $request->file('attachments')->store('orders');
             break;

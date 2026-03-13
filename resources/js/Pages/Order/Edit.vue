@@ -17,7 +17,9 @@
 
           <div class="flex items-center gap-2">
             <div v-if="!form.id" class="text-xl font-medium pr-2">Modulo d'Ordine non ancora salvato </div>
-            <div v-else class="text-xl font-medium pr-2"> #<ZeroPaddingId :id="form.id "/>  del {{ dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss') }}</div> 
+            <div v-else class="text-xl font-medium pr-2">
+              Ordine {{ props.order.legacy_code ?? ('#' + form.id) }} del {{ dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss') }}
+            </div> 
             <button @click="openAll()" type="button" class="btn btn-sm btn-success">Apri tutto <font-awesome-icon :icon="['fas', 'chevron-down']" /></button>
             <button @click="closeAll()" type="button" class="btn btn-sm btn-error">Chiudi tutto <font-awesome-icon :icon="['fas', 'chevron-up']" /></button>
           </div>
@@ -233,8 +235,26 @@
               </div>
           </AccordionRow>
 
-          <!-- SEZIONE ANNOTAZIONI MAGAZZINO 3-->
-           <!-- NON PRESNETI nel modulo di CREAZIONE ORDINE-->
+          <!-- SEZIONE 3 NOTE ORDINE -->
+          <AccordionRow
+            id="3"
+            title="Note Ordine"
+            :initialOpen=true
+            @register="registerSection"
+          >
+            <div>
+              <label class="label">Annotazioni operative del ritiro</label>
+              <textarea
+                v-model="form.notes"
+                class="textarea textarea-bordered w-full"
+                rows="4"
+                placeholder="Inserisci eventuali note operative per l'ordine"
+              />
+              <div class="input-error" v-if="form.errors.notes">
+                {{ form.errors.notes }}
+              </div>
+            </div>
+          </AccordionRow>
 
 
           <!-- SEZIONE 4 ITEMS-->
@@ -340,11 +360,10 @@
     import VueDatePicker from '@vuepic/vue-datepicker';
     import { getIconForSite } from '@/Composables/getIconForSite';
     import { DataTable } from 'datatables.net-vue3';
-    import ItemRow from './Components/ItemRow.vue';
-    import HolderRow from './Components/HolderRow.vue';
-    import AccordionRow from './Components/AccordionRow.vue';
-    import { uuid } from '@/utils/uuid';
-import ZeroPaddingId from '@/Components/UI/ZeroPaddingId.vue';
+import ItemRow from './Components/ItemRow.vue';
+import HolderRow from './Components/HolderRow.vue';
+import AccordionRow from './Components/AccordionRow.vue';
+import { uuid } from '@/utils/uuid';
  
     
     const props = defineProps({
@@ -441,6 +460,7 @@ const groupedItems = computed(() => {
       is_urgent: Boolean(props.order.is_urgent),
       requested_at: props.order.created_at,
       expected_withdraw_at: new Date(props.order.expected_withdraw_at),
+      notes: props.order.notes ?? '',
       logistics_user_id: props.order.logistics_user_id ? props.order.logistics_user_id : user ? user.value.id : null, // Fallback to null if user is not defined
       has_adr_consultant: currentSite.value?.has_adr_consultant ?? '',
       customer_id: currentSite.customer_id,

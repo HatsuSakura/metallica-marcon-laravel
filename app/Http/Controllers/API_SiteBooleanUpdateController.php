@@ -17,6 +17,7 @@ class API_SiteBooleanUpdateController extends Controller
             'has_manual_pallet_truck' => 'nullable|boolean',
             'other_machines' => 'nullable|string',
             'has_adr_consultant' => 'nullable|boolean',
+            'notes' => 'nullable|string',
         ]);
     
         $site->update(

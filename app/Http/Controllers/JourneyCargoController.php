@@ -281,7 +281,7 @@ class JourneyCargoController extends Controller
         foreach ($orders as $order) {
             $order->update([
                 'journey_id' => null,
-                'status' => OrdersState::STATE_CREATED,
+                'status' => OrdersState::STATUS_CREATED,
                 'cargo_location' => null,
             ]);
         }

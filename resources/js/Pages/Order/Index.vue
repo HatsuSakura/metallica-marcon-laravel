@@ -1,19 +1,27 @@
 <template>
 
     <section>
-        Per creare un nuovo Ordine: 
-    <Link @click="closeDrawer" :href="route('customer.index')" class="btn btn-primary mb-4">
-        Inizia da un cliente
-    </Link>
+        <div class="mb-2">Per creare un nuovo ordine:</div>
+        <Link :href="route('customer.index')" class="btn btn-primary mb-4">
+            Inizia da un cliente
+        </Link>
     </section>
     
     <section>
+        <h2 class="text-xl font-semibold mb-3">Lista ordini</h2>
+
+        <div v-if="!props.orders?.data?.length" class="alert">
+            Nessun ordine disponibile.
+        </div>
         
         <div class="grid grid-cols-12 gap-2">
     
-        <Box v-for="order in props.orders.data" class="col-span-6">
+        <Box v-for="order in props.orders.data" :key="order.id" class="col-span-6">
             <div class="flex flex-row justify-between mb-2">
                 <div>
+                    <div class="font-medium">
+                        Codice ordine: <span class="badge badge-outline">{{ order.legacy_code ?? 'N/D' }}</span>
+                    </div>
                     <div class="font-medium text-lg">
                         {{ order.customer.company_name }}
                     </div>
@@ -77,10 +85,10 @@
 import OrderSummaryItems from './Components/OrderSummaryItems.vue';
 import OrderSummaryHolders from './Components/OrderSummaryHolders.vue';
     
-    const props = defineProps({
+const props = defineProps({
         orders : Object,
         holders: Object,
     })
     
-    </script>
+</script>
 

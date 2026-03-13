@@ -103,6 +103,19 @@ const stopOrderModel = computed({
           {{ form.errors.planned_end_at }}
         </div>
       </div>
+
+      <div class="mt-3">
+        <label class="label">Note Viaggio</label>
+        <textarea
+          v-model="form.notes"
+          class="textarea textarea-bordered w-full"
+          rows="3"
+          placeholder="Inserisci eventuali note operative relative al viaggio corrente"
+        />
+        <div class="input-error" v-if="form.errors.notes">
+          {{ form.errors.notes }}
+        </div>
+      </div>
     </Box>
 
     <div class="sticky top-24 shadow-md px-4 pb-4 mt-4 rounded-md flex flex-col gap-4 w-full">

@@ -7,7 +7,7 @@
     <div class="name flex justify-between space-x-4">
       <div class="text-lg flex items-center space-x-2">
         <font-awesome-icon :icon="['fas', 'address-card']" class="text-2xl"/>
-        <span>{{props.site.customer.company_name}}</span>
+        <span>{{ customerName }}</span>
       </div>
       <div class="action">
         <div class="tooltip tooltip-left" data-tip="Modifica Cliente">
@@ -62,7 +62,7 @@
       <div class="tooltip" data-tip="Commerciale">
         <div class="flex items-center justify-between space-x-2 ">
           <font-awesome-icon :icon="['fas', 'briefcase']" class="text-2xl"/>
-          <span>{{props.site.customer.seller.name}}</span>
+          <span>{{ sellerName }}</span>
         </div>
       </div>
 
@@ -89,6 +89,9 @@ const options = computed(() => ({
   position: { lat: props.site.latitude, lng: props.site.longitude },
   title: props.site.name,
 }));
+
+const customerName = computed(() => props.site?.customer?.company_name ?? '[Cliente non disponibile]');
+const sellerName = computed(() => props.site?.customer?.seller?.name ?? 'N/D');
 
 
 const siteIcon = computed(() => {

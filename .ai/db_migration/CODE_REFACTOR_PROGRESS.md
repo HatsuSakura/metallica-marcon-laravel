@@ -147,6 +147,8 @@
 - Added legacy drop migration for this block:
   - `database/migrations/2026_03_05_040000_drop_legacy_order_holders_columns_phase5.php`
   - drops `order_holders.holder_piene`, `order_holders.holder_vuote`, `order_holders.holder_totale`.
+- Git reference:
+  - commit `3fed08f` (`refactor: consolidate db standardization, relator purge, and holders canonicalization`)
 
 ### Remaining work after Batch 8
 - No known runtime references to legacy standardization columns remain in active Order/Journey flows.

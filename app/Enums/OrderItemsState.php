@@ -4,26 +4,26 @@ namespace App\Enums;
 
 enum OrderItemsState: string
 {
-    case STATE_CREATED = 'creato';
-    case STATE_LOADED = 'caricato';
-    case STATE_DOWNLOADED = 'scaricato';
-    case STATE_PROGRESS = 'lavorazione';
-    case STATE_CLASSIFIED = 'classificato';
-    case STATE_CLOSED = 'chiuso';
-    // da STATE_DOWNLOADED può anche passare a trasbordo per poi creare un altro viaggio (LOADED)
-    case STATE_TRANSHIPMENT = 'trasbordo';
+    case STATUS_CREATED = 'creato';
+    case STATUS_LOADED = 'caricato';
+    case STATUS_DOWNLOADED = 'scaricato';
+    case STATUS_PROGRESS = 'lavorazione';
+    case STATUS_CLASSIFIED = 'classificato';
+    case STATUS_CLOSED = 'chiuso';
+    // da STATUS_DOWNLOADED può anche passare a trasbordo per poi creare un altro viaggio (LOADED)
+    case STATUS_TRANSHIPMENT = 'trasbordo';
 
     public function canTransitionTo(self $nextState): bool
     {
         $transitions = [
-            self::STATE_CREATED->value => [self::STATE_LOADED],
-            self::STATE_LOADED->value => [self::STATE_DOWNLOADED],
-            self::STATE_DOWNLOADED->value => [self::STATE_PROGRESS],
-            self::STATE_PROGRESS->value => [self::STATE_CLASSIFIED],
-            self::STATE_CLASSIFIED->value => [self::STATE_CLOSED],
+            self::STATUS_CREATED->value => [self::STATUS_LOADED],
+            self::STATUS_LOADED->value => [self::STATUS_DOWNLOADED],
+            self::STATUS_DOWNLOADED->value => [self::STATUS_PROGRESS],
+            self::STATUS_PROGRESS->value => [self::STATUS_CLASSIFIED],
+            self::STATUS_CLASSIFIED->value => [self::STATUS_CLOSED],
             // CICLO di TRASBORDO
-            self::STATE_DOWNLOADED->value => [self::STATE_TRANSHIPMENT],
-            self::STATE_TRANSHIPMENT->value => [self::STATE_LOADED],
+            self::STATUS_DOWNLOADED->value => [self::STATUS_TRANSHIPMENT],
+            self::STATUS_TRANSHIPMENT->value => [self::STATUS_LOADED],
         ];
 
         return isset($transitions[$this->value]) && in_array($nextState, $transitions[$this->value], true);

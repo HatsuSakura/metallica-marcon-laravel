@@ -4,7 +4,6 @@ import MainLayout from '@/Layouts/MainLayout.vue'
 import LoginLayout from './Layouts/LoginLayout.vue';
 import { ZiggyVue } from 'ziggy'
 import { GoogleMap } from 'vue3-google-map';
-import '../css/tailwind.css'
 import FontAwesomeIcon from './fontawesome';
 import DataTablesLib from 'datatables.net'; 
 import DataTable from 'datatables.net-vue3';
@@ -54,3 +53,4 @@ createInertiaApp({
       app.mount(el);
   },
 })
+

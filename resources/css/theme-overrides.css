@@ -1,0 +1,34 @@
+/* UI overrides (theme-specific)
+   Keep all visual exceptions/custom tweaks here. */
+
+.label{
+  padding-top:0;
+  padding-bottom: 0;
+}
+
+/* Base light look */
+@media (prefers-color-scheme: light) {
+  .label,
+  .label-text {
+    color: #333333 !important;
+  }
+}
+
+/* Dark look aligned with system dark mode */
+@media (prefers-color-scheme: dark) {
+  .label,
+  .label-text {
+    color: #cccccc !important;
+  }
+}
+
+/* Theme-explicit fallback (when app forces data-theme) */
+[data-theme='lighttheme'] .label,
+[data-theme='lighttheme'] .label-text {
+  color: #333333 !important;
+}
+
+[data-theme='darktheme'] .label,
+[data-theme='darktheme'] .label-text {
+  color: #cccccc !important;
+}

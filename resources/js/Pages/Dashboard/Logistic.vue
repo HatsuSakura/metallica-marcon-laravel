@@ -3,19 +3,18 @@
         Dashboard Logistica
     </DashboardHeader>
 
-    <div>
+    <div class="flex gap-2">
+        <Link
+            :href="route('order.index')"
+            class="btn btn-primary"
+        >
+            Ordini
+        </Link>
         <Link
             :href="route('journey.index')"
             class="btn btn-primary"
         >
             Viaggi
-        </Link>
-        &nbsp;
-        <Link
-            :href="route('dashboard.logistic.full')"
-            class="btn btn-primary"
-        >
-            Vecchia Dashboard Logistica
         </Link>
     </div>
 </template>

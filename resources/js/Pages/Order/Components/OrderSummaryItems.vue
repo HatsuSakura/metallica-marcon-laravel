@@ -8,7 +8,7 @@
         <div class="collapse-title my-collapse text-xl font-medium">Materiali presenti nell'ordine</div>
         <div class="collapse-content">
             <div v-for="item in props.items">
-                {{ item.holder_quantity }} x {{ holders.find(holder => holder.id === item.holder_id).name }} di
+                {{ item.holder_quantity ?? 0 }} x {{ getHolderName(item.holder_id) }} di
                 "{{ item.description? item.description : 'materiale' }}" : 
                 {{ item.weight_declared }} Kg
             </div>
@@ -25,8 +25,13 @@ const props = defineProps({
     holders: Object,
 });
 
+const getHolderName = (holderId) => {
+    const holder = props.holders?.find((h) => Number(h.id) === Number(holderId));
+    return holder?.name ?? 'contenitore non definito';
+};
+
 const totalDeclaredWeight = computed(() => {
-    return props.items.reduce((total, item) => total + item.weight_declared, 0);
+    return props.items.reduce((total, item) => total + Number(item.weight_declared ?? 0), 0);
 });
 
 </script>

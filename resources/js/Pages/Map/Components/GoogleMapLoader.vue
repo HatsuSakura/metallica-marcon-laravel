@@ -2,6 +2,7 @@
     <div class="full-width-map">
         <div class="my-container">
             <GoogleMap mapId="DEMO_MAP_ID" 
+                :key="mapRenderKey"
                 style="width: 100%; height: 100%" 
                 :api-key=props.mapApiKey
                 :center="props.mapCenter" 
@@ -9,6 +10,7 @@
                 :fullscreenControl = false
                 >
                     <GoogleMapMarker v-for="site in sites"
+                        :key="site.id"
                         :site="site"
                         :withInfoWindow="true"
                     />
@@ -32,6 +34,11 @@ const props = defineProps({
 
 
 const sites = computed(() => props.markers);
+const mapRenderKey = computed(() =>
+    (sites.value ?? [])
+        .map((site) => `${site.id}:${site.calculated_risk_factor}:${site.site_type}`)
+        .join('|')
+);
 
 watch(sites, (newSites) => {
     console.log('Updated sites:', newSites);

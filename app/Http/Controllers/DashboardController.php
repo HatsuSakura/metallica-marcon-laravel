@@ -46,7 +46,7 @@ class DashboardController extends Controller
         ->get();
 
         $groundings = JourneyCargo::query()
-        ->where('status', JourneyCargosState::STATE_CREATED->value)
+        ->where('status', JourneyCargosState::STATUS_CREATED->value)
         ->where('is_grounded', true)
         ->with('cargo')
         ->with('journey')
@@ -67,7 +67,7 @@ class DashboardController extends Controller
         ->get();
 
         $journeyCargos = JourneyCargo::query()
-        ->where('status', JourneyCargosState::STATE_CREATED->value)
+        ->where('status', JourneyCargosState::STATUS_CREATED->value)
         ->where('is_grounded', false)
         ->with('cargo')
         ->with('journey')

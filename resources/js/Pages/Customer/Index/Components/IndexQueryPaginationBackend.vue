@@ -50,7 +50,6 @@
           <a
             class="btn btn-circle btn-outline btn-primary"
             :href="route('customer.show', { customer: customer.id })"
-            target="_blank"
           >
             <font-awesome-icon :icon="['fas', 'file-lines']" class="h-5 w-5 stroke-current" />
           </a>

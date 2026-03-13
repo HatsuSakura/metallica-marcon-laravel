@@ -2,44 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\SiteTipologia;
 use App\Models\Site;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class SiteController extends Controller
 {
-
-    public function __consruct(){
+    public function __construct()
+    {
         $this->authorizeResource(Site::class, 'site');
     }
 
-    public function index(Request $request){
-        $filters = [
-            'deleted' => $request->boolean('deleted'),
-            ...$request->only(['by', 'order']) // ... is like "merge array"
-        ];
-
-        return inertia(
-            'Index',
-            [
-                'filters' => $filters,
-                'sites' => Site::query()
-                    ->sites()
-                    //->mostRecent() // managed by default 'by'
-                    //->withCount('images')
-                    //->withCount('offers')
-                    //->filter($filters)
-                    //->paginate(5)
-                    //->withQueryString()
-            ]);
+    public function index(Request $request)
+    {
+        return redirect()->route('customer.index');
     }
 
-    public function show(Site $site){
-        return inertia(
-            'Show',
-            ['site' => $site->load('orders', 'customer')],
-        );
+    public function show(Site $site)
+    {
+        return redirect()->route('customer.show', ['customer' => $site->customer_id]);
     }
 
     /**
@@ -48,7 +31,7 @@ class SiteController extends Controller
     public function create()
     {
         Gate::authorize('create', Site::class);
-        return inertia('Create');
+        return redirect()->route('customer.index');
     }
 
     /**
@@ -56,16 +39,49 @@ class SiteController extends Controller
      */
     public function store(Request $request)
     {
-        // sostistuisco "//Site::create([" con questa nuova riga per generare direttamente il LISTING associato all'utente che lo crea
-        $request->user()->sites()->create(
-        //Site::create(
-            $request->validate([
-                'beds' => 'required|integer|min:0|max:20',
-                'baths' => 'required|integer|min:0|max:20',
-            ])
-        );
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'name' => 'required|string|max:191',
+            'site_type' => ['nullable', 'string', Rule::in(array_column(SiteTipologia::cases(), 'value'))],
+            'is_main' => 'nullable|boolean',
+            'address' => 'required|string|max:191',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'has_muletto' => 'nullable|boolean',
+            'has_electric_pallet_truck' => 'nullable|boolean',
+            'has_manual_pallet_truck' => 'nullable|boolean',
+            'other_machines' => 'nullable|string',
+            'has_adr_consultant' => 'nullable|boolean',
+            'notes' => 'nullable|string',
+        ]);
 
-        return redirect()->route('site.index')->with('success', 'Site was created!');
+        $isMain = (bool) ($validated['is_main'] ?? false);
+        $hasNoSites = !Site::query()->where('customer_id', $validated['customer_id'])->exists();
+
+        if ($hasNoSites || $isMain) {
+            Site::query()
+                ->where('customer_id', $validated['customer_id'])
+                ->update(['is_main' => false]);
+            $isMain = true;
+        }
+
+        Site::create([
+            'customer_id' => (int) $validated['customer_id'],
+            'name' => $validated['name'],
+            'site_type' => $validated['site_type'] ?? null,
+            'is_main' => $isMain,
+            'address' => $validated['address'],
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
+            'has_muletto' => (bool) ($validated['has_muletto'] ?? false),
+            'has_electric_pallet_truck' => (bool) ($validated['has_electric_pallet_truck'] ?? false),
+            'has_manual_pallet_truck' => (bool) ($validated['has_manual_pallet_truck'] ?? false),
+            'other_machines' => $validated['other_machines'] ?? '',
+            'has_adr_consultant' => (bool) ($validated['has_adr_consultant'] ?? false),
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        return redirect()->back()->with('success', 'Sede creata con successo');
     }
 
     /**
@@ -74,12 +90,7 @@ class SiteController extends Controller
     public function edit(Site $site)
     {
         Gate::authorize('update', $site);
-        return inertia(
-            'Edit',
-            [
-                'site' => $site
-            ]
-        );
+        return redirect()->route('customer.show', ['customer' => $site->customer_id]);
     }
 
     /**
@@ -88,38 +99,46 @@ class SiteController extends Controller
     public function update(Request $request, Site $site)
     {
         $validated = $request->validate([
-            'customer_id' => 'nullable|numeric',
-            'name' => 'nullable|string',
-            'site_type'  => 'nullable|string',
-            'address'  => 'nullable|string',
-            'latitude'  => 'nullable|numeric',
-            'longitude'  => 'nullable|numeric',
-            'calculated_risk_factor'  => 'nullable|numeric',
-            'days_until_next_withdraw'  => 'nullable|numeric',
+            'customer_id' => 'required|exists:customers,id',
+            'name' => 'required|string|max:191',
+            'site_type' => ['nullable', 'string', Rule::in(array_column(SiteTipologia::cases(), 'value'))],
+            'is_main' => 'nullable|boolean',
+            'address' => 'required|string|max:191',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
             'has_muletto' => 'nullable|boolean',
             'has_electric_pallet_truck' => 'nullable|boolean',
             'has_manual_pallet_truck' => 'nullable|boolean',
             'other_machines' => 'nullable|string',
             'has_adr_consultant' => 'nullable|boolean',
+            'notes' => 'nullable|string',
         ]);
+
+        $isMain = (bool) ($validated['is_main'] ?? false);
+        if ($isMain) {
+            Site::query()
+                ->where('customer_id', $validated['customer_id'])
+                ->where('id', '!=', $site->id)
+                ->update(['is_main' => false]);
+        }
 
         $site->update([
-            'customer_id' => $validated['customer_id'] ?? null,
-            'name' => $validated['name'] ?? null,
+            'customer_id' => (int) $validated['customer_id'],
+            'name' => $validated['name'],
             'site_type' => $validated['site_type'] ?? null,
-            'address' => $validated['address'] ?? null,
+            'is_main' => $isMain,
+            'address' => $validated['address'],
             'latitude' => $validated['latitude'] ?? null,
             'longitude' => $validated['longitude'] ?? null,
-            'calculated_risk_factor' => $validated['calculated_risk_factor'] ?? null,
-            'days_until_next_withdraw' => $validated['days_until_next_withdraw'] ?? null,
-            'has_muletto' => $validated['has_muletto'] ?? null,
-            'has_electric_pallet_truck' => $validated['has_electric_pallet_truck'] ?? null,
-            'has_manual_pallet_truck' => $validated['has_manual_pallet_truck'] ?? null,
-            'other_machines' => $validated['other_machines'] ?? null,
-            'has_adr_consultant' => $validated['has_adr_consultant'] ?? null,
+            'has_muletto' => (bool) ($validated['has_muletto'] ?? false),
+            'has_electric_pallet_truck' => (bool) ($validated['has_electric_pallet_truck'] ?? false),
+            'has_manual_pallet_truck' => (bool) ($validated['has_manual_pallet_truck'] ?? false),
+            'other_machines' => $validated['other_machines'] ?? '',
+            'has_adr_consultant' => (bool) ($validated['has_adr_consultant'] ?? false),
+            'notes' => $validated['notes'] ?? null,
         ]);
 
-        return redirect()->route('site.index')->with('success', 'Site was successfully modified!');
+        return redirect()->back()->with('success', 'Sede aggiornata con successo');
     }
 
 
@@ -129,14 +148,29 @@ class SiteController extends Controller
     public function destroy(Site $site)
     {
         Gate::authorize('delete', $site);
+        $customerId = $site->customer_id;
+        $wasMain = (bool) $site->is_main;
         $site->deleteOrFail();
 
-        return redirect()->back()->with('success', 'Site was deleted');
+        if ($wasMain) {
+            $replacement = Site::query()
+                ->where('customer_id', $customerId)
+                ->whereNull('deleted_at')
+                ->orderBy('id')
+                ->first();
+
+            if ($replacement) {
+                $replacement->update(['is_main' => true]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Sede eliminata');
     }
 
-    public function restore(Site $site){
+    public function restore(Site $site)
+    {
         $site->restore();
-        return redirect()->back()->with('success', 'Site was restored');
+        return redirect()->back()->with('success', 'Sede ripristinata');
     }
 
 }

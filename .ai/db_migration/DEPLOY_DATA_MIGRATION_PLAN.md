@@ -19,11 +19,16 @@ This plan is for the moment when DB standardization is completed and we are read
 ## 4. Run ETL Data Migration Routine
 - Source: old SQL dump / old schema data.
 - Transform: map old columns to canonical columns, normalize values, handle invalid records by agreed rules.
+- Include explicit `sites.site_type` normalization before go-live verification:
+  - `'1'` / legacy aliases -> `fully_operative`
+  - `'2'` / legacy aliases -> `only_legal`
+  - `'3'` / legacy aliases -> `only_stock`
+  - empty/unknown -> `NULL`
 - Load: insert data in dependency order (parents before children) to preserve referential integrity.
 
 ## 5. Verify and Sign Off
 - Compare row counts old vs new (per table).
 - Check FK/unique/null constraints.
+- Enforce domain coherence rule: no `sites` without matching `customers` (`sites.customer_id -> customers.id`, also with soft-deleted records).
 - Run key business queries and smoke test critical flows.
 - Approve cutover only after verification passes.
-

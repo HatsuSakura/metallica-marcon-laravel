@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\CustomerJobType;
 use App\Models\Order;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Customer extends Model
 {
     use SoftDeletes;
+
+    private static ?bool $hasCanonicalFulltextIndex = null;
 
     protected $dates = ['deleted_at'];
 
@@ -28,9 +32,38 @@ class Customer extends Model
         'sales_email',
         'administrative_email',
         'certified_email',
-        'responsabile_smaltimenti',
-        'telefono_principale',
+        'notes',
     ];
+
+    protected $casts = [
+        'business_type' => CustomerJobType::class,
+    ];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Customer $customer) {
+            if ($customer->isForceDeleting()) {
+                $customer->sites()->withTrashed()->get()->each->forceDelete();
+                return;
+            }
+
+            $customer->sites()
+                ->whereNull('deleted_at')
+                ->update([
+                    'deleted_at' => now(),
+                    'updated_at' => now(),
+                ]);
+        });
+
+        static::restoring(function (Customer $customer) {
+            $customer->sites()
+                ->onlyTrashed()
+                ->update([
+                    'deleted_at' => null,
+                    'updated_at' => now(),
+                ]);
+        });
+    }
 
     public function seller(): BelongsTo{
         return $this->belongsTo(User::class, 'seller_id');
@@ -90,13 +123,40 @@ class Customer extends Model
         )
         ->when(
             $filters['chiave'] ?? false,
-            fn ($query, $value) => $query->whereRaw(
-                "MATCH(
-                    company_name, vat_number, tax_code, legal_address, sales_email, administrative_email, certified_email
-                ) 
-                AGAINST(? IN BOOLEAN MODE)", 
-                ["$value*"]
-            )
+            function ($query, $value) {
+                $term = trim((string) $value);
+                if ($term === '') {
+                    return $query;
+                }
+
+                if (self::hasCanonicalFulltextIndex()) {
+                    $booleanTerm = collect(preg_split('/\s+/', $term))
+                        ->filter()
+                        ->map(fn (string $token) => "{$token}*")
+                        ->implode(' ');
+
+                    return $query->whereRaw(
+                        "MATCH(
+                            company_name, vat_number, tax_code, legal_address, sales_email, administrative_email, certified_email
+                        ) 
+                        AGAINST(? IN BOOLEAN MODE)",
+                        [$booleanTerm]
+                    );
+                }
+
+                $likeTerm = '%' . $term . '%';
+
+                return $query->where(function (Builder $searchQuery) use ($likeTerm) {
+                    $searchQuery
+                        ->orWhere('company_name', 'like', $likeTerm)
+                        ->orWhere('vat_number', 'like', $likeTerm)
+                        ->orWhere('tax_code', 'like', $likeTerm)
+                        ->orWhere('legal_address', 'like', $likeTerm)
+                        ->orWhere('sales_email', 'like', $likeTerm)
+                        ->orWhere('administrative_email', 'like', $likeTerm)
+                        ->orWhere('certified_email', 'like', $likeTerm);
+                });
+            }
         )
         /*
         ->when(
@@ -136,6 +196,21 @@ class Customer extends Model
     public function setPecAttribute($value): void
     {
         $this->setCertifiedEmailAttribute($value);
+    }
+
+    private static function hasCanonicalFulltextIndex(): bool
+    {
+        if (self::$hasCanonicalFulltextIndex !== null) {
+            return self::$hasCanonicalFulltextIndex;
+        }
+
+        self::$hasCanonicalFulltextIndex = DB::table('information_schema.statistics')
+            ->where('table_schema', DB::getDatabaseName())
+            ->where('table_name', 'customers')
+            ->where('index_name', 'customers_fulltext_index')
+            ->exists();
+
+        return self::$hasCanonicalFulltextIndex;
     }
 
     /**

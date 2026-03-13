@@ -38,6 +38,9 @@ class API_DriverJourneyStopsController extends Controller
             'stops.customer',
             'stops.technicalAction',
             'stops.stopOrders.order.site',
+            'stops.stopOrders.order.customer',
+            'stops.stopOrders.order.items',
+            'stops.stopOrders.order.items.cerCode',
         ]);
     }
 
@@ -83,10 +86,10 @@ class API_DriverJourneyStopsController extends Controller
                 ? $journey->status
                 : JourneysState::from((string) $journey->status);
 
-            if ($currentState === JourneysState::STATE_CREATED) {
+            if ($currentState === JourneysState::STATUS_CREATED) {
                 $hasOtherActiveJourney = Journey::query()
                     ->where('driver_id', $journey->driver_id)
-                    ->where('status', JourneysState::STATE_ACTIVE->value)
+                    ->where('status', JourneysState::STATUS_ACTIVE->value)
                     ->where('id', '!=', $journey->id)
                     ->exists();
 
@@ -95,8 +98,8 @@ class API_DriverJourneyStopsController extends Controller
                 }
             }
 
-            if ($currentState === JourneysState::STATE_CREATED) {
-                $journey->status = JourneysState::STATE_ACTIVE->value;
+            if ($currentState === JourneysState::STATUS_CREATED) {
+                $journey->status = JourneysState::STATUS_ACTIVE->value;
                 $journey->actual_start_at = now();
                 $journey->save();
             }

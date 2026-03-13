@@ -5,8 +5,8 @@
 <ul v-if="props.withdraws.length" class="timeline timeline-vertical timeline-snap-icon">
     <li v-for="withdraw in props.withdraws" :key="withdraw.id">
         <div class="timeline-start">
-            {{ dayjs(withdraw.dataRitiro).format('YYYY-MM-DD') }}
-            <span v-if="withdraw.insManuale" class="text-2xl">
+            {{ formatWithdrawDate(withdraw) }}
+            <span v-if="withdraw.is_manual_entry" class="text-2xl">
                 <font-awesome-icon :icon="['fas', 'hand']" />
             </span>
             <span v-else>
@@ -25,8 +25,8 @@
         <div class="timeline-end timeline-box flex items-center space-x-4">
 
             <div>
-                <div class="radial-progress" :style="{ '--value': withdraw.percentualeResidua }"
-                    role="progressbar">{{ withdraw.percentualeResidua }}%</div>
+                <div class="radial-progress" :style="{ '--value': withdraw.residue_percentage ?? 0 }"
+                    role="progressbar">{{ withdraw.residue_percentage ?? 0 }}%</div>
             </div>
             <div class="flex flex-col items-start space-y-0">
                 <div class="flex flex-col items-center space-y-0">
@@ -34,7 +34,7 @@
                         <font-awesome-icon :icon="['fas', 'user']" />
                     </div>
                     <div>
-                        {{ withdraw.driver.name }}
+                        {{ withdraw.driver?.name ?? '-' }}
                     </div>
                 </div>
                 <div class="flex flex-col items-center space-y-0">
@@ -42,7 +42,7 @@
                         <font-awesome-icon :icon="['fas', 'truck']" />
                     </div>
                     <div>
-                        {{ withdraw.vehicle.name }}
+                        {{ withdraw.vehicle?.name ?? '-' }}
                     </div>
                 </div>
             </div>
@@ -76,10 +76,16 @@
 <script setup>
 import EmptyState from '@/Components/UI/EmptyState.vue';
 import { Link } from '@inertiajs/vue3';
+import dayjs from 'dayjs';
 
 
 const props = defineProps({
     site: Object,
     withdraws: Array,
 })
+
+const formatWithdrawDate = (withdraw) => {
+    const raw = withdraw?.withdrawn_at ?? null;
+    return raw ? dayjs(raw).format('YYYY-MM-DD') : '-';
+};
 </script>

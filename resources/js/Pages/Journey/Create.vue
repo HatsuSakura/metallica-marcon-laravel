@@ -183,6 +183,7 @@
     const form = useForm({
       planned_start_at: '',
       planned_end_at: '',
+      notes: '',
       vehicle_id: '',
       vehicle_cargo_id: '',
       trailer_id: '',

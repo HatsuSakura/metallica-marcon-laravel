@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::table('order_items', function (Blueprint $table) {
             $table->enum('state', array_column(OrderItemsState::cases(), 'value'))
-                ->default(OrderItemsState::STATE_CREATED->value);
+                ->default(OrderItemsState::STATUS_CREATED->value);
         });
     }
 

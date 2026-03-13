@@ -17,7 +17,8 @@ const props = defineProps({
   withInfoWindow: Boolean,
 });
 
-const {buildingType, backgroundColor, borderColor} = getIconForSite(props.site);
+const siteRef = computed(() => props.site);
+const {buildingType, backgroundColor, borderColor} = getIconForSite(siteRef);
 
 // Reference to hold the generated SVG content
 const pinSvg = ref(null);

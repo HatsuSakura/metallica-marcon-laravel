@@ -1,13 +1,19 @@
 <template>
-    <div class="mb-4">
-        <Link
-            class="btn btn-ghost" 
-            :href="route('customer.index')"
-        >
+    <div class="mb-4 flex items-center justify-between gap-2">
+        <Link class="btn btn-ghost" :href="route('customer.index')">
             <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>
             Torna a Clienti
         </Link>
-
+        <Link
+            class="btn btn-primary btn-sm"
+            :href="route('customer.edit', {
+                customer: reactiveCustomer.id,
+                return_to: route('customer.show', { customer: reactiveCustomer.id }),
+            })"
+        >
+            <font-awesome-icon :icon="['fas', 'pen']" class="text-base" />
+            Modifica dati cliente
+        </Link>
     </div>
 
     <section class="flex flex-col md:grid md:grid-cols-12 gap-4 mb-4">
@@ -22,6 +28,18 @@
                     <CustomerSpace :customer="reactiveCustomer" class="text-gray-500" />
                 </div>
                 <CustomerAddress :customer="reactiveCustomer" class="text-gray-500" />
+            </Box>
+        </div>
+
+        <div class="md:col-span-12">
+            <Box>
+                <template #header>Note Cliente</template>
+                <div v-if="reactiveCustomer.notes" class="whitespace-pre-line">
+                    {{ reactiveCustomer.notes }}
+                </div>
+                <div v-else class="opacity-70">
+                    Nessuna nota cliente
+                </div>
             </Box>
         </div>
 

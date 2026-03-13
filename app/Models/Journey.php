@@ -49,6 +49,7 @@ class Journey extends Model
         'driver_id',
         'logistics_user_id',
         'status',
+        'notes',
         'plan_version',
 
         // per lo scarico

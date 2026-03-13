@@ -187,8 +187,26 @@
               </div>
           </AccordionRow>
 
-          <!-- SEZIONE ANNOTAZIONI MAGAZZINO 3-->
-           <!-- NON PRESNETI nel modulo di CREAZIONE ORDINE-->
+          <!-- SEZIONE 3 NOTE ORDINE -->
+          <AccordionRow
+            id="3"
+            title="Note Ordine"
+            :initialOpen=true
+            @register="registerSection"
+          >
+            <div>
+              <label class="label">Annotazioni operative del ritiro</label>
+              <textarea
+                v-model="form.notes"
+                class="textarea textarea-bordered w-full"
+                rows="4"
+                placeholder="Inserisci eventuali note operative per l'ordine"
+              />
+              <div class="input-error" v-if="form.errors.notes">
+                {{ form.errors.notes }}
+              </div>
+            </div>
+          </AccordionRow>
 
 
           <!-- SEZIONE 4 ITEMS-->
@@ -392,6 +410,7 @@ const groupedItems = computed(() => {
       is_urgent: false,
       requested_at: currentDate.value,
       expected_withdraw_at: null,
+      notes: '',
       logistics_user_id: user ? user.value.id : null, // Fallback to null if user is not defined
       has_adr_consultant: site.has_adr_consultant ?? '',
       customer_id: site.customer_id,

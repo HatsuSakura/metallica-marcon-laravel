@@ -29,7 +29,8 @@ class Site extends Model
         'has_electric_pallet_truck',
         'has_manual_pallet_truck',
         'other_machines',
-        'has_adr_consultant'
+        'has_adr_consultant',
+        'notes',
     ];
 
     /*

@@ -1,6 +1,6 @@
 <template>
-    <form @submit.prevent>
-        <div class="mx-4 mb-4 flex flex-wrap gap-0">
+    <form @submit.prevent="applyFilters">
+        <div class="mb-4 mt-4 flex flex-wrap gap-4">
             <div class="flex flex-nowrap items-center gap-1">
                 <input 
                     id="continuativo" 
@@ -31,13 +31,16 @@
                         id="chiave" 
                         v-model="filterForm.chiave"
                         type="text" 
-                        class="grow"
+                        class="grow filter-search-input"
                         placeholder="Ricerca..." 
                     />
-                    <font-awesome-icon :icon="['fas', 'magnifying-glass']" class="text-2xl"/>
+                    <font-awesome-icon :icon="['fas', 'user-tie']" class="text-2xl"/>
                 </label>
-                <button @click="resetChiave" class="btn btn-ghost btn-circle ml-1">
+                <button type="button" @click="resetChiave" class="btn btn-ghost btn-circle ml-1" title="Resetta">
                     <font-awesome-icon :icon="['fas', 'arrows-rotate']" class="text-2xl"/>
+                </button>
+                <button type="submit" class="btn btn-ghost btn-circle" title="Cerca">
+                    <font-awesome-icon :icon="['fas', 'magnifying-glass']" class="h-5 w-5" />
                 </button>
             </div>
             <div class="flex flex-nowrap items-center gap-1">
@@ -84,9 +87,8 @@
 </template>
 
 <script setup>
-import {reactive, watch, computed} from 'vue'
+import {reactive} from 'vue'
 import { router } from '@inertiajs/vue3'
-import { debounce } from 'lodash'
 
 const props = defineProps({
     filters: Object,
@@ -103,9 +105,8 @@ const filterForm = reactive({
     rischioCritico: props.filters.rischioCritico ?? true,
 })
 
-// in this case we don't need to know the value, it's important to know that something has changed
-watch(
-    filterForm, debounce( () => router.get(
+const applyFilters = () => {
+    router.get(
         route('map.site.index'),
         filterForm,
         {
@@ -113,10 +114,11 @@ watch(
             preserveScroll: false, 
             onSuccess: () => window.scrollTo(0, 0)  // Scrolls back to the top on navigation
         },
-    ), 1000 ),  
-)
+    )
+}
 
 const resetChiave = () => {
     filterForm.chiave = null
+    applyFilters()
 }
 </script>

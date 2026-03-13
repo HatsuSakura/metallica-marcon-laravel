@@ -1,0 +1,25 @@
+{
+  "profiles": [
+    {
+      "name": "docker_dev_marconinertia",
+      "execution_mode": "docker",
+      "docker_container": "f9d21941531de9381c41b50cf9899ccbd60a7eb888437c9d90f4d1386814503c",
+      "mysql_host": "127.0.0.1",
+      "mysql_port": 3306,
+      "mysql_user": "root",
+      "mysql_password": "root",
+      "old_db": "legacy_tmp",
+      "new_db": "marconinertia",
+      "legacy_dump_file": ".ai/db_migration/old_database_dump.sql"
+    },
+    {
+      "name": "qa_siteground_tunnel",
+      "execution_mode": "cli",
+      "mysql_host": "127.0.0.1",
+      "mysql_port": 13306,
+      "mysql_user": "ul1orgzjompbh",
+      "mysql_password": "92vXC!1w1RPOJK_UKkeM0p9S",      
+      "new_db": "dbft2czeulzfyi"
+    }
+  ]
+}

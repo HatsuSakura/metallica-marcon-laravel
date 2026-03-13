@@ -71,6 +71,10 @@
                 :reorder-enabled="isReorderEnabled(journey.id)"
                 @reorder-changed="(stopIds) => $emit('reorder-changed', journey.id, stopIds)"
             />
+            <div v-if="journey.notes" class="mt-3 rounded-box border border-base-300 bg-base-200/40 p-3">
+                <div class="text-xs uppercase tracking-wide opacity-70">Note Viaggio</div>
+                <div class="whitespace-pre-line">{{ journey.notes }}</div>
+            </div>
         </Box>
     </div>
     <EmptyState v-else>

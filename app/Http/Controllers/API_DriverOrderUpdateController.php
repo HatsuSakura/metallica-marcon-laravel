@@ -21,24 +21,24 @@ class API_DriverOrderUpdateController extends Controller
         }
 
         /*
-        case STATE_CREATED = 'creato';
-        case STATE_PLANNED = 'pianificato';
-        case STATE_EXECUTED = 'eseguito';
-        case STATE_DOWNLOADED = 'scaricato';
-        case STATE_CLOSED = 'chiuso';
+        case STATUS_CREATED = 'creato';
+        case STATUS_PLANNED = 'pianificato';
+        case STATUS_EXECUTED = 'eseguito';
+        case STATUS_DOWNLOADED = 'scaricato';
+        case STATUS_CLOSED = 'chiuso';
         */
 
         // Add lifecycle-specific logic
         switch ($newState) {
-            case OrdersState::STATE_CREATED:
+            case OrdersState::STATUS_CREATED:
                 $order->created_at = $request->created_at;
                 break;
 
-            case OrdersState::STATE_EXECUTED:
+            case OrdersState::STATUS_EXECUTED:
                 $order->actual_withdraw_at = $request->actual_withdraw_at;
                 break;
 
-            case OrdersState::STATE_CLOSED:
+            case OrdersState::STATUS_CLOSED:
                 // Attachments or warehouse updates
                 $order->downloaded_files = $request->file('attachments')->store('orders');
                 break;

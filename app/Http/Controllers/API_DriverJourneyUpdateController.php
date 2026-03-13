@@ -21,27 +21,27 @@ class API_DriverJourneyUpdateController extends Controller
         }
 
         /*
-        case STATE_CREATED = 'creato';
-        case STATE_ACTIVE = 'attivo';
-        case STATE_EXECUTED = 'eseguito';
-        case STATE_CLOSED = 'chiuso';
+        case STATUS_CREATED = 'creato';
+        case STATUS_ACTIVE = 'attivo';
+        case STATUS_EXECUTED = 'eseguito';
+        case STATUS_CLOSED = 'chiuso';
         */
 
         // Add lifecycle-specific logic
         switch ($newState) {
-            case JourneysState::STATE_CREATED:
+            case JourneysState::STATUS_CREATED:
                 $journey->created_at = $request->created_at;
                 break;
 
-            case JourneysState::STATE_ACTIVE:
+            case JourneysState::STATUS_ACTIVE:
                 $journey->actual_start_at = $request->actual_start_at;
                 break;
 
-            case JourneysState::STATE_EXECUTED:
+            case JourneysState::STATUS_EXECUTED:
                 $journey->actual_end_at = $request->actual_end_at;
                 break;
 
-            case JourneysState::STATE_CLOSED:
+            case JourneysState::STATUS_CLOSED:
                 // Attachments or warehouse updates
                 $journey->downloaded_files = $request->file('attachments')->store('journeys');
                 break;

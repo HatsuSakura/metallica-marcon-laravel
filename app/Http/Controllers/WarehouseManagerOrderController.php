@@ -23,8 +23,8 @@ class WarehouseManagerOrderController extends Controller
         
         // Retrieve orderItems assigned to this warehouse manager
         $orders = Order::query()
-        ->where('status', OrdersState::STATE_EXECUTED->value) // for DEBUG PURPOSES ONLY
-        //->where('status', OrdersState::STATE_DOWNLOADED->value)
+        ->where('status', OrdersState::STATUS_EXECUTED->value) // for DEBUG PURPOSES ONLY
+        //->where('status', OrdersState::STATUS_DOWNLOADED->value)
         ->get();
 
         return inertia(

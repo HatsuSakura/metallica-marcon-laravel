@@ -183,6 +183,7 @@
     const form = useForm({
       planned_start_at: '',
       planned_end_at: '',
+      notes: '',
       vehicle_id: '',
       vehicle_cargo_id: '',
       trailer_id: '',
@@ -638,6 +639,7 @@ const hydrateFromJourney = () => {
 
   form.planned_start_at = journey.planned_start_at ? dayjs(journey.planned_start_at).toDate() : ''
   form.planned_end_at = journey.planned_end_at ? dayjs(journey.planned_end_at).toDate() : ''
+  form.notes = journey.notes ?? ''
   form.vehicle_id = journey.vehicle_id ? Number(journey.vehicle_id) : ''
   form.vehicle_cargo_id = journey.vehicle_cargo_id ? Number(journey.vehicle_cargo_id) : ''
   form.trailer_id = journey.trailer_id ? Number(journey.trailer_id) : ''

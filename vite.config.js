@@ -6,7 +6,7 @@ import vue from '@vitejs/plugin-vue';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/js/app.js', 'resources/css/tailwind.css'],
+            input: ['resources/js/app.js', 'resources/css/tailwind.css', 'resources/css/theme-overrides.css'],
 			buildDirectory: 'build', // Correct output directory,
             refresh: true,
         }),
@@ -37,3 +37,4 @@ export default defineConfig({
         }
     }
 });
+
