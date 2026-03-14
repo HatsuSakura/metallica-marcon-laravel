@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Journey;
-use App\Enums\JourneysState;
+use App\Enums\JourneyStatus;
 use Illuminate\Http\Request;
 
 class API_DriverJourneyUpdateController extends Controller
@@ -14,9 +14,9 @@ class API_DriverJourneyUpdateController extends Controller
     */
     public function updateState(Journey $journey, Request $request)
     {
-        $newState = JourneysState::from($request->new_state);
+        $newState = JourneyStatus::from($request->new_state);
 
-        if (!JourneysState::from($journey->status->value)->canTransitionTo($newState)) {
+        if (!JourneyStatus::from($journey->status->value)->canTransitionTo($newState)) {
             abort(403, 'Invalid state transition.');
         }
 
@@ -29,19 +29,19 @@ class API_DriverJourneyUpdateController extends Controller
 
         // Add lifecycle-specific logic
         switch ($newState) {
-            case JourneysState::STATUS_CREATED:
+            case JourneyStatus::STATUS_CREATED:
                 $journey->created_at = $request->created_at;
                 break;
 
-            case JourneysState::STATUS_ACTIVE:
+            case JourneyStatus::STATUS_ACTIVE:
                 $journey->actual_start_at = $request->actual_start_at;
                 break;
 
-            case JourneysState::STATUS_EXECUTED:
+            case JourneyStatus::STATUS_EXECUTED:
                 $journey->actual_end_at = $request->actual_end_at;
                 break;
 
-            case JourneysState::STATUS_CLOSED:
+            case JourneyStatus::STATUS_CLOSED:
                 // Attachments or warehouse updates
                 $journey->downloaded_files = $request->file('attachments')->store('journeys');
                 break;
@@ -72,6 +72,7 @@ class API_DriverJourneyUpdateController extends Controller
         return response()->json(['message' => 'Journey saved successfully.', 'journey' => $journey], 200);
     }
 }
+
 
 
 

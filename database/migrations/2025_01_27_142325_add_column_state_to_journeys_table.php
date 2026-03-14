@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\JourneysState;
+use App\Enums\JourneyStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,8 +13,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('journeys', function (Blueprint $table) {
-            $table->enum('state', array_column(JourneysState::cases(), 'value'))
-                ->default(JourneysState::STATUS_CREATED->value);
+            $table->enum('state', array_column(JourneyStatus::cases(), 'value'))
+                ->default(JourneyStatus::STATUS_CREATED->value);
         });
     }
 
@@ -28,3 +28,4 @@ return new class extends Migration
         });
     }
 };
+

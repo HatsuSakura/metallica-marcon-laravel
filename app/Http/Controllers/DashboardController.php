@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 use App\Enums\CustomerJobType;
 use Illuminate\Support\Carbon;
 use App\Models\InternalContact;
-use App\Enums\JourneyCargosState;
+use App\Enums\JourneyCargoStatus;
 use App\Models\Order;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +46,7 @@ class DashboardController extends Controller
         ->get();
 
         $groundings = JourneyCargo::query()
-        ->where('status', JourneyCargosState::STATUS_CREATED->value)
+        ->where('status', JourneyCargoStatus::STATUS_CREATED->value)
         ->where('is_grounded', true)
         ->with('cargo')
         ->with('journey')
@@ -67,7 +67,7 @@ class DashboardController extends Controller
         ->get();
 
         $journeyCargos = JourneyCargo::query()
-        ->where('status', JourneyCargosState::STATUS_CREATED->value)
+        ->where('status', JourneyCargoStatus::STATUS_CREATED->value)
         ->where('is_grounded', false)
         ->with('cargo')
         ->with('journey')
@@ -93,6 +93,7 @@ class DashboardController extends Controller
     }
 
 }
+
 
 
 

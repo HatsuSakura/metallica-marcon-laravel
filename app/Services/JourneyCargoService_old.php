@@ -7,7 +7,7 @@ use App\Models\Cargo;
 use App\Models\Journey;
 use App\Models\OrderItem;
 use App\Models\JourneyCargo;
-use App\Enums\OrderItemsState;
+use App\Enums\OrderItemStatus;
 use App\Enums\OrdersTruckLocation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -61,8 +61,8 @@ class JourneyCargoService
 
 
             foreach ($items as $item) {
-                $currentState = OrderItemsState::from($item->state);
-                if ($currentState->canTransitionTo(OrderItemsState::STATUS_LOADED)) {
+                $currentState = OrderItemStatus::from($item->state);
+                if ($currentState->canTransitionTo(OrderItemStatus::STATUS_LOADED)) {
 
                     $pivotData = [
                         'is_double_load'      => isset($item->pivot) && isset($item->pivot->is_double_load)
@@ -80,7 +80,7 @@ class JourneyCargoService
                             'warehouse_download_id' => $item->pivot['warehouse_download_id'] ?? null,
                         ]
                     ]);
-                    $item->state = OrderItemsState::STATUS_LOADED;
+                    $item->state = OrderItemStatus::STATUS_LOADED;
                     //$item->journey_cargo_id = $truckCargo->id;
                     $item->save();
 
@@ -108,17 +108,17 @@ class JourneyCargoService
     
                 foreach ($items as $item) {
                     //$currentState = $item->state;
-                    $currentState = OrderItemsState::from($item->state);
-                    if ($currentState instanceof OrderItemsState ){
+                    $currentState = OrderItemStatus::from($item->state);
+                    if ($currentState instanceof OrderItemStatus ){
                         Log::info("CURRENT STATE: {$item->state}");
                     }
-                    Log::info("Transition check from {$currentState->value} to " . OrderItemsState::STATUS_LOADED->value);
+                    Log::info("Transition check from {$currentState->value} to " . OrderItemStatus::STATUS_LOADED->value);
     
-                    $canTransition = $currentState->canTransitionTo(OrderItemsState::STATUS_LOADED);
+                    $canTransition = $currentState->canTransitionTo(OrderItemStatus::STATUS_LOADED);
                     Log::info("Can transition? " . ($canTransition ? 'Yes' : 'No'));
     
     
-                    if ($currentState->canTransitionTo(OrderItemsState::STATUS_LOADED)) {
+                    if ($currentState->canTransitionTo(OrderItemStatus::STATUS_LOADED)) {
 
                         $trailerCargo->items()->syncWithoutDetaching([
                             $item->id => [
@@ -126,7 +126,7 @@ class JourneyCargoService
                                 'warehouse_download_id' => $item->pivot['warehouse_download_id'] ?? null,
                             ]
                         ]);
-                        $item->state = OrderItemsState::STATUS_LOADED;
+                        $item->state = OrderItemStatus::STATUS_LOADED;
                         //$item->journey_cargo_id = $trailerCargo->id;
                         $item->save();
                     } else {
@@ -165,8 +165,8 @@ class JourneyCargoService
             $items = OrderItem::hydrate( $truckData['items'] );
 
             foreach ($items as $item) {
-                $currentState = OrderItemsState::from($item->state);
-                if ($currentState == OrderItemsState::STATUS_LOADED) {
+                $currentState = OrderItemStatus::from($item->state);
+                if ($currentState == OrderItemStatus::STATUS_LOADED) {
                     $truckCargo->items()->updateExistingPivot($item->id, [
                         'is_double_load'       => $item->pivot['is_double_load'] ?? false,
                         'warehouse_download_id' => $item->pivot['warehouse_download_id'] ?? null,
@@ -195,8 +195,8 @@ class JourneyCargoService
 
                 foreach ($items as $item) {
                     //$currentState = $item->state;
-                    $currentState = OrderItemsState::from($item->state);
-                    if ($currentState == OrderItemsState::STATUS_LOADED) {
+                    $currentState = OrderItemStatus::from($item->state);
+                    if ($currentState == OrderItemStatus::STATUS_LOADED) {
                         $trailerCargo->items()->updateExistingPivot($item->id, [
                             'is_double_load'       => $item->pivot['is_double_load'] ?? false,
                             'warehouse_download_id' => $item->pivot['warehouse_download_id'] ?? null,
@@ -212,3 +212,4 @@ class JourneyCargoService
         });
     }
 }
+

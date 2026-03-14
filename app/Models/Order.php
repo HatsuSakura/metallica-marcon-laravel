@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\OrdersState;
+use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Mpociot\Versionable\VersionableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,7 +16,7 @@ class Order extends Model
     protected $keepOldVersions = true; // Keep all versions of the model
 
     protected $casts = [
-        'status' => OrdersState::class,
+        'status' => OrderStatus::class,
         'requested_at' => 'datetime',
         'expected_withdraw_at' => 'datetime',
         'actual_withdraw_at' => 'datetime',
@@ -138,3 +138,4 @@ protected static function booted()
     }
 
 }
+

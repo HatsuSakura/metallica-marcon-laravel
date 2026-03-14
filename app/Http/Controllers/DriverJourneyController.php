@@ -12,8 +12,8 @@ use App\Models\Journey;
 use App\Models\Trailer;
 use App\Models\Vehicle;
 use App\Models\Warehouse;
-use App\Enums\OrdersState;
-use App\Enums\JourneysState;
+use App\Enums\OrderStatus;
+use App\Enums\JourneyStatus;
 use Illuminate\Http\Request;
 use App\Enums\OrdersTruckLocation;
 use Illuminate\Support\Str;
@@ -34,8 +34,8 @@ class DriverJourneyController extends Controller
         $currentJourneys = Journey::query()
             ->where('driver_id', $user->id)
             ->whereIn('status', [
-                JourneysState::STATUS_CREATED->value,
-                JourneysState::STATUS_ACTIVE->value,
+                JourneyStatus::STATUS_CREATED->value,
+                JourneyStatus::STATUS_ACTIVE->value,
             ])
             ->withCount('stops')
             ->with([
@@ -50,13 +50,13 @@ class DriverJourneyController extends Controller
                 'stops.stopOrders.order.items',
                 'stops.stopOrders.order.items.cerCode',
             ])
-            ->orderByRaw("CASE WHEN status = ? THEN 0 ELSE 1 END", [JourneysState::STATUS_ACTIVE->value])
+            ->orderByRaw("CASE WHEN status = ? THEN 0 ELSE 1 END", [JourneyStatus::STATUS_ACTIVE->value])
             ->orderByDesc('planned_start_at')
             ->get();
 
         $historyJourneys = Journey::query()
             ->where('driver_id', $user->id)
-            ->where('status', JourneysState::STATUS_EXECUTED->value)
+            ->where('status', JourneyStatus::STATUS_EXECUTED->value)
             ->with([
                 'vehicle',
                 'trailer',
@@ -69,7 +69,7 @@ class DriverJourneyController extends Controller
 
         $hasActiveJourney = Journey::query()
             ->where('driver_id', $user->id)
-        ->where('status', JourneysState::STATUS_ACTIVE->value)
+        ->where('status', JourneyStatus::STATUS_ACTIVE->value)
             ->exists();
 
         $warehouses = Warehouse::all();
@@ -202,7 +202,7 @@ class DriverJourneyController extends Controller
             $validated['secondary_warehouse_download_at'] = null;
         }
 
-        $validated['status'] = JourneysState::STATUS_EXECUTED;
+        $validated['status'] = JourneyStatus::STATUS_EXECUTED;
 
         // aggiorna
         $journey->update($validated);
@@ -212,7 +212,7 @@ class DriverJourneyController extends Controller
         foreach ($orders as $order) {
             $order->update([
                 'journey_id' => null,
-                'status' => OrdersState::STATUS_CREATED,
+                'status' => OrderStatus::STATUS_CREATED,
                 'cargo_location' => null,
             ]);
         }
@@ -240,7 +240,7 @@ class DriverJourneyController extends Controller
         foreach ($orders as $order) {
             $order->update([
                 'journey_id' => null,
-                'status' => OrdersState::STATUS_CREATED,
+                'status' => OrderStatus::STATUS_CREATED,
                 'cargo_location' => null,
             ]);
         }
@@ -258,6 +258,7 @@ class DriverJourneyController extends Controller
 
 
 }
+
 
 
 
