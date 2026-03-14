@@ -12,8 +12,8 @@ use App\Models\JourneyStopAction;
 use App\Models\Trailer;
 use App\Models\Vehicle;
 use App\Models\Warehouse;
-use App\Enums\OrdersState;
-use App\Enums\JourneysState;
+use App\Enums\OrderStatus;
+use App\Enums\JourneyStatus;
 use Illuminate\Http\Request;
 use App\Enums\OrdersTruckLocation;
 use App\Models\JourneyStop;
@@ -46,7 +46,7 @@ class JourneyController extends Controller
             ->with('driver')
             ->with('vehicle')
             ->with('trailer')
-            ->where('status', JourneysState::STATUS_CREATED->value)
+            ->where('status', JourneyStatus::STATUS_CREATED->value)
             ->orderByDesc('planned_start_at')
             ->get();
 
@@ -54,7 +54,7 @@ class JourneyController extends Controller
             ->with('driver')
             ->with('vehicle')
             ->with('trailer')
-            ->where('status', JourneysState::STATUS_ACTIVE->value)
+            ->where('status', JourneyStatus::STATUS_ACTIVE->value)
             ->orderByDesc('planned_start_at')
             ->get();
 
@@ -72,7 +72,7 @@ class JourneyController extends Controller
             ->with('driver')
             ->with('vehicle')
             ->with('trailer')
-            ->where('status', JourneysState::STATUS_EXECUTED->value);
+            ->where('status', JourneyStatus::STATUS_EXECUTED->value);
         $this->applyJourneyIndexFilters($executedJourneys, $request);
         $executedJourneys = $executedJourneys
             ->orderByDesc('planned_start_at')
@@ -83,7 +83,7 @@ class JourneyController extends Controller
             ->with('driver')
             ->with('vehicle')
             ->with('trailer')
-            ->where('status', JourneysState::STATUS_CLOSED->value);
+            ->where('status', JourneyStatus::STATUS_CLOSED->value);
         $this->applyJourneyIndexFilters($closedJourneys, $request);
         $closedJourneys = $closedJourneys
             ->orderByDesc('planned_start_at')
@@ -111,10 +111,10 @@ class JourneyController extends Controller
                     $activeTab,
                     [
                         'tutti',
-                        JourneysState::STATUS_CREATED->value,
-                        JourneysState::STATUS_ACTIVE->value,
-                        JourneysState::STATUS_EXECUTED->value,
-                        JourneysState::STATUS_CLOSED->value,
+                        JourneyStatus::STATUS_CREATED->value,
+                        JourneyStatus::STATUS_ACTIVE->value,
+                        JourneyStatus::STATUS_EXECUTED->value,
+                        JourneyStatus::STATUS_CLOSED->value,
                     ],
                     true
                 ) ? $activeTab : 'tutti',
@@ -160,7 +160,7 @@ class JourneyController extends Controller
             ->where('is_active', true)
             ->get(['id', 'label']);
         $orders = Order::query()
-            ->where('status', OrdersState::STATUS_CREATED->value)
+            ->where('status', OrderStatus::STATUS_CREATED->value)
             ->with([
                 'logistic:id,name',
                 'customer:id,company_name',
@@ -247,7 +247,7 @@ public function store(Request $request)
             'trailer_cargo_id' => $validated['trailer_cargo_id'] ?? null,
             'driver_id' => $validated['driver_id'],
             'logistics_user_id' => $validated['logistics_user_id'] ?? null,
-            'status' => JourneysState::STATUS_CREATED->value,
+            'status' => JourneyStatus::STATUS_CREATED->value,
             // status / plan_version se presenti nel model, altrimenti default DB
         ]);
 
@@ -377,11 +377,11 @@ private function applyOrdersToJourney(
         $currentState = $order->status;
 
         $isPlannedInCurrentJourney = $allowAlreadyPlannedForCurrentJourney
-            && $currentState === OrdersState::STATUS_PLANNED
+            && $currentState === OrderStatus::STATUS_PLANNED
             && (int) $order->journey_id === (int) $journey->id;
 
-        if ($currentState->canTransitionTo(OrdersState::STATUS_PLANNED) || $isPlannedInCurrentJourney) {
-            $order->status = OrdersState::STATUS_PLANNED->value;
+        if ($currentState->canTransitionTo(OrderStatus::STATUS_PLANNED) || $isPlannedInCurrentJourney) {
+            $order->status = OrderStatus::STATUS_PLANNED->value;
             $order->cargo_location = $truckLocation;
             $order->journey_id = $journey->id;
             $order->save();
@@ -411,7 +411,7 @@ private function applyOrdersToJourney(
 
         $orders = Order::query()
             ->where(function ($q) use ($journey) {
-                $q->where('status', OrdersState::STATUS_CREATED->value)
+                $q->where('status', OrderStatus::STATUS_CREATED->value)
                     ->orWhere('journey_id', $journey->id);
             })
             ->with([
@@ -496,18 +496,18 @@ private function applyOrdersToJourney(
 
             $journeyStatusRaw = $journey->getRawOriginal('status');
             if ($journeyStatusRaw === null || $journeyStatusRaw === '') {
-                $journeyStatusRaw = JourneysState::STATUS_CREATED->value;
+                $journeyStatusRaw = JourneyStatus::STATUS_CREATED->value;
             }
 
             try {
-                $journeyState = $journey->status instanceof JourneysState
+                $journeyState = $journey->status instanceof JourneyStatus
                     ? $journey->status
-                    : JourneysState::from((string) $journeyStatusRaw);
+                    : JourneyStatus::from((string) $journeyStatusRaw);
             } catch (\ValueError $e) {
-                $journeyState = JourneysState::STATUS_CREATED;
+                $journeyState = JourneyStatus::STATUS_CREATED;
             }
 
-            if ($journeyState !== JourneysState::STATUS_CREATED) {
+            if ($journeyState !== JourneyStatus::STATUS_CREATED) {
                 abort(422, 'Il viaggio puo essere modificato solo quando e in stato creato.');
             }
 
@@ -557,7 +557,7 @@ private function applyOrdersToJourney(
                     ->update([
                         'journey_id' => null,
                         'cargo_location' => null,
-                        'status' => OrdersState::STATUS_CREATED->value,
+                        'status' => OrderStatus::STATUS_CREATED->value,
                     ]);
             }
 
@@ -668,7 +668,7 @@ private function applyOrdersToJourney(
         foreach ($orders as $order) {
             $order->update([
                 'journey_id' => null,
-                'status' => OrdersState::STATUS_CREATED,
+                'status' => OrderStatus::STATUS_CREATED,
                 'cargo_location' => null,
             ]);
         }
@@ -692,23 +692,23 @@ private function applyOrdersToJourney(
 
 public function updateState(Journey $journey, Request $request)
 {
-    $newState = JourneysState::from($request->new_state);
+    $newState = JourneyStatus::from($request->new_state);
 
-    if (!JourneysState::from($journey->status)->canTransitionTo($newState)) {
+    if (!JourneyStatus::from($journey->status)->canTransitionTo($newState)) {
         abort(403, 'Invalid state transition.');
     }
 
     // Add lifecycle-specific logic
     switch ($newState) {
-        case JourneysState::STATUS_CREATED:
+        case JourneyStatus::STATUS_CREATED:
             $journey->planned_date = $request->planned_date;
             break;
 
-        case JourneysState::STATUS_ACTIVE:
+        case JourneyStatus::STATUS_ACTIVE:
             $journey->executed_at = now();
             break;
 
-        case JourneysState::STATUS_EXECUTED:
+        case JourneyStatus::STATUS_EXECUTED:
             // Attachments or warehouse updates
             $journey->downloaded_files = $request->file('attachments')->store('journeys');
             break;
@@ -723,6 +723,7 @@ public function updateState(Journey $journey, Request $request)
 
 
 }
+
 
 
 

@@ -1,10 +1,10 @@
 <?php
 
-use App\Enums\JourneyCargosState;
-use App\Enums\JourneyStopState;
-use App\Enums\JourneysState;
-use App\Enums\OrderItemsState;
-use App\Enums\OrdersState;
+use App\Enums\JourneyCargoStatus;
+use App\Enums\JourneyStopStatus;
+use App\Enums\JourneyStatus;
+use App\Enums\OrderItemStatus;
+use App\Enums\OrderStatus;
 use App\Enums\OrdersTruckLocation;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -208,7 +208,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('logistics_user_id')->nullable()->after('logistic_id');
             }
             if (!Schema::hasColumn('journeys', 'status')) {
-                $table->enum('status', array_column(JourneysState::cases(), 'value'))->nullable()->after('state');
+                $table->enum('status', array_column(JourneyStatus::cases(), 'value'))->nullable()->after('state');
             }
         });
     }
@@ -223,7 +223,7 @@ return new class extends Migration
                 $table->boolean('is_grounded')->nullable()->after('is_grounding');
             }
             if (!Schema::hasColumn('journey_cargos', 'status')) {
-                $table->enum('status', array_column(JourneyCargosState::cases(), 'value'))->nullable()->after('state');
+                $table->enum('status', array_column(JourneyCargoStatus::cases(), 'value'))->nullable()->after('state');
             }
         });
     }
@@ -241,7 +241,7 @@ return new class extends Migration
     {
         Schema::table('journey_events', function (Blueprint $table) {
             if (!Schema::hasColumn('journey_events', 'status')) {
-                $table->enum('status', array_column(JourneyStopState::cases(), 'value'))->nullable()->after('state');
+                $table->enum('status', array_column(JourneyStopStatus::cases(), 'value'))->nullable()->after('state');
             }
         });
     }
@@ -253,7 +253,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('logistics_user_id')->nullable()->after('logistic_id');
             }
             if (!Schema::hasColumn('orders', 'status')) {
-                $table->enum('status', array_column(OrdersState::cases(), 'value'))->nullable()->after('state');
+                $table->enum('status', array_column(OrderStatus::cases(), 'value'))->nullable()->after('state');
             }
             if (!Schema::hasColumn('orders', 'expected_withdraw_at')) {
                 $table->timestamp('expected_withdraw_at')->nullable()->after('expected_withdraw_dt');
@@ -325,7 +325,7 @@ return new class extends Migration
                 $table->boolean('has_adr_partial_exemption')->nullable()->after('adr_esenzione_parziale');
             }
             if (!Schema::hasColumn('order_items', 'status')) {
-                $table->enum('status', array_column(OrderItemsState::cases(), 'value'))->nullable()->after('state');
+                $table->enum('status', array_column(OrderItemStatus::cases(), 'value'))->nullable()->after('state');
             }
         });
     }
@@ -530,3 +530,4 @@ return new class extends Migration
         });
     }
 };
+

@@ -7,7 +7,7 @@ use App\Models\Order;
 use App\Models\Recipe;
 use App\Enums\UserRole;
 use App\Models\Warehouse;
-use App\Enums\OrdersState;
+use App\Enums\OrderStatus;
 use App\Models\CatalogItem;
 use Illuminate\Http\Request;
 use App\Services\OrderItemUpdater;
@@ -23,8 +23,8 @@ class WarehouseManagerOrderController extends Controller
         
         // Retrieve orderItems assigned to this warehouse manager
         $orders = Order::query()
-        ->where('status', OrdersState::STATUS_EXECUTED->value) // for DEBUG PURPOSES ONLY
-        //->where('status', OrdersState::STATUS_DOWNLOADED->value)
+        ->where('status', OrderStatus::STATUS_EXECUTED->value) // for DEBUG PURPOSES ONLY
+        //->where('status', OrderStatus::STATUS_DOWNLOADED->value)
         ->get();
 
         return inertia(
@@ -131,7 +131,7 @@ class WarehouseManagerOrderController extends Controller
     public function update(Request $request, Order $order, OrderItemUpdater $updater)
     {
         $validated = $request->validate([
-            'status' => 'required|in:' . implode(',', OrdersState::getValues()),
+            'status' => 'required|in:' . implode(',', OrderStatus::getValues()),
         ]);
 
         foreach ($request->input('items', []) as $itemData) {
@@ -150,6 +150,7 @@ class WarehouseManagerOrderController extends Controller
     }
 
 }
+
 
 
 

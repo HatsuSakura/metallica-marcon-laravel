@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CustomerJobType;
-use App\Enums\OrdersState;
+use App\Enums\OrderStatus;
 use App\Enums\UserRole;
 use App\Models\Area;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Site;
 use App\Models\User;
+use App\Services\CalculateRiskService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Gate;
@@ -62,7 +63,7 @@ class CustomerController extends Controller
             ->withCount('sites')
             ->with(['sites' => fn ($q) => $q->select('id', 'customer_id', 'name', 'is_main')])
             ->withCount([
-                'orders as open_orders_count' => fn ($q) => $q->whereNot('status', OrdersState::STATUS_CLOSED->value),
+                'orders as open_orders_count' => fn ($q) => $q->whereNot('status', OrderStatus::STATUS_CLOSED->value),
                 'orders as total_orders_count',
             ])
             ->filter($filters);
@@ -263,4 +264,21 @@ class CustomerController extends Controller
 
         return redirect()->back()->with('success', 'Cliente ripristinato con successo');
     }
+
+    public function recalculateRisk(Customer $customer, CalculateRiskService $calculateRiskService)
+    {
+        $updatedSites = $calculateRiskService->recalculateCustomerRisk([
+            'customerId' => (int) $customer->id,
+        ]);
+
+        return response()->json([
+            'message' => 'Customer risk recalculated successfully.',
+            'sites' => collect($updatedSites)->map(fn (Site $site) => [
+                'id' => $site->id,
+                'calculated_risk_factor' => $site->calculated_risk_factor,
+                'days_until_next_withdraw' => $site->days_until_next_withdraw,
+            ])->values(),
+        ], 200);
+    }
 }
+

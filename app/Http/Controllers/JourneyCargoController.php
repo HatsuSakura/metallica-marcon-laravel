@@ -11,10 +11,10 @@ use App\Models\Trailer;
 use App\Models\Vehicle;
 use App\Models\OrderItem;
 use App\Models\Warehouse;
-use App\Enums\JourneysState;
+use App\Enums\JourneyStatus;
 use App\Models\JourneyCargo;
 use Illuminate\Http\Request;
-use App\Enums\OrdersState;
+use App\Enums\OrderStatus;
 use App\Enums\OrdersTruckLocation;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -281,7 +281,7 @@ class JourneyCargoController extends Controller
         foreach ($orders as $order) {
             $order->update([
                 'journey_id' => null,
-                'status' => OrdersState::STATUS_CREATED,
+                'status' => OrderStatus::STATUS_CREATED,
                 'cargo_location' => null,
             ]);
         }
@@ -300,6 +300,7 @@ class JourneyCargoController extends Controller
 
 
 }
+
 
 
 

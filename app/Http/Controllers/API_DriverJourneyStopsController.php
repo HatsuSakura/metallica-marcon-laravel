@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\JourneysState;
-use App\Enums\JourneyStopState;
+use App\Enums\JourneyStatus;
+use App\Enums\JourneyStopStatus;
 use App\Models\Journey;
 use App\Models\JourneyEvent;
 use App\Models\JourneyStop;
@@ -47,7 +47,7 @@ class API_DriverJourneyStopsController extends Controller
     private function currentStop(Journey $journey): ?JourneyStop
     {
         return $journey->stops()
-            ->where('status', JourneyStopState::InProgress->value)
+            ->where('status', JourneyStopStatus::InProgress->value)
             ->orderBy('sequence')
             ->first();
     }
@@ -55,7 +55,7 @@ class API_DriverJourneyStopsController extends Controller
     private function nextPlannedStop(Journey $journey, int $afterSequence): ?JourneyStop
     {
         return $journey->stops()
-            ->where('status', JourneyStopState::Planned->value)
+            ->where('status', JourneyStopStatus::Planned->value)
             ->where('sequence', '>', $afterSequence)
             ->orderBy('sequence')
             ->first();
@@ -82,14 +82,14 @@ class API_DriverJourneyStopsController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $currentState = $journey->status instanceof JourneysState
+            $currentState = $journey->status instanceof JourneyStatus
                 ? $journey->status
-                : JourneysState::from((string) $journey->status);
+                : JourneyStatus::from((string) $journey->status);
 
-            if ($currentState === JourneysState::STATUS_CREATED) {
+            if ($currentState === JourneyStatus::STATUS_CREATED) {
                 $hasOtherActiveJourney = Journey::query()
                     ->where('driver_id', $journey->driver_id)
-                    ->where('status', JourneysState::STATUS_ACTIVE->value)
+                    ->where('status', JourneyStatus::STATUS_ACTIVE->value)
                     ->where('id', '!=', $journey->id)
                     ->exists();
 
@@ -98,8 +98,8 @@ class API_DriverJourneyStopsController extends Controller
                 }
             }
 
-            if ($currentState === JourneysState::STATUS_CREATED) {
-                $journey->status = JourneysState::STATUS_ACTIVE->value;
+            if ($currentState === JourneyStatus::STATUS_CREATED) {
+                $journey->status = JourneyStatus::STATUS_ACTIVE->value;
                 $journey->actual_start_at = now();
                 $journey->save();
             }
@@ -107,12 +107,12 @@ class API_DriverJourneyStopsController extends Controller
             $current = $this->currentStop($journey);
             if (!$current) {
                 $first = $journey->stops()
-                    ->where('status', JourneyStopState::Planned->value)
+                    ->where('status', JourneyStopStatus::Planned->value)
                     ->orderBy('sequence')
                     ->first();
 
                 if ($first) {
-                    $first->status = JourneyStopState::InProgress->value;
+                    $first->status = JourneyStopStatus::InProgress->value;
                     $first->started_at = $first->started_at ?? now();
                     $first->save();
                     $current = $first;
@@ -145,14 +145,14 @@ class API_DriverJourneyStopsController extends Controller
             $stops = $journey->stops()->orderBy('sequence')->get();
 
             $reorderable = $stops->filter(fn ($s) => in_array($s->status, [
-                JourneyStopState::Planned->value,
-                JourneyStopState::InProgress->value,
+                JourneyStopStatus::Planned->value,
+                JourneyStopStatus::InProgress->value,
             ], true));
 
             $locked = $stops->filter(fn ($s) => in_array($s->status, [
-                JourneyStopState::Done->value,
-                JourneyStopState::Skipped->value,
-                JourneyStopState::Cancelled->value,
+                JourneyStopStatus::Done->value,
+                JourneyStopStatus::Skipped->value,
+                JourneyStopStatus::Cancelled->value,
             ], true));
 
             $incoming = array_values($validated['stop_ids']);
@@ -211,12 +211,12 @@ class API_DriverJourneyStopsController extends Controller
             abort(404);
         }
 
-        if ($stop->status !== JourneyStopState::InProgress->value) {
+        if ($stop->status !== JourneyStopStatus::InProgress->value) {
             abort(422, 'Solo la tappa corrente puÃ² essere completata.');
         }
 
         return DB::transaction(function () use ($request, $journey, $stop) {
-            $stop->status = JourneyStopState::Done->value;
+            $stop->status = JourneyStopStatus::Done->value;
             $stop->completed_at = $stop->completed_at ?? now();
             $stop->save();
 
@@ -226,7 +226,7 @@ class API_DriverJourneyStopsController extends Controller
 
             $next = $this->nextPlannedStop($journey, $stop->sequence);
             if ($next) {
-                $next->status = JourneyStopState::InProgress->value;
+                $next->status = JourneyStopStatus::InProgress->value;
                 $next->started_at = $next->started_at ?? now();
                 $next->save();
             }
@@ -248,7 +248,7 @@ class API_DriverJourneyStopsController extends Controller
             abort(404);
         }
 
-        if ($stop->status !== JourneyStopState::InProgress->value) {
+        if ($stop->status !== JourneyStopStatus::InProgress->value) {
             abort(422, 'Solo la tappa corrente puÃ² essere saltata.');
         }
 
@@ -258,7 +258,7 @@ class API_DriverJourneyStopsController extends Controller
         ]);
 
         return DB::transaction(function () use ($request, $journey, $stop, $validated) {
-            $stop->status = JourneyStopState::Skipped->value;
+            $stop->status = JourneyStopStatus::Skipped->value;
             $stop->completed_at = $stop->completed_at ?? now();
             $stop->reason_code = $validated['reason_code'];
             $stop->driver_notes = $validated['driver_notes'];
@@ -272,7 +272,7 @@ class API_DriverJourneyStopsController extends Controller
 
             $next = $this->nextPlannedStop($journey, $stop->sequence);
             if ($next) {
-                $next->status = JourneyStopState::InProgress->value;
+                $next->status = JourneyStopStatus::InProgress->value;
                 $next->started_at = $next->started_at ?? now();
                 $next->save();
             }
@@ -314,7 +314,7 @@ class API_DriverJourneyStopsController extends Controller
                 'driver_notes' => $validated['driver_notes'] ?? null,
                 'sequence' => $insertAfter + 1,
                 'planned_sequence' => $insertAfter + 1,
-                'status' => JourneyStopState::Planned->value,
+                'status' => JourneyStopStatus::Planned->value,
             ]);
 
             $this->logEvent($request, $journey, $stop, [
@@ -331,6 +331,7 @@ class API_DriverJourneyStopsController extends Controller
         });
     }
 }
+
 
 
 

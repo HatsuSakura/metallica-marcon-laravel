@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\JourneysState;
+use App\Enums\JourneyStatus;
 use Illuminate\Database\Eloquent\Model;
 use Mpociot\Versionable\VersionableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,7 +16,7 @@ class Journey extends Model
     protected $keepOldVersions = true; // Keep all versions of the model
 
     protected $casts = [
-        'status' => JourneysState::class,
+        'status' => JourneyStatus::class,
         'plan_version' => 'integer',
 
         // datetime
@@ -111,3 +111,4 @@ class Journey extends Model
     }
 
 }
+

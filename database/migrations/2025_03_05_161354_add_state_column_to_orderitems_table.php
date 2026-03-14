@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\OrderItemsState;
+use App\Enums\OrderItemStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,8 +13,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('order_items', function (Blueprint $table) {
-            $table->enum('state', array_column(OrderItemsState::cases(), 'value'))
-                ->default(OrderItemsState::STATUS_CREATED->value);
+            $table->enum('state', array_column(OrderItemStatus::cases(), 'value'))
+                ->default(OrderItemStatus::STATUS_CREATED->value);
         });
     }
 
@@ -28,3 +28,4 @@ return new class extends Migration
         });
     }
 };
+
