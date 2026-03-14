@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum JourneyCargosState: string
+enum JourneyCargoStatus: string
 {
     case STATUS_CREATED = 'creato';
     case STATUS_ACTIVE = 'attivo';
@@ -23,3 +23,4 @@ enum JourneyCargosState: string
         return isset($transitions[$this->value]) && in_array($nextState, $transitions[$this->value], true);
     }
 }
+
