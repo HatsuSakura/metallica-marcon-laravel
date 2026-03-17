@@ -88,6 +88,7 @@
 <script setup>
 import { reactive, ref, watch } from 'vue';
 import axios from 'axios';
+import { useStore } from 'vuex';
 
 const props = defineProps({
     journey: {
@@ -101,6 +102,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['updated']);
+const store = useStore();
 
 const form = reactive({
     is_double_load: Boolean(props.journey.is_double_load),
@@ -137,8 +139,16 @@ async function savePlan() {
         );
 
         emit('updated', data.journey);
+        store.dispatch('flash/queueMessage', {
+            type: 'success',
+            text: 'Piano dispatch salvato correttamente.',
+        });
     } catch (error) {
         errorMessage.value = error?.response?.data?.message ?? 'Salvataggio non riuscito.';
+        store.dispatch('flash/queueMessage', {
+            type: 'error',
+            text: errorMessage.value,
+        });
     } finally {
         saving.value = false;
     }

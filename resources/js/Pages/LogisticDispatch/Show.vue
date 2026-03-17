@@ -86,6 +86,7 @@ import DispatchPlanCard from '@/Pages/LogisticDispatch/Partials/DispatchPlanCard
 import { Link } from '@inertiajs/vue3';
 import { reactive, ref } from 'vue';
 import axios from 'axios';
+import { useStore } from 'vuex';
 
 const props = defineProps({
     journey: {
@@ -100,29 +101,49 @@ const props = defineProps({
 
 const localJourney = reactive({ ...props.journey });
 const actionNotes = ref('');
+const store = useStore();
 
 function onPlanUpdated(journey) {
     Object.assign(localJourney, journey);
 }
 
 async function sendAction(type) {
-    if (type === 'hold') {
-        await axios.post(route('api.logistic-dispatch.hold', localJourney.id), {
+    try {
+        if (type === 'hold') {
+            await axios.post(route('api.logistic-dispatch.hold', localJourney.id), {
+                notes: actionNotes.value,
+            });
+            store.dispatch('flash/queueMessage', {
+                type: 'success',
+                text: 'Viaggio messo in attesa.',
+            });
+            return;
+        }
+
+        if (type === 'resume') {
+            await axios.post(route('api.logistic-dispatch.resume', localJourney.id), {
+                notes: actionNotes.value,
+            });
+            store.dispatch('flash/queueMessage', {
+                type: 'success',
+                text: 'Viaggio ripreso correttamente.',
+            });
+            return;
+        }
+
+        await axios.post(route('api.logistic-dispatch.complete', localJourney.id), {
+            completion_code: localJourney.is_double_load ? 'double_load_done' : 'single_load_done',
             notes: actionNotes.value,
         });
-        return;
-    }
-
-    if (type === 'resume') {
-        await axios.post(route('api.logistic-dispatch.resume', localJourney.id), {
-            notes: actionNotes.value,
+        store.dispatch('flash/queueMessage', {
+            type: 'success',
+            text: 'Dispatch completato correttamente.',
         });
-        return;
+    } catch (error) {
+        store.dispatch('flash/queueMessage', {
+            type: 'error',
+            text: error?.response?.data?.message ?? 'Errore durante l\'operazione dispatch.',
+        });
     }
-
-    await axios.post(route('api.logistic-dispatch.complete', localJourney.id), {
-        completion_code: localJourney.is_double_load ? 'double_load_done' : 'single_load_done',
-        notes: actionNotes.value,
-    });
 }
 </script>
