@@ -11,7 +11,7 @@ use App\Models\Trailer;
 use App\Models\Vehicle;
 use App\Models\OrderItem;
 use App\Models\Warehouse;
-use App\Enums\OrderDocumentsState;
+use App\Enums\OrderDocumentsStatus;
 use App\Enums\JourneyStatus;
 use App\Models\JourneyCargo;
 use Illuminate\Http\Request;
@@ -299,11 +299,11 @@ class JourneyCargoController extends Controller
 
     private function statusAfterJourneyDetach(Order $order): string
     {
-        $documentsState = $order->documents_state instanceof OrderDocumentsState
-            ? $order->documents_state
-            : OrderDocumentsState::tryFrom((string) $order->documents_state);
+        $documentsState = $order->documents_status instanceof OrderDocumentsStatus
+            ? $order->documents_status
+            : OrderDocumentsStatus::tryFrom((string) $order->documents_status);
 
-        if ($documentsState === OrderDocumentsState::GENERATED) {
+        if ($documentsState === OrderDocumentsStatus::GENERATED) {
             return OrderStatus::STATUS_READY->value;
         }
 
@@ -314,6 +314,7 @@ class JourneyCargoController extends Controller
 
 
 }
+
 
 
 

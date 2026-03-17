@@ -12,7 +12,7 @@ use App\Models\JourneyStopAction;
 use App\Models\Trailer;
 use App\Models\Vehicle;
 use App\Models\Warehouse;
-use App\Enums\OrderDocumentsState;
+use App\Enums\OrderDocumentsStatus;
 use App\Enums\OrderStatus;
 use App\Enums\JourneyStatus;
 use Illuminate\Http\Request;
@@ -376,9 +376,9 @@ private function applyOrdersToJourney(
 
     foreach ($orders as $order) {
         $currentState = $order->status;
-        $documentsState = $order->documents_state instanceof OrderDocumentsState
-            ? $order->documents_state
-            : OrderDocumentsState::tryFrom((string) $order->documents_state);
+        $documentsState = $order->documents_status instanceof OrderDocumentsStatus
+            ? $order->documents_status
+            : OrderDocumentsStatus::tryFrom((string) $order->documents_status);
 
         $isPlannedInCurrentJourney = $allowAlreadyPlannedForCurrentJourney
             && $currentState === OrderStatus::STATUS_PLANNED
@@ -386,7 +386,7 @@ private function applyOrdersToJourney(
 
         if (
             !$isPlannedInCurrentJourney
-            && $documentsState !== OrderDocumentsState::GENERATED
+            && $documentsState !== OrderDocumentsStatus::GENERATED
         ) {
             Log::warning("Order ID {$order->id} is not plan-ready: documents are not generated.");
             continue;
@@ -735,11 +735,11 @@ public function updateState(Journey $journey, Request $request)
 
 private function statusAfterJourneyDetach(Order $order): string
 {
-    $documentsState = $order->documents_state instanceof OrderDocumentsState
-        ? $order->documents_state
-        : OrderDocumentsState::tryFrom((string) $order->documents_state);
+    $documentsState = $order->documents_status instanceof OrderDocumentsStatus
+        ? $order->documents_status
+        : OrderDocumentsStatus::tryFrom((string) $order->documents_status);
 
-    if ($documentsState === OrderDocumentsState::GENERATED) {
+    if ($documentsState === OrderDocumentsStatus::GENERATED) {
         return OrderStatus::STATUS_READY->value;
     }
 
@@ -749,6 +749,7 @@ private function statusAfterJourneyDetach(Order $order): string
 
 
 }
+
 
 
 

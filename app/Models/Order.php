@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\OrderDocumentsState;
+use App\Enums\OrderDocumentsStatus;
 use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Mpociot\Versionable\VersionableTrait;
@@ -18,7 +18,7 @@ class Order extends Model
 
     protected $casts = [
         'status' => OrderStatus::class,
-        'documents_state' => OrderDocumentsState::class,
+        'documents_status' => OrderDocumentsStatus::class,
         'requested_at' => 'datetime',
         'expected_withdraw_at' => 'datetime',
         'actual_withdraw_at' => 'datetime',
@@ -42,7 +42,7 @@ class Order extends Model
         'crane_operator_user_id',
         'machinery_time_minutes',
         'notes',
-        'documents_state',
+        'documents_status',
         'documents_generated_at',
         'documents_error',
         'documents_version',
@@ -145,3 +145,4 @@ protected static function booted()
     }
 
 }
+

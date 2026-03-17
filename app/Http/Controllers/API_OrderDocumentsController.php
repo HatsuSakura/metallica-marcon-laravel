@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\OrderDocumentsState;
+use App\Enums\OrderDocumentsStatus;
 use App\Models\Order;
 use App\Services\OrderDocumentGenerationService;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -16,11 +16,11 @@ class API_OrderDocumentsController extends Controller
     {
         Gate::authorize('update', $order);
 
-        $documentsState = $order->documents_state instanceof OrderDocumentsState
-            ? $order->documents_state
-            : (OrderDocumentsState::tryFrom((string) $order->documents_state) ?? OrderDocumentsState::NOT_GENERATED);
+        $documentsState = $order->documents_status instanceof OrderDocumentsStatus
+            ? $order->documents_status
+            : (OrderDocumentsStatus::tryFrom((string) $order->documents_status) ?? OrderDocumentsStatus::NOT_GENERATED);
 
-        if ($documentsState === OrderDocumentsState::GENERATING) {
+        if ($documentsState === OrderDocumentsStatus::GENERATING) {
             if ($service->isGeneratingStateStale($order)) {
                 $service->recoverStaleGeneratingState($order);
                 $order->refresh();
@@ -81,3 +81,4 @@ class API_OrderDocumentsController extends Controller
         );
     }
 }
+

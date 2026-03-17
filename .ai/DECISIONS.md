@@ -37,3 +37,8 @@ Reference: `.ai/decisions/2026-03-17-logistic-dispatch-implementation-strategy.m
 - New branch `feature/logistic-dispatch-board` from `main`.
 - Dispatch flow developed as dedicated module (`Pages/LogisticDispatch/*`) with command endpoints under `/api/logistic/dispatch/*`.
 - Initial scaffold tracks decisions in `.ai/decisions/2026-03-17-logistic-dispatch-pr01-scaffold.md`.
+
+## D10: Status naming convention enforced for order document lifecycle
+- Renamed enum usage from `OrderDocumentsState` to `OrderDocumentsStatus`.
+- Renamed order field usage from `documents_state` to `documents_status`.
+- Added compatibility migration `2026_03_17_180000_rename_order_documents_state_to_status`.

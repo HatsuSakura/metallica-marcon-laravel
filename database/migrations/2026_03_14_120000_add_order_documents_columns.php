@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\OrderDocumentsState;
+use App\Enums\OrderDocumentsStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,8 +11,8 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             if (!Schema::hasColumn('orders', 'documents_state')) {
-                $table->enum('documents_state', array_column(OrderDocumentsState::cases(), 'value'))
-                    ->default(OrderDocumentsState::NOT_GENERATED->value)
+                $table->enum('documents_state', array_column(OrderDocumentsStatus::cases(), 'value'))
+                    ->default(OrderDocumentsStatus::NOT_GENERATED->value)
                     ->after('status');
             }
 
@@ -47,4 +47,5 @@ return new class extends Migration
         });
     }
 };
+
 

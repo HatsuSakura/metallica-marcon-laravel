@@ -36,8 +36,8 @@
                     <div>
                         <font-awesome-icon :icon="['fas', 'file-lines']" class="text-2xl"/>
                         Stato documenti
-                        <span class="badge ml-2" :class="documentsStateBadgeClass(order.documents_state)">
-                            {{ documentsStateLabel(order.documents_state) }}
+                        <span class="badge ml-2" :class="documentsStateBadgeClass(order.documents_status)">
+                            {{ documentsStateLabel(order.documents_status) }}
                         </span>
                     </div>
                     <div>
@@ -164,3 +164,4 @@ const generateDocuments = async (orderId) => {
 };
 
 </script>
+

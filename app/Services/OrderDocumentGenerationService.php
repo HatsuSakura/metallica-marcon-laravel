@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\OrderDocumentsState;
+use App\Enums\OrderDocumentsStatus;
 use App\Enums\OrderStatus;
 use App\Jobs\GenerateOrderDocumentsJob;
 use App\Models\Order;
@@ -22,7 +22,7 @@ class OrderDocumentGenerationService
     public function enqueueGeneration(Order $order): void
     {
         $order->forceFill([
-            'documents_state' => OrderDocumentsState::GENERATING->value,
+            'documents_status' => OrderDocumentsStatus::GENERATING->value,
             'documents_error' => null,
         ])->save();
 
@@ -83,7 +83,7 @@ class OrderDocumentGenerationService
             : $currentStatus->value;
 
         $snapshot->forceFill([
-            'documents_state' => OrderDocumentsState::GENERATED->value,
+            'documents_status' => OrderDocumentsStatus::GENERATED->value,
             'documents_generated_at' => now(),
             'documents_error' => null,
             'documents_version' => $version,
@@ -96,7 +96,7 @@ class OrderDocumentGenerationService
     public function markFailed(Order $order, string $error): void
     {
         $order->forceFill([
-            'documents_state' => OrderDocumentsState::FAILED->value,
+            'documents_status' => OrderDocumentsStatus::FAILED->value,
             'documents_error' => mb_substr($error, 0, 2000),
         ])->save();
     }
@@ -113,7 +113,7 @@ class OrderDocumentGenerationService
 
         $order->forceFill([
             'status' => OrderStatus::STATUS_CREATED->value,
-            'documents_state' => OrderDocumentsState::NOT_GENERATED->value,
+            'documents_status' => OrderDocumentsStatus::NOT_GENERATED->value,
             'documents_generated_at' => null,
             'documents_error' => null,
         ])->save();
@@ -124,7 +124,7 @@ class OrderDocumentGenerationService
         return [
             'order_id' => $order->id,
             'order_status' => $order->status?->value ?? (string) $order->status,
-            'documents_state' => $order->documents_state?->value ?? (string) $order->documents_state,
+            'documents_status' => $order->documents_status?->value ?? (string) $order->documents_status,
             'documents_generated_at' => $order->documents_generated_at,
             'documents_error' => $order->documents_error,
             'documents_version' => (int) ($order->documents_version ?? 0),
@@ -144,7 +144,7 @@ class OrderDocumentGenerationService
     public function recoverStaleGeneratingState(Order $order): void
     {
         $order->forceFill([
-            'documents_state' => OrderDocumentsState::NOT_GENERATED->value,
+            'documents_status' => OrderDocumentsStatus::NOT_GENERATED->value,
             'documents_error' => null,
         ])->save();
     }
@@ -307,3 +307,4 @@ class OrderDocumentGenerationService
         });
     }
 }
+
