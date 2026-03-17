@@ -12,10 +12,11 @@ use App\Models\CerCode;
 use App\Models\Trailer;
 use App\Models\Vehicle;
 use App\Models\Warehouse;
-use App\Enums\OrdersState;
+use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Services\OrderItemGroupResolver;
+use App\Services\OrderDocumentGenerationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
@@ -94,7 +95,10 @@ class OrderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, OrderItemGroupResolver $groupResolver)
+    public function store(
+        Request $request,
+        OrderItemGroupResolver $groupResolver
+    )
     {
 
         $CUSTOM_HOLDER_ID = 1;
@@ -107,6 +111,7 @@ class OrderController extends Controller
             'customer_id'=> 'required',
             'site_id'=> 'required',
             'logistics_user_id' => 'nullable',
+            'post_action' => ['nullable', Rule::in(['create_exit', 'create_stay'])],
             // 'journey_id' => ALLA CREAZIONE, al momento soprattutto, non viene passato e prende il default NULL
             'items' => 'nullable|array', // Make items optional
             'items.*.cer_code_id' => 'required|exists:cer_codes,id',
@@ -195,20 +200,16 @@ class OrderController extends Controller
             }
         }
 
+        $postAction = $validatedData['post_action'] ?? 'create_exit';
+        if ($postAction === 'create_stay') {
+            return redirect()
+                ->route('order.edit', ['order' => $order->id])
+                ->with('success', 'Ordine inserito con successo!');
+        }
 
-
-        /*
-        return response()->json([
-            'message' => 'Order created successfully!',
-            'order' => $order->load('items'),
-        ]);
-        */
-
-        //return redirect()->route('order.index')->with('success', 'Ritiro inserito con successo!');
-        //return redirect()->back()->with('success', 'Ordine inserito con successo!');
-        // Force a full client-side location visit to avoid stale Inertia page state
-        // after create flow started from customer list/modal context.
-        return \Inertia\Inertia::location(route('customer.show', ['customer' => $order->customer_id]));
+        return redirect()
+            ->route('customer.show', ['customer' => $order->customer_id])
+            ->with('success', 'Ordine inserito con successo!');
     }
 
     /**
@@ -248,7 +249,12 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Order $order, OrderItemGroupResolver $groupResolver)
+    public function update(
+        Request $request,
+        Order $order,
+        OrderItemGroupResolver $groupResolver,
+        OrderDocumentGenerationService $documentsService
+    )
     {
         Gate::authorize('redirectAfterUpdate', $order);
 
@@ -261,6 +267,7 @@ class OrderController extends Controller
             'site_id'=> 'required',
             'logistics_user_id' => 'nullable',
             'journey_id' => 'nullable',
+            'post_action' => ['nullable', Rule::in(['save_exit', 'save_stay'])],
             'items' => 'nullable|array', // Make items optional
             'items.*.id' => 'required',
             'items.*.cer_code_id' => 'required|exists:cer_codes,id',
@@ -364,9 +371,18 @@ class OrderController extends Controller
             $order->holders()->delete();
         }
         
-        $redirectRoute = route('order.index');
+        $documentsService->invalidateAfterReadyOrderEdit($order->refresh());
 
-        return redirect($redirectRoute)->with('success', 'Ordine aggiornato con successo!');
+        $postAction = $validatedData['post_action'] ?? 'save_exit';
+        if ($postAction === 'save_stay') {
+            return redirect()
+                ->route('order.edit', ['order' => $order->id])
+                ->with('success', 'Ordine aggiornato con successo!');
+        }
+
+        return redirect()
+            ->route('order.index')
+            ->with('success', 'Ordine aggiornato con successo!');
 
         //return redirect()->route('order.index')->with('success', 'Ritiro modificato con successo!');
         //return redirect()->back()->with('success', 'Ritiro modificato con successo!');
@@ -397,23 +413,23 @@ class OrderController extends Controller
 
 public function updateState(Order $order, Request $request)
 {
-    $newState = OrdersState::from($request->new_state);
+    $newState = OrderStatus::from($request->new_state);
 
-    if (!OrdersState::from($order->status)->canTransitionTo($newState)) {
+    if (!OrderStatus::from($order->status)->canTransitionTo($newState)) {
         abort(403, 'Invalid state transition.');
     }
 
     // Add lifecycle-specific logic
     switch ($newState) {
-        case OrdersState::STATUS_PLANNED:
+        case OrderStatus::STATUS_PLANNED:
             $order->planned_date = $request->planned_date;
             break;
 
-        case OrdersState::STATUS_EXECUTED:
+        case OrderStatus::STATUS_EXECUTED:
             $order->executed_at = now();
             break;
 
-        case OrdersState::STATUS_DOWNLOADED:
+        case OrderStatus::STATUS_DOWNLOADED:
             // Attachments or warehouse updates
             $order->downloaded_files = $request->file('attachments')->store('orders');
             break;
@@ -428,9 +444,6 @@ public function updateState(Order $order, Request $request)
 
 
 }
-
-
-
 
 
 

@@ -25,16 +25,16 @@
       />
     </div>
 
-    <!-- Vuoti richiesti (Â±) -->
+    <!-- Vuoti richiesti (±) -->
     <div class="form-control flex flex-row items-center gap-2">
-      <label class="label" for="empty_holders_count"><span class="label-text">Vuoti richiesti (Â±)</span></label>
+      <label class="label" for="empty_holders_count"><span class="label-text">Vuoti richiesti (±)</span></label>
       <input
         v-model.number="holder.empty_holders_count"
         id="empty_holders_count"
         type="number"
         step="1"
         class="input input-bordered w-32"
-        placeholder="+/- quantitÃ "
+        placeholder="+/- Quantità"
       />
     </div>
 

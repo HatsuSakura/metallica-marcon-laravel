@@ -6,7 +6,7 @@ namespace App\Services;
 use App\Models\Journey;
 use App\Models\JourneyCargo;
 use App\Models\OrderItem;
-use App\Enums\OrderItemsState;
+use App\Enums\OrderItemStatus;
 use App\Enums\OrdersTruckLocation;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -160,9 +160,9 @@ class JourneyCargoService
 
         $items = OrderItem::whereIn('id', $ids)->get(['id', 'status']);
         foreach ($items as $item) {
-            $current = OrderItemsState::from($item->status);
-            if ($current->canTransitionTo(OrderItemsState::STATUS_LOADED)) {
-                $item->status = OrderItemsState::STATUS_LOADED;
+            $current = OrderItemStatus::from($item->status);
+            if ($current->canTransitionTo(OrderItemStatus::STATUS_LOADED)) {
+                $item->status = OrderItemStatus::STATUS_LOADED;
                 $item->save();
             } else {
                 Log::warning("Invalid state transition from {$current->value} for order_item {$item->id}");
@@ -170,3 +170,4 @@ class JourneyCargoService
         }
     }
 }
+

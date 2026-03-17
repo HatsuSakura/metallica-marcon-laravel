@@ -13,7 +13,7 @@
         type="number" 
         step="1"
         class="input input-bordered w-32"
-        placeholder="QuantitÃ "
+        placeholder="Quantità"
         min="1"
       />
       
@@ -23,7 +23,7 @@
         type="number" 
         step="1"
         class="input input-bordered w-32"
-        placeholder="+/- quantitÃ "
+        placeholder="+/- Quantità"
       />
   
       <label class="label" for="holder">Totale da consegnare:</label>

@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum JourneyStopState: string
+enum JourneyStopStatus: string
 {
     case Planned = 'planned';
     case InProgress = 'in_progress';
@@ -10,3 +10,4 @@ enum JourneyStopState: string
     case Skipped = 'skipped';
     case Cancelled = 'cancelled';
 }
+

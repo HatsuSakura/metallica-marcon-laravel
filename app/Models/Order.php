@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\OrdersState;
+use App\Enums\OrderDocumentsState;
+use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Mpociot\Versionable\VersionableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,10 +17,12 @@ class Order extends Model
     protected $keepOldVersions = true; // Keep all versions of the model
 
     protected $casts = [
-        'status' => OrdersState::class,
+        'status' => OrderStatus::class,
+        'documents_state' => OrderDocumentsState::class,
         'requested_at' => 'datetime',
         'expected_withdraw_at' => 'datetime',
         'actual_withdraw_at' => 'datetime',
+        'documents_generated_at' => 'datetime',
     ];
     
     protected $fillable = [
@@ -39,6 +42,10 @@ class Order extends Model
         'crane_operator_user_id',
         'machinery_time_minutes',
         'notes',
+        'documents_state',
+        'documents_generated_at',
+        'documents_error',
+        'documents_version',
     ]; 
 
 protected static function booted()

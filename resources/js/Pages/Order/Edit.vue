@@ -1,6 +1,6 @@
 <template>
     <section v-if="currentSite" class="mb-8"> <!-- SERVE per evitare errori in apertura se VUEX STORE non è in sync-->
-      <form @submit.prevent="edit">   
+      <form @submit.prevent="edit('save_exit')">   
 
         <!-- Intestazione + Buttons to Open/Close All -->
         <div class="mb-4 flex items-center justify-between">
@@ -87,7 +87,7 @@
             <div class="flex content-center">
               <div>
                 <div class="flex content-center pr-4">
-                  <div class="radial-progress" :style="{ '--value': currentSite.calculated_risk_factor * 100, color: backgroundColor }" role="progressbar">{{ currentSite.calculated_risk_factor * 100 }}%</div>
+                  <div class="radial-progress" :style="{ '--value': riskPercent, color: backgroundColor }" role="progressbar">{{ riskPercent }}%</div>
                   <font-awesome-icon :icon="['fas', buildingFaIcon]" class="text-4xl p-4" :style="{ color: backgroundColor }" />
                 </div>
                 
@@ -242,16 +242,28 @@
             :initialOpen=true
             @register="registerSection"
           >
-            <div>
-              <label class="label">Annotazioni operative del ritiro</label>
-              <textarea
-                v-model="form.notes"
-                class="textarea textarea-bordered w-full"
-                rows="4"
-                placeholder="Inserisci eventuali note operative per l'ordine"
-              />
-              <div class="input-error" v-if="form.errors.notes">
-                {{ form.errors.notes }}
+            <div class="flex flex-row gap-4 justify-stretch w-full">
+              <div class="w-1/2">
+                <label class="label">Annotazioni aggiuntive per il ritiro</label>
+                <textarea
+                  v-model="form.notes"
+                  class="textarea textarea-bordered w-full"
+                  rows="4"
+                  placeholder="Inserisci eventuali note operative per l'ordine"
+                />
+                <div class="input-error" v-if="form.errors.notes">
+                  {{ form.errors.notes }}
+                </div>
+              </div>
+
+              <div class="w-1/2">
+                <label class="label">Note di questa sede</label>
+                <textarea
+                  :value="siteNotesText"
+                  class="textarea textarea-bordered w-full"
+                  rows="4"
+                  readonly
+                />
               </div>
             </div>
           </AccordionRow>
@@ -341,11 +353,74 @@
 
         </div>
 
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">
-              <font-awesome-icon :icon="['fas', 'floppy-disk']" class="text-lg"/>
-              Salva modifiche
+        <div class="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            :disabled="generatingDocuments"
+            @click="generateDocuments"
+          >
+            <font-awesome-icon :icon="['fas', 'file-export']" class="text-lg"/>
+            {{ generatingDocuments ? 'Avvio...' : 'Genera documenti' }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline"
+            :disabled="form.processing"
+            @click="edit('save_stay')"
+          >
+            <font-awesome-icon :icon="['fas', 'floppy-disk']" class="text-lg"/>
+            Salva
+          </button>
+          <button type="submit" class="btn btn-primary" :disabled="form.processing">
+            Salva & Esci
+          </button>
+        </div>
+
+        <div class="mt-6 rounded-box border border-base-300 p-4">
+          <div class="mb-3 flex items-center justify-between">
+            <div class="text-lg font-semibold">Documenti generati</div>
+            <button type="button" class="btn btn-ghost btn-sm" :disabled="loadingDocuments" @click="fetchOrderDocuments">
+              <font-awesome-icon :icon="['fas', 'rotate-right']" />
+              Aggiorna elenco
             </button>
+          </div>
+
+          <div v-if="loadingDocuments" class="text-sm opacity-70">Caricamento documenti...</div>
+          <div v-else-if="orderDocuments.length === 0" class="text-sm opacity-70">
+            Nessun documento generato per questo ordine.
+          </div>
+
+          <div v-else class="overflow-x-auto">
+            <table class="table table-zebra table-sm">
+              <thead>
+                <tr>
+                  <th>Nome file</th>
+                  <th>Tipo</th>
+                  <th>Dimensione</th>
+                  <th>Ultima modifica</th>
+                  <th class="text-right">Azioni</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="doc in orderDocuments" :key="doc.path">
+                  <td class="font-mono text-xs">{{ doc.name }}</td>
+                  <td>{{ (doc.extension || '-').toUpperCase() }}</td>
+                  <td>{{ formatBytes(doc.size) }}</td>
+                  <td>{{ formatTimestamp(doc.last_modified) }}</td>
+                  <td class="text-right">
+                    <a
+                      class="btn btn-outline btn-xs"
+                      :href="downloadDocumentHref(doc.name)"
+                    >
+                      <font-awesome-icon :icon="['fas', 'download']" />
+                      Download
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
     
       </form>
@@ -355,7 +430,8 @@
     <script setup>
     import { computed, watch, ref, watchEffect , onMounted } from 'vue';
     import { createStore, useStore } from 'vuex';
-    import { useForm, usePage } from '@inertiajs/vue3'
+    import axios from 'axios';
+    import { useForm, usePage, router } from '@inertiajs/vue3'
     import dayjs from 'dayjs';
     import VueDatePicker from '@vuepic/vue-datepicker';
     import { getIconForSite } from '@/Composables/getIconForSite';
@@ -381,6 +457,9 @@ import { uuid } from '@/utils/uuid';
     })
     
     const page = usePage();
+    const generatingDocuments = ref(false);
+    const loadingDocuments = ref(false);
+    const orderDocuments = ref([]);
     const user = computed(
       () => page.props.user
     )
@@ -390,6 +469,11 @@ import { uuid } from '@/utils/uuid';
 
 //    const store = useStore();
     const currentSite = computed(() => props.site );
+    const siteNotesText = computed(() =>
+      currentSite.value?.notes?.trim()
+        ? currentSite.value.notes
+        : 'nessuna nota particoalre per questa sede'
+    );
     const currentDate = computed(
       () => new Date()
     )
@@ -400,6 +484,11 @@ const totalItemsWeight = computed(() => {
       }
       return 0;
     });
+
+const riskPercent = computed(() => {
+  const value = Number(currentSite.value?.calculated_risk_factor ?? 0) * 100;
+  return Number.isFinite(value) ? Number(value.toFixed(1)) : 0;
+});
 
 const groupedItems = computed(() => {
   const cerById = new Map((props.cerList || []).map((c) => [Number(c.id), c]));
@@ -461,6 +550,7 @@ const groupedItems = computed(() => {
       requested_at: props.order.created_at,
       expected_withdraw_at: new Date(props.order.expected_withdraw_at),
       notes: props.order.notes ?? '',
+      post_action: 'save_exit',
       logistics_user_id: props.order.logistics_user_id ? props.order.logistics_user_id : user ? user.value.id : null, // Fallback to null if user is not defined
       has_adr_consultant: currentSite.value?.has_adr_consultant ?? '',
       customer_id: currentSite.customer_id,
@@ -591,6 +681,7 @@ const groupedItems = computed(() => {
       manageExpectedDate();
       manageCurrentDate();
       parseBooleanValues();
+      fetchOrderDocuments();
     });
 
     const parseBooleanValues = () => {
@@ -700,7 +791,7 @@ const groupedItems = computed(() => {
       }
     }, { immediate: true });
     
-    const edit = () => {
+    const edit = (postAction = 'save_exit') => {
       // Ensure filled_holders_count and empty_holders_count is set to 0 if empty
       form.holders.forEach(holder => {
         if (holder.filled_holders_count === "") {
@@ -713,8 +804,55 @@ const groupedItems = computed(() => {
       // Before submitting, format the date correctly
       form.requested_at = dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss');
       form.expected_withdraw_at = dayjs(form.expected_withdraw_at).format('YYYY-MM-DD HH:mm:ss');
+      form.post_action = postAction;
       form.put(route('order.update', {order: props.order.id }));
     }
+
+    const generateDocuments = async () => {
+      if (generatingDocuments.value) {
+        return;
+      }
+
+      generatingDocuments.value = true;
+      try {
+        const response = await axios.post(`/api/orders/${props.order.id}/generate-documents`);
+        alert(response?.data?.message ?? 'Generazione documenti avviata.');
+        await fetchOrderDocuments();
+      } catch (error) {
+        alert(error?.response?.data?.message ?? 'Errore durante la generazione documenti.');
+      } finally {
+        generatingDocuments.value = false;
+      }
+    };
+
+    const fetchOrderDocuments = async () => {
+      if (loadingDocuments.value) {
+        return;
+      }
+
+      loadingDocuments.value = true;
+      try {
+        const response = await axios.get(`/api/orders/${props.order.id}/documents`);
+        orderDocuments.value = response?.data?.data ?? [];
+      } catch (error) {
+        orderDocuments.value = [];
+      } finally {
+        loadingDocuments.value = false;
+      }
+    };
+
+    const downloadDocumentHref = (fileName) =>
+      `/api/orders/${props.order.id}/documents/${encodeURIComponent(fileName)}/download`;
+
+    const formatTimestamp = (unixTimestamp) =>
+      unixTimestamp ? dayjs.unix(unixTimestamp).format('YYYY-MM-DD HH:mm:ss') : '-';
+
+    const formatBytes = (bytes) => {
+      const value = Number(bytes || 0);
+      if (value < 1024) return `${value} B`;
+      if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+      return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+    };
         
     </script>
     
@@ -742,6 +880,3 @@ const groupedItems = computed(() => {
       border-radius: 0.375rem;
     }
     </style>
-
-
-

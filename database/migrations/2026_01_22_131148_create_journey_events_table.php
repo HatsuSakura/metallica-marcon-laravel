@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\JourneyStopState;
+use App\Enums\JourneyStopStatus;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->foreignId('journey_id')->constrained('journeys')->cascadeOnDelete();
             $table->foreignId('journey_stop_id')->nullable()->constrained('journey_stops')->nullOnDelete();
 
-            $table->enum('state', array_column(JourneyStopState::cases(), 'value'))
+            $table->enum('state', array_column(JourneyStopStatus::cases(), 'value'))
             ->nullable()
             ->default(null);
             $table->json('payload')->nullable();
@@ -35,3 +35,4 @@ return new class extends Migration {
         Schema::dropIfExists('journey_events');
     }
 };
+

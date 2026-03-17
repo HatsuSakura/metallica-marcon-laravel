@@ -26,7 +26,6 @@
       <section>
         <div class="flex items-center gap-1 text-gray-600">
           <div class="flex items-center gap-1">
-            <!-- Badge contatore -->
             <span
               v-if="customer.can && customer.can.createOrder"
               class="badge badge-outline"
@@ -35,46 +34,60 @@
               {{ customer.open_orders_count }} / {{ customer.total_orders_count }}
             </span>
 
-            <!-- Bottone "Crea ordine" -->
-            <button
-              v-if="customer.can && customer.can.createOrder"
-              class="btn btn-primary btn-sm"
-              type="button"
-              @click="onCreateOrderClick(customer)"
-            >
-              Crea ordine
-            </button>
+            <div class="tooltip" data-tip="Crea ordine">
+              <button
+                v-if="customer.can && customer.can.createOrder"
+                class="btn btn-circle btn-primary"
+                type="button"
+                @click="onCreateOrderClick(customer)"
+              >
+                <font-awesome-icon :icon="['fas', 'clipboard-list']" class="h-5 w-5 stroke-current" />
+              </button>
+            </div>
+
+            <div class="tooltip" data-tip="Crea ritiro">
+              <button
+                class="btn btn-circle btn-secondary"
+                type="button"
+                @click="onCreateWithdrawClick(customer)"
+              >
+                <font-awesome-icon :icon="['fas', 'cart-plus']" class="h-5 w-5 stroke-current" />
+              </button>
+            </div>
           </div>
 
-          <!-- SCHEDA -->
-          <a
-            class="btn btn-circle btn-outline btn-primary"
-            :href="route('customer.show', { customer: customer.id })"
-          >
-            <font-awesome-icon :icon="['fas', 'file-lines']" class="h-5 w-5 stroke-current" />
-          </a>
+          <div class="tooltip" data-tip="Scheda cliente">
+            <a
+              class="btn btn-circle btn-outline btn-primary"
+              :href="route('customer.show', { customer: customer.id })"
+            >
+              <font-awesome-icon :icon="['fas', 'file-lines']" class="h-5 w-5 stroke-current" />
+            </a>
+          </div>
 
-          <!-- EDIT  -->
-          <Link
-            class="btn btn-circle btn-outline"
-            :href="route('customer.edit', { customer: customer.id })"
-          >
-            <font-awesome-icon :icon="['fas', 'pencil']" class="h-5 w-5 stroke-current" />
-          </Link>
 
-          <!-- DELETE / RESTORE -->
-          <Link
-            v-if="!customer.deleted_at"
-            class="btn btn-circle btn-outline btn-error"
-            :href="route('customer.destroy', { customer: customer.id })"
-            as="button"
-            method="delete"
-          >
-            <font-awesome-icon :icon="['fas', 'trash-can']" class="h-5 w-5 stroke-current" />
-          </Link>
+          <div class="tooltip" data-tip="Modifica cliente">
+            <Link
+              class="btn btn-circle btn-outline"
+              :href="route('customer.edit', { customer: customer.id })"
+            >
+              <font-awesome-icon :icon="['fas', 'pencil']" class="h-5 w-5 stroke-current" />
+            </Link>
+          </div>
 
+          <div v-if="!customer.deleted_at" class="tooltip" data-tip="Elimina cliente">
+            <Link
+              
+              class="btn btn-circle btn-outline btn-error"
+              :href="route('customer.destroy', { customer: customer.id })"
+              as="button"
+              method="delete"
+            >
+              <font-awesome-icon :icon="['fas', 'trash-can']" class="h-5 w-5 stroke-current" />
+            </Link>
+          </div>
+          <div v-else class="tooltip" data-tip="Ripristina cliente">
           <Link
-            v-else
             class="btn btn-circle btn-outline btn-success"
             :href="route('customer.restore', { customer: customer.id })"
             as="button"
@@ -82,17 +95,19 @@
           >
             <font-awesome-icon :icon="['fas', 'trash-can-arrow-up']" />
           </Link>
+          </div> 
+
         </div>
       </section>
     </div>
   </Box>
 
-  <!-- Modal: usa <dialog> con API imperative -->
   <dialog ref="siteModal" class="modal">
     <div class="modal-box">
       <h3 class="font-bold text-lg">Seleziona la sede</h3>
       <p class="py-2 text-sm text-base-content/70">
-        Il cliente ha più sedi. Scegli quella a cui associare l’ordine.
+        Il cliente ha piu sedi. Scegli quella a cui associare
+        {{ sitePickAction === 'withdraw' ? ' il ritiro.' : " l'ordine." }}
       </p>
 
       <div class="mt-3 flex flex-col gap-2">
@@ -101,7 +116,7 @@
           :key="s.id"
           class="btn btn-outline w-full justify-between"
           type="button"
-          @click="goCreate(s.id)"
+          @click="goActionForSite(s.id)"
         >
           <span>{{ s.name }}</span>
           <span v-if="s.is_main" class="badge badge-primary">Principale</span>
@@ -113,7 +128,6 @@
       </div>
     </div>
 
-    <!-- backdrop che chiude il dialog -->
     <form method="dialog" class="modal-backdrop">
       <button>close</button>
     </form>
@@ -128,21 +142,29 @@ import CustomerSpace from '@/Components/CustomerSpace.vue'
 import CustomerAddress from '@/Components/CustomerAddress.vue'
 
 const props = defineProps({
-  customers: { type: Object, required: true }, // paginator o array
+  customers: { type: Object, required: true },
 })
 
-/**
- * Normalizza: se arriva un paginator usa .data, altrimenti usa l'array.
- */
 const customersArr = computed(() =>
   Array.isArray(props.customers?.data) ? props.customers.data : props.customers
 )
 
-// Modal state
-const siteModal = ref(null) // <<<<<< MANCAVA
+const siteModal = ref(null)
 const customerForSitePick = ref(null)
+const sitePickAction = ref('order')
 
 function onCreateOrderClick(cust) {
+  sitePickAction.value = 'order'
+  openSitePickerForCustomer(cust)
+}
+
+function onCreateWithdrawClick(cust) {
+  sitePickAction.value = 'withdraw'
+  openSitePickerForCustomer(cust)
+}
+
+function openSitePickerForCustomer(cust) {
+  customerForSitePick.value = cust
   const sites = cust?.sites || []
   const count = cust?.sites_count ?? sites.length
 
@@ -157,20 +179,22 @@ function onCreateOrderClick(cust) {
       alert('Sede non disponibile.')
       return
     }
-    goCreate(onlySite.id)
+    goActionForSite(onlySite.id)
     return
   }
 
-  // più sedi: apri modal
-  customerForSitePick.value = cust
   nextTick(() => siteModal.value?.showModal?.())
 }
 
-function goCreate(siteId) {
-  // chiudi SEMPRE il dialog prima di navigare
+function goActionForSite(siteId) {
   siteModal.value?.close?.()
+  const customerId = customerForSitePick.value?.id
+
+  if (sitePickAction.value === 'withdraw') {
+    router.get(route('withdraw.create', { site: siteId, customer: customerId }))
+    return
+  }
+
   router.get(route('order.create', { site: siteId }))
 }
 </script>
-
-

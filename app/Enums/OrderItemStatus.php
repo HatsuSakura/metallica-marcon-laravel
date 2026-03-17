@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum OrderItemsState: string
+enum OrderItemStatus: string
 {
     case STATUS_CREATED = 'creato';
     case STATUS_LOADED = 'caricato';
@@ -29,3 +29,4 @@ enum OrderItemsState: string
         return isset($transitions[$this->value]) && in_array($nextState, $transitions[$this->value], true);
     }
 }
+

@@ -196,13 +196,38 @@
 
                     <div v-if="stopOrdersCount(selectedStop) > 0" class="space-y-1">
                         <div class="font-semibold">Ordini collegati</div>
-                        <div class="flex flex-col gap-1">
+                        <div class="flex flex-col gap-2">
                             <div
                                 v-for="order in stopOrders(selectedStop)"
                                 :key="order.id"
-                                class="text-sm"
+                                class="rounded-box border border-base-300 bg-base-100 p-3 text-sm"
                             >
-                                #{{ String(order.id).padStart('9', '0') }} — {{ order.customer?.company_name ?? 'Cliente' }}
+                                <div class="font-semibold">
+                                    {{ String(order.legacy_code)}} 
+                                </div>
+                                <div class="mt-1 whitespace-pre-line">
+                                    <span class="font-semibold">Note Cliente: </span>
+                                    <span v-if="orderCustomerNotes(order)" >{{ orderCustomerNotes(order) }}</span>
+                                    <span v-else class="italic opacity-70">Nessuna nota cliente</span>
+                                </div>
+                                <div class="mt-1 whitespace-pre-line">
+                                    <span class="font-semibold">Note Sede: </span>
+                                    <span v-if="orderSiteNotes(order)" >{{ orderSiteNotes(order) }}</span>
+                                    <span v-else class="italic opacity-70">Nessuna nota sede</span>
+                                </div>
+                                <div class="mt-1 whitespace-pre-line">
+                                    <span class="font-semibold">Note Ordine: </span>
+                                    <span v-if="order.notes" >{{ order.notes }}</span>
+                                    <span v-else class="italic opacity-70">Nessuna nota ordine</span>
+                                </div>
+                                <div v-if="orderItems(order).length > 0" class="mt-2">
+                                    <div class="font-semibold">Dettaglio elementi:</div>
+                                    <ul class="list-disc ml-5">
+                                        <li v-for="item in orderItems(order)" :key="item.id ?? item.uuid ?? item.temp_id">
+                                            {{ itemSummary(item) }}
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -260,7 +285,7 @@
         <Box class="my-4">
             <template #header>Scarico a magazzino</template>
             <div class="text-sm opacity-70">
-                Placeholder: in attesa di definizione con il cliente.
+                Terminate le tappe di consegna, chiamare in sede la Logistica per concordare le modalità di scarico.
             </div>
         </Box>
     </section>
@@ -388,6 +413,24 @@ const stopStatusLabel = (status) => {
     }
 }
 
+const orderItems = (order) => {
+    if (!order || !Array.isArray(order.items)) return []
+    return order.items
+}
+
+const itemSummary = (item) => {
+    const cer = item?.cer_code?.code ?? item?.cerCode?.code ?? '-'
+    const description = item?.description ? ` - ${item.description}` : ''
+    const weight = item?.weight_declared ? ` (${item.weight_declared} kg)` : ''
+    return `CER ${cer}${description}${weight}`
+}
+
+const orderSiteAddress = (order) => order?.site?.address ?? null
+
+const orderCustomerNotes = (order) => order?.customer?.notes ?? null
+
+const orderSiteNotes = (order) => order?.site?.notes ?? null
+
 const toggleReorder = () => {
     reorderEnabled.value = !reorderEnabled.value
     if (reorderEnabled.value) {
@@ -482,4 +525,3 @@ const createTechnicalStop = async () => {
     }
 }
 </script>
-

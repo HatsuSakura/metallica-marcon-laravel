@@ -2,9 +2,16 @@
     <div v-if="journeys.length > 0" class="flex flex-col items-center justify-center gap-2">
         <Box v-for="journey in journeys" :key="journey.id" class="w-3/4">
             <div class="flex flex-row justify-between items-start mb-4">
-                <div class="flex items-center gap-4">
-                    <JourneyMainData :journey="journey" />
-                    <span class="badge badge-outline">{{ journey.status }}</span>
+                <div>
+                    <div class="flex items-center gap-4">
+                        <JourneyMainData :journey="journey" />
+                        <span class="badge badge-outline">{{ journey.status }}</span>
+                    </div>
+                    <div class="my-2 rounded-box border border-base-300 bg-base-200/40 p-3">
+                        <div class="text-sm tracking-wide opacity-70">Note viaggio</div>
+                        <div v-if="journey.notes"class="whitespace-pre-line text-sm">{{ journey.notes }}</div>
+                        <div v-else class="italic opacity-70 text-sm">Nessuna nota generale: verifica eventuali note per singola tappa.</div>
+                    </div>
                 </div>
                 <div v-if="journey.status != 'eseguito'" class="flex flex-col items-end gap-2">
                     <span
@@ -64,6 +71,7 @@
                 </div>
             </div>
 
+
             <JourneyOrdersList
                 :journey="journey"
                 :warehouses="warehouses"
@@ -71,10 +79,6 @@
                 :reorder-enabled="isReorderEnabled(journey.id)"
                 @reorder-changed="(stopIds) => $emit('reorder-changed', journey.id, stopIds)"
             />
-            <div v-if="journey.notes" class="mt-3 rounded-box border border-base-300 bg-base-200/40 p-3">
-                <div class="text-xs uppercase tracking-wide opacity-70">Note Viaggio</div>
-                <div class="whitespace-pre-line">{{ journey.notes }}</div>
-            </div>
         </Box>
     </div>
     <EmptyState v-else>

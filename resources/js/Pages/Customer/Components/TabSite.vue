@@ -1,31 +1,28 @@
 <template>
 
-<dialog id="my_modal_4" class="modal">
+<dialog ref="riskModal" class="modal">
   <div class="modal-box">
-    <h3 class="text-lg font-bold">Nuovo Ritiro</h3>
-    {{ props.site }}
-    <Create />
-    <div class="modal-action">
-      <form method="dialog">
-        <!-- if there is a button in form, it will close the modal -->
-        <button class="btn">Close</button>
-      </form>
-    </div>
-  </div>
-</dialog>
+    <h3 class="font-bold text-lg">Ricalcolo Rischio</h3>
+    <p class="py-2 text-sm text-base-content/70">
+      Il cliente ha più sedi: come vuoi ricalcolare il rischio?
+    </p>
 
-<!-- You can open the modal using ID.showModal() method -->
-<dialog id="my_modal_42" class="modal">
-  <div class="modal-box w-11/12 max-w-5xl">
-    <h3 class="text-lg font-bold">Nuovo Ritiro</h3>
-    <Create />
+    <div class="mt-3 flex flex-col gap-2">
+      <button class="btn btn-outline w-full" type="button" @click="runSingleSiteRiskRecalculation">
+        Solo questa sede
+      </button>
+      <button class="btn btn-primary w-full" type="button" @click="runCustomerRiskRecalculation">
+        Tutte le sedi del cliente
+      </button>
+    </div>
+
     <div class="modal-action">
-      <form method="dialog">
-        <!-- if there is a button, it will close the modal -->
-        <button class="btn">Close</button>
-      </form>
+      <button class="btn" type="button" @click="riskModal?.close()">Annulla</button>
     </div>
   </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
 </dialog>
 
     <input 
@@ -36,11 +33,13 @@
         :aria-label="calculatedLabel"
         :checked="props.counter === 0 ? true : false" 
     />
-    <div role="tabpanel" class="tab-content  p-0 pb-8">
+    <div role="tabpanel" class="tab-content border-base-300 rounded-box border-l-0 border-r-0 p-0 pb-8">
 
         <!-- NAVBAR singola SCHEDA -->
         <div class="navbar bg-base-100">
             <div class="navbar-start">
+                <!-- DROPDOWN PER AZIONI RAPIDE -->
+                <!--
                 <div class="dropdown">
                     <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
@@ -52,37 +51,44 @@
                     <ul tabindex="0"
                         class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
                         <li>
-                            <Link @click="selectSite(props.site)" :href="route('withdraw.create')">
+                            <Link :href="withdrawCreateUrl(props.site)">
                             Nuovo Ritiro
                             </Link>
                         </li>
-                        <li><a>Ricalcola Rischio</a></li>
+                        <li><button type="button" @click="calculateRiskFactor(props.site)">Ricalcola Rischio</button></li>
                         <li><a>Edit</a></li>
                     </ul>
                 </div>
+                -->
             </div>
             <div class="navbar-center text-xl">
                 Riepilogo sede {{ props.site.name }}
             </div>
             <div class="navbar-end space-x-2">
-                <Link 
-                    :href="route('order.create', { site: props.site.id })"
-                    class="btn btn-circle btn-primary"
-                >
-                    <font-awesome-icon :icon="['fas', 'plus']" class="h-5 w-5" stroke="currentColor" />
-                </Link>
+                <div class="tooltip" data-tip="Crea ordine">
+                    <Link :href="route('order.create', { site: props.site.id })" class="btn btn-circle btn-primary">
+                        <font-awesome-icon :icon="['fas', 'clipboard-list']" class="h-5 w-5" stroke="currentColor" />
+                    </Link>
+                </div>
 
-                <button class="btn btn-circle btn-secondary" @click="openCreateWithdrawModal(props.site)">
-                    <font-awesome-icon :icon="['fas', 'plus']" class="h-5 w-5" stroke="currentColor" />
-                </button>
+                <div class="tooltip" data-tip="Crea ritiro">
+                    <Link :href="withdrawCreateUrl(props.site)" class="btn btn-circle btn-secondary">
+                        <font-awesome-icon :icon="['fas', 'cart-plus']" class="h-5 w-5" stroke="currentColor" />
+                    </Link>
+                </div>
                 
-                <Link @click="selectSite(props.site)" :href="route('withdraw.create')"
-                    class="btn btn-circle btn-warning">
-                <font-awesome-icon :icon="['fas', 'square-root-variable']" class="h-5 w-5" stroke="currentColor" />
-                </Link>
-                <button class="btn btn-ghost btn-circle">
-                    <font-awesome-icon :icon="['fas', 'cog']" class="h-5 w-5" stroke="currentColor" />
-                </button>
+                <div class="tooltip" data-tip="Ricalcola rischio">
+                    <button type="button" @click="calculateRiskFactor(props.site)" class="btn btn-circle btn-warning">
+                        <font-awesome-icon :icon="['fas', 'square-root-variable']" class="h-5 w-5" stroke="currentColor" />
+                    </button>
+                </div>
+<!--
+                <div class="tooltip" data-tip="Impostazioni">
+                    <button class="btn btn-ghost btn-circle">
+                        <font-awesome-icon :icon="['fas', 'cog']" class="h-5 w-5" stroke="currentColor" />
+                    </button>
+                </div>
+-->
             </div>
         </div>
 
@@ -224,7 +230,7 @@
                         <h2 clasS="mb-2">Fattore Rischio</h2>
                         <div class="flex items-center justify-between gap-2">
                             <div class="text-4xl"><font-awesome-icon icon="triangle-exclamation" /></div>
-                            <div class="flex text-2xl">{{ 100 * props.site.calculated_risk_factor }}%</div>
+                            <div class="flex text-2xl">{{ (100 * (props.site.calculated_risk_factor ?? 0)).toFixed(1) }}%</div>
                         </div>
                     </div>
 
@@ -273,13 +279,12 @@
 
 <script setup>
 
-import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed, reactive, ref } from 'vue';
+import { Link, router, useForm } from '@inertiajs/vue3';
+import { computed, ref, nextTick } from 'vue';
 import { useStore } from 'vuex';
 import EmptyState from '@/Components/UI/EmptyState.vue';
 import EditableTimetable from './EditableTimetable.vue';
 import SimpleMapWithMarker from '@/Pages/Map/Components/SimpleMapWithMarker.vue';
-//import Create from '../../Withdraw/Create.vue';
 import StoricoRitiri from './StoricoRitiri.vue';
 import OrdiniInCorso from './OrdiniInCorso.vue';
 import SiteBooleanParameter from './SiteBooleanParameter.vue';
@@ -289,6 +294,7 @@ import SiteHeadParameter from './SiteHeadParameter.vue';
 
 const props = defineProps({
     site: Object,
+    customerSitesCount: Number,
     counter: Number,
     areas: Array,
     orders: Array,
@@ -312,12 +318,6 @@ const calculatedName = computed(
 const calculatedLabel = computed(
     () => '' + props.site.name
 );
-
-// Method to select the current site
-const selectSite = (site) => {
-    console.log('Selected Site:', site);
-    store.dispatch('setCurrentSite', site); // Dispatch action to set current site
-};
 
 const sitePreferredArea = ref(
     props.site.areas && props.site.areas.length > 0
@@ -364,13 +364,62 @@ function updateBooleanParametersForSite() {
         });
 }
 
-const openCreateWithdrawModal = (site) => {
-    selectSite(site);
-    my_modal_4.showModal();
-};
+const withdrawCreateUrl = (site) => route('withdraw.create', {
+    site: site.id,
+    customer: site.customer_id,
+});
 
+const riskModal = ref(null);
+const targetSiteForRisk = ref(null);
+
+const calculateRiskFactor = (site) => {
+    targetSiteForRisk.value = site;
+    const sitesCount = Number(props.customerSitesCount ?? 1);
+    if (sitesCount > 1) {
+        nextTick(() => riskModal.value?.showModal?.());
+        return;
+    }
+    runSingleSiteRiskRecalculation();
+}
+
+const runSingleSiteRiskRecalculation = () => {
+    const site = targetSiteForRisk.value ?? props.site;
+    if (!site?.id) return;
+    riskModal.value?.close?.();
+
+    axios.post(`/api/site/${site.id}/recalculate-risk`)
+        .then((response) => {
+            const mergedSite = {
+                ...JSON.parse(JSON.stringify(site)),
+                ...(response.data.site ?? {}),
+            };
+            emit('siteUpdated', mergedSite);
+            store.dispatch('flash/queueMessage', { type: 'success', text: 'Rischio sede ricalcolato correttamente' });
+        })
+        .catch(() => {
+            store.dispatch('flash/queueMessage', { type: 'error', text: 'Errore durante il ricalcolo del rischio' });
+        });
+}
+
+const runCustomerRiskRecalculation = () => {
+    const site = targetSiteForRisk.value ?? props.site;
+    if (!site?.customer_id) return;
+    riskModal.value?.close?.();
+
+    axios.post(`/api/customer/${site.customer_id}/recalculate-risk`)
+        .then(() => {
+            store.dispatch('flash/queueMessage', { type: 'success', text: 'Rischio ricalcolato su tutte le sedi del cliente' });
+            router.reload({
+                only: ['customer', 'orders_by_site'],
+                preserveScroll: true,
+                preserveState: false,
+            });
+        })
+        .catch(() => {
+            store.dispatch('flash/queueMessage', { type: 'error', text: 'Errore durante il ricalcolo globale del rischio' });
+        });
+}
 
 
 
 </script>
-

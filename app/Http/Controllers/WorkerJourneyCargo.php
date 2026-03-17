@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\JourneyCargosState;
+use App\Enums\JourneyCargoStatus;
 use App\Models\User;
 use App\Models\Holder;
 use App\Enums\UserRole;
@@ -11,7 +11,7 @@ use App\Models\Trailer;
 use App\Models\Vehicle;
 use App\Models\Order;
 use Illuminate\Http\Request;
-use App\Enums\OrdersState;
+use App\Enums\OrderStatus;
 use App\Models\JourneyCargo;
 use App\Models\OrderItem;
 use App\Models\Warehouse;
@@ -387,23 +387,23 @@ class WorkerJourneyCargo extends Controller
 
 public function updateState(Order $order, Request $request)
 {
-    $newState = OrdersState::from($request->new_state);
+    $newState = OrderStatus::from($request->new_state);
 
-    if (!OrdersState::from($order->status)->canTransitionTo($newState)) {
+    if (!OrderStatus::from($order->status)->canTransitionTo($newState)) {
         abort(403, 'Invalid state transition.');
     }
 
     // Add lifecycle-specific logic
     switch ($newState) {
-        case OrdersState::STATUS_PLANNED:
+        case OrderStatus::STATUS_PLANNED:
             $order->planned_date = $request->planned_date;
             break;
 
-        case OrdersState::STATUS_EXECUTED:
+        case OrderStatus::STATUS_EXECUTED:
             $order->executed_at = now();
             break;
 
-        case OrdersState::STATUS_DOWNLOADED:
+        case OrderStatus::STATUS_DOWNLOADED:
             // Attachments or warehouse updates
             $order->downloaded_files = $request->file('attachments')->store('orders');
             break;
@@ -418,6 +418,7 @@ public function updateState(Order $order, Request $request)
 
 
 }
+
 
 
 

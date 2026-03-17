@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\JourneyStopKind;
-use App\Enums\JourneyStopState;
+use App\Enums\JourneyStopStatus;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
@@ -45,9 +45,9 @@ return new class extends Migration {
             $table->unsignedInteger('sequence')->default(0);
 
             // status: planned|in_progress|done|skipped|cancelled
-            $table->enum('status', array_column(JourneyStopState::cases(), 'value'))
+            $table->enum('status', array_column(JourneyStopStatus::cases(), 'value'))
             ->nullable()
-            ->default(JourneyStopState::Planned);
+            ->default(JourneyStopStatus::Planned);
 
             // location (sia customer che technical)
             $table->decimal('location_lat', 10, 7)->nullable();
@@ -80,3 +80,4 @@ return new class extends Migration {
         Schema::dropIfExists('journey_stops');
     }
 };
+

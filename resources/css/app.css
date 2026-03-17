@@ -76,6 +76,21 @@ html, body {
     box-shadow: 0 0 0 1000px var(--fallback-b1, oklch(var(--b1) / 1)) inset;
 }
 
+/* Keep regular form inputs theme-consistent when browser autofill is applied */
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus,
+.input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--fallback-bc, oklch(var(--bc) / 1));
+    -webkit-box-shadow: 0 0 0 1000px var(--fallback-b1, oklch(var(--b1) / 1)) inset;
+    box-shadow: 0 0 0 1000px var(--fallback-b1, oklch(var(--b1) / 1)) inset;
+    caret-color: var(--fallback-bc, oklch(var(--bc) / 1));
+}
+
+.input:-moz-autofill {
+    box-shadow: 0 0 0 1000px var(--fallback-b1, oklch(var(--b1) / 1)) inset;
+}
+
 /* Style for the Info Window in Google MAP */
 .gm-style .gm-style-iw-c {
     color: #222!important;

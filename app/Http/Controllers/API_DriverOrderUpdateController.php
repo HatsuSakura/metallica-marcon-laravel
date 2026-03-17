@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Enums\OrdersState;
+use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
 
 class API_DriverOrderUpdateController extends Controller
@@ -14,9 +14,9 @@ class API_DriverOrderUpdateController extends Controller
     */
     public function updateState(Order $order, Request $request)
     {
-        $newState = OrdersState::from($request->new_state);
+        $newState = OrderStatus::from($request->new_state);
 
-        if (!OrdersState::from($order->status->value)->canTransitionTo($newState)) {
+        if (!OrderStatus::from($order->status->value)->canTransitionTo($newState)) {
             abort(403, 'Invalid state transition.');
         }
 
@@ -30,15 +30,15 @@ class API_DriverOrderUpdateController extends Controller
 
         // Add lifecycle-specific logic
         switch ($newState) {
-            case OrdersState::STATUS_CREATED:
+            case OrderStatus::STATUS_CREATED:
                 $order->created_at = $request->created_at;
                 break;
 
-            case OrdersState::STATUS_EXECUTED:
+            case OrderStatus::STATUS_EXECUTED:
                 $order->actual_withdraw_at = $request->actual_withdraw_at;
                 break;
 
-            case OrdersState::STATUS_CLOSED:
+            case OrderStatus::STATUS_CLOSED:
                 // Attachments or warehouse updates
                 $order->downloaded_files = $request->file('attachments')->store('orders');
                 break;
@@ -69,6 +69,7 @@ class API_DriverOrderUpdateController extends Controller
         return response()->json(['message' => 'Order saved successfully.', 'order' => $order], 200);
     }
 }
+
 
 
 
