@@ -57,7 +57,7 @@ class LogisticDispatchController extends Controller
             'orders:id,journey_id,customer_id,site_id,status,notes',
             'orders.customer:id,company_name',
             'orders.site:id,name,address',
-            'orders.items:id,order_id,holder_id,cer_code_id,quantity,weight,notes,truck_location',
+            'orders.items:id,order_id,holder_id,cer_code_id,description,holder_quantity,weight_declared,status',
             'orders.items.holder:id,name',
             'orders.items.cerCode:id,code,description',
         ]);
