@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\JourneysState;
+use App\Enums\JourneyStatus;
 use App\Models\Journey;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
@@ -28,10 +28,10 @@ class LogisticDispatchController extends Controller
             ->when(
                 $status === 'open',
                 fn ($query) => $query->whereIn('status', [
-                    JourneysState::STATUS_ACTIVE->value,
-                    JourneysState::STATUS_EXECUTED->value,
+                    JourneyStatus::STATUS_ACTIVE->value,
+                    JourneyStatus::STATUS_EXECUTED->value,
                 ]),
-                fn ($query) => $query->where('status', JourneysState::STATUS_CLOSED->value)
+                fn ($query) => $query->where('status', JourneyStatus::STATUS_CLOSED->value)
             )
             ->orderByDesc('planned_end_at')
             ->paginate(20)
