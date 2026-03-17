@@ -20,8 +20,7 @@ class CalculateRiskService
         $today = Carbon::today();
         $weightPeriod3 = 0.15;
         $weightPeriod2 = 0.35;
-        $weightStored = 0.50;
-        $algorithmCase = 0;
+        $weightPeriod1 = 0.50;
         $daysBetweenThirdAndSecondWithdraw = 0;
         $daysBetweenSecondAndFirstWithdraw = 0;
         $daysSinceLatestWithdraw = 0;
@@ -48,8 +47,6 @@ class CalculateRiskService
             $withdrawCount = $withdraws->count();
         }
 
-        $algorithmCase = $withdrawCount;
-
         if ($withdrawCount > 0) {
             $residueFactor = ((float) ($withdraws[0]->residue_percentage ?? 0)) / 100;
             $daysSinceLatestWithdraw = Carbon::parse($withdraws[0]->withdrawn_at)->diffInDays($today);
@@ -63,28 +60,18 @@ class CalculateRiskService
                 ->diffInDays(Carbon::parse($withdraws[1]->withdrawn_at));
         }
 
-        // Residue percentage from the latest withdraw contributes additively to the computed risk.
-        switch ($algorithmCase) {
+        // Idempotent expectation:
+        // - do not recursively reuse previously computed days_until_next_withdraw when history is sufficient.
+        // - use stored days_until_next_withdraw only as a fallback reference when history is insufficient.
+        switch ($withdrawCount) {
             case 3:
-                if ($daysUntilNextWithdraw == 0) {
-                    $daysUntilNextWithdraw =
-                        $daysBetweenThirdAndSecondWithdraw * ($weightPeriod3 + 0.5 * $weightStored)
-                        + $daysBetweenSecondAndFirstWithdraw * ($weightPeriod2 + 0.5 * $weightStored);
-                } else {
-                    $daysUntilNextWithdraw =
-                        $daysBetweenThirdAndSecondWithdraw * $weightPeriod3
-                        + $daysBetweenSecondAndFirstWithdraw * $weightPeriod2
-                        + $daysUntilNextWithdraw * $weightStored;
-                }
+                $daysUntilNextWithdraw =
+                    $daysBetweenThirdAndSecondWithdraw * $weightPeriod3
+                    + $daysBetweenSecondAndFirstWithdraw * $weightPeriod2
+                    + $daysSinceLatestWithdraw * $weightPeriod1;
                 break;
             case 2:
-                if ($daysUntilNextWithdraw == 0) {
-                    $daysUntilNextWithdraw = $daysBetweenSecondAndFirstWithdraw;
-                } else {
-                    $daysUntilNextWithdraw =
-                        $daysBetweenSecondAndFirstWithdraw * ($weightPeriod2 + 0.5 * $weightPeriod3)
-                        + $daysUntilNextWithdraw * ($weightStored + 0.5 * $weightPeriod3);
-                }
+                $daysUntilNextWithdraw = $daysBetweenSecondAndFirstWithdraw;
                 break;
             case 1:
                 if ($daysUntilNextWithdraw == 0) {
@@ -98,9 +85,8 @@ class CalculateRiskService
                 $daysUntilNextWithdraw = 2;
                 break;
             default:
-                $daysUntilNextWithdraw =
-                    $daysBetweenThirdAndSecondWithdraw * ($weightPeriod3 + 0.5 * $weightStored)
-                    + $daysBetweenSecondAndFirstWithdraw * ($weightPeriod2 + 0.5 * $weightStored);
+                // Keep existing reference if available; otherwise fallback.
+                $daysUntilNextWithdraw = $daysUntilNextWithdraw > 0 ? $daysUntilNextWithdraw : 2;
         }
 
         if ($daysUntilNextWithdraw <= 0) {

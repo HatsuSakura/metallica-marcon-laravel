@@ -11,6 +11,7 @@ use App\Models\Trailer;
 use App\Models\Vehicle;
 use App\Models\OrderItem;
 use App\Models\Warehouse;
+use App\Enums\OrderDocumentsState;
 use App\Enums\JourneyStatus;
 use App\Models\JourneyCargo;
 use Illuminate\Http\Request;
@@ -281,7 +282,7 @@ class JourneyCargoController extends Controller
         foreach ($orders as $order) {
             $order->update([
                 'journey_id' => null,
-                'status' => OrderStatus::STATUS_CREATED,
+                'status' => $this->statusAfterJourneyDetach($order),
                 'cargo_location' => null,
             ]);
         }
@@ -296,11 +297,23 @@ class JourneyCargoController extends Controller
         return redirect()->back()->with('success', 'Viaggio ripristinato con successo!');
     }
 
+    private function statusAfterJourneyDetach(Order $order): string
+    {
+        $documentsState = $order->documents_state instanceof OrderDocumentsState
+            ? $order->documents_state
+            : OrderDocumentsState::tryFrom((string) $order->documents_state);
+
+        if ($documentsState === OrderDocumentsState::GENERATED) {
+            return OrderStatus::STATUS_READY->value;
+        }
+
+        return OrderStatus::STATUS_CREATED->value;
+    }
+
 
 
 
 }
-
 
 
 

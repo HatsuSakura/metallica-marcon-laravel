@@ -34,6 +34,13 @@
                             <span class="font-medium">{{ order.status }} </span>
                     </div>
                     <div>
+                        <font-awesome-icon :icon="['fas', 'file-lines']" class="text-2xl"/>
+                        Stato documenti
+                        <span class="badge ml-2" :class="documentsStateBadgeClass(order.documents_state)">
+                            {{ documentsStateLabel(order.documents_state) }}
+                        </span>
+                    </div>
+                    <div>
                         <font-awesome-icon :icon="['fas', 'calendar-check']" class="text-2xl"/>
                         Data inserimento ordine:
                             <span class="font-medium">{{ dayjs(order.created_at).format('YYYY-MM-DD HH:mm:ss') }} </span>
@@ -50,6 +57,16 @@
             </div>
     
             <div class="flex flex-row justify-end gap-2">
+                <button
+                    type="button"
+                    class="btn btn-outline btn-sm"
+                    :disabled="generatingOrderId === order.id"
+                    @click="generateDocuments(order.id)"
+                >
+                    <font-awesome-icon :icon="['fas', 'file-export']" />
+                    {{ generatingOrderId === order.id ? 'Avvio...' : 'Genera documenti' }}
+                </button>
+
                 <Link
                 :href="route('order.edit', {order: order.id} )"
                 method="get"
@@ -78,10 +95,13 @@
     
     </template>
     
-    <script setup>
-    import Box from '@/Components/UI/Box.vue';
-    import dayjs from 'dayjs';
-    import { Link } from '@inertiajs/vue3';
+<script setup>
+import Box from '@/Components/UI/Box.vue';
+import dayjs from 'dayjs';
+import axios from 'axios';
+import { Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { useStore } from 'vuex';
 import OrderSummaryItems from './Components/OrderSummaryItems.vue';
 import OrderSummaryHolders from './Components/OrderSummaryHolders.vue';
     
@@ -89,6 +109,58 @@ const props = defineProps({
         orders : Object,
         holders: Object,
     })
-    
-</script>
 
+const store = useStore();
+const generatingOrderId = ref(null);
+
+const documentsStateLabel = (state) => {
+    switch (state) {
+        case 'generated':
+            return 'Generati';
+        case 'generating':
+            return 'In generazione';
+        case 'failed':
+            return 'Errore';
+        case 'not_generated':
+        default:
+            return 'Non generati';
+    }
+};
+
+const documentsStateBadgeClass = (state) => {
+    switch (state) {
+        case 'generated':
+            return 'badge-success';
+        case 'generating':
+            return 'badge-info';
+        case 'failed':
+            return 'badge-error';
+        case 'not_generated':
+        default:
+            return 'badge-warning';
+    }
+};
+
+const generateDocuments = async (orderId) => {
+    if (!orderId || generatingOrderId.value) {
+        return;
+    }
+
+    generatingOrderId.value = orderId;
+
+    try {
+        const response = await axios.post(`/api/orders/${orderId}/generate-documents`);
+        store.dispatch('flash/queueMessage', {
+            type: response?.data?.type ?? 'success',
+            text: response?.data?.message ?? 'Generazione documenti avviata.',
+        });
+        router.reload({ only: ['orders'] });
+    } catch (error) {
+        const message = error?.response?.data?.message ?? 'Errore durante l’avvio della generazione documenti.';
+        store.dispatch('flash/queueMessage', { type: 'error', text: message });
+    } finally {
+        generatingOrderId.value = null;
+    }
+};
+
+</script>

@@ -5,6 +5,7 @@ namespace App\Enums;
 enum OrderStatus: string
 {
     case STATUS_CREATED = 'creato';
+    case STATUS_READY = 'pronto';
     case STATUS_PLANNED = 'pianificato';
     case STATUS_EXECUTED = 'eseguito';
     case STATUS_DOWNLOADED = 'scaricato'; 
@@ -16,7 +17,8 @@ enum OrderStatus: string
     public function canTransitionTo(self $nextState): bool
     {
         $transitions = [
-            self::STATUS_CREATED->value => [self::STATUS_PLANNED],
+            self::STATUS_CREATED->value => [self::STATUS_READY],
+            self::STATUS_READY->value => [self::STATUS_PLANNED],
             self::STATUS_PLANNED->value => [self::STATUS_EXECUTED],
             self::STATUS_EXECUTED->value => [self::STATUS_DOWNLOADED],
             self::STATUS_DOWNLOADED->value => [self::STATUS_CLOSED],
@@ -25,4 +27,3 @@ enum OrderStatus: string
         return isset($transitions[$this->value]) && in_array($nextState, $transitions[$this->value], true);
     }
 }
-

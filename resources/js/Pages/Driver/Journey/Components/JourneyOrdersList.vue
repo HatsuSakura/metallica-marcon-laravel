@@ -1,5 +1,5 @@
 <template>
-    <ul class="timeline timeline-vertical">
+    <ul class="timeline timeline-vertical journey-orders-list">
         <li>
             <div class="timeline-start timeline-box">
                 Partenza
@@ -140,12 +140,19 @@
                                 {{ order.site.notes }}
                             </div>
                             <div v-if="orderItems(order).length > 0" class="mt-1">
-                                <div class="font-semibold">Dettaglio item</div>
-                                <ul class="list-disc ml-5">
-                                    <li v-for="item in orderItems(order)" :key="item.id ?? item.uuid ?? item.temp_id">
-                                        {{ itemSummary(item) }}
-                                    </li>
-                                </ul>
+                                <div tabindex="0" class="collapse collapse-arrow journey-items-collapse">
+                                    <input type="checkbox" />
+                                    <div class="collapse-title text-sm font-semibold">
+                                        Dettaglio elementi ({{ orderItems(order).length }})
+                                    </div>
+                                    <div class="collapse-content pt-0">
+                                        <ul class="list-disc ml-5">
+                                            <li v-for="item in orderItems(order)" :key="item.id ?? item.uuid ?? item.temp_id">
+                                                {{ itemSummary(item) }}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
                             <div v-if="order.notes" class="mt-1 whitespace-pre-line">
                                 <span class="font-semibold">Note Ordine:</span>
@@ -292,3 +299,25 @@ const onDragEnd = () => {
 }
 </script>
 
+<style scoped>
+.journey-orders-list .journey-items-collapse .collapse-title {
+    padding: 0.125rem 0.75rem !important;
+    min-height: 1.75rem !important;
+    line-height: 1.1rem !important;
+}
+
+.journey-orders-list .journey-items-collapse > input[type="checkbox"] {
+    min-height: 1.75rem !important;
+    height: 1.75rem !important;
+}
+
+.journey-orders-list .journey-items-collapse > input[type="checkbox"] ~ .collapse-content {
+    padding-top: 0 !important;
+}
+
+.journey-orders-list .journey-items-collapse.collapse-arrow > .collapse-title:after {
+    top: 50% !important;
+    inset-inline-end: 1rem !important;
+    --tw-translate-y: -50% !important;
+}
+</style>

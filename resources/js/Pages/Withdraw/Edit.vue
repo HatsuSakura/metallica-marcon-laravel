@@ -2,32 +2,21 @@
   <section class="max-w-4xl mx-auto">
     <div class="card bg-base-100 shadow-xl">
       <div class="card-body">
-        <h1 class="card-title">Nuovo Ritiro</h1>
+        <h1 class="card-title">Modifica Ritiro</h1>
 
         <div class="grid md:grid-cols-2 gap-4">
           <div class="form-control">
             <label class="label">
               <span class="label-text">Sede di carico</span>
             </label>
-            <input
-              type="text"
-              class="input input-bordered w-full"
-              :value="selectedSiteLabel"
-              readonly
-            />
+            <input type="text" class="input input-bordered w-full" :value="siteLabel" readonly />
           </div>
 
           <div class="form-control">
             <label class="label">
               <span class="label-text">Cliente</span>
             </label>
-            <input
-              type="text"
-              class="input input-bordered w-full"
-              :value="selectedSite?.customer?.company_name ?? '-'"
-              readonly
-            />
-            <div class="input-error" v-if="form.errors.customer_id">{{ form.errors.customer_id }}</div>
+            <input type="text" class="input input-bordered w-full" :value="customerLabel" readonly />
           </div>
         </div>
 
@@ -91,8 +80,8 @@
 
         <div class="card-actions justify-end">
           <button type="button" class="btn btn-ghost" @click="goBack">Annulla</button>
-          <button type="button" class="btn btn-primary" :disabled="form.processing || !selectedSite" @click="createWithdraw">
-            Salva ritiro
+          <button type="button" class="btn btn-primary" :disabled="form.processing" @click="updateWithdraw">
+            Salva modifiche
           </button>
         </div>
       </div>
@@ -101,45 +90,45 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 
 const props = defineProps({
+  withdraw: { type: Object, required: true },
   vehicles: { type: Array, default: () => [] },
   drivers: { type: Array, default: () => [] },
-  selectedSite: { type: Object, default: null },
 });
 
 const form = useForm({
-  withdrawn_at: null,
-  residue_percentage: 0,
-  customer_id: props.selectedSite?.customer_id ?? null,
-  site_id: props.selectedSite?.id ?? null,
-  vehicle_id: null,
-  driver_id: null,
-  is_manual_entry: true,
+  withdrawn_at: props.withdraw.withdrawn_at ? new Date(props.withdraw.withdrawn_at) : null,
+  residue_percentage: Number(props.withdraw.residue_percentage ?? 0),
+  customer_id: props.withdraw.customer_id,
+  site_id: props.withdraw.site_id,
+  vehicle_id: props.withdraw.vehicle_id ?? null,
+  driver_id: props.withdraw.driver_id ?? null,
+  is_manual_entry: Boolean(props.withdraw.is_manual_entry ?? true),
 });
 
-const selectedSite = computed(() => props.selectedSite);
-const selectedSiteLabel = computed(() => {
-  if (!selectedSite.value) return '-';
-  return `${selectedSite.value.name} - ${selectedSite.value.address ?? '-'}`;
+const siteLabel = computed(() => {
+  const site = props.withdraw.site;
+  if (!site) return '-';
+  return `${site.name} - ${site.address ?? '-'}`;
 });
 
-watch(selectedSite, (newSite) => {
-  form.site_id = newSite?.id ?? null;
-  form.customer_id = newSite?.customer_id ?? null;
-}, { immediate: true });
+const customerLabel = computed(() => {
+  const customer = props.withdraw.site?.customer;
+  return customer?.company_name ?? '-';
+});
 
-const createWithdraw = () => {
+const updateWithdraw = () => {
   const payloadDate = form.withdrawn_at ? dayjs(form.withdrawn_at).format('YYYY-MM-DD HH:mm:ss') : null;
   form.transform((data) => ({
     ...data,
     withdrawn_at: payloadDate,
-  })).post(route('withdraw.store'));
+  })).put(route('withdraw.update', { withdraw: props.withdraw.id }));
 };
 
 const goBack = () => {

@@ -49,18 +49,19 @@
 
             <div class="flex flex-col items-start space-y-1">
                 <div class="flex">
-                    <Link @click="selectSite(props.site)" :href="route('withdraw.create')"
+                    <Link :href="withdrawEditUrl(withdraw)"
                         class="btn btn-circle btn-primary">
                     <font-awesome-icon :icon="['fas', 'pencil']" class="h-5 w-5"
                         stroke="currentColor" />
                     </Link>
                 </div>
                 <div class="flex">
-                    <Link @click="selectSite(props.site)" :href="route('withdraw.create')"
+                    <button type="button"
+                        @click="deleteWithdraw(withdraw)"
                         class="btn btn-circle btn-error">
                     <font-awesome-icon :icon="['fas', 'trash-can']" class="h-5 w-5"
                         stroke="currentColor" />
-                    </Link>
+                    </button>
                 </div>
             </div>
 
@@ -75,7 +76,7 @@
 
 <script setup>
 import EmptyState from '@/Components/UI/EmptyState.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
 
 
@@ -87,5 +88,27 @@ const props = defineProps({
 const formatWithdrawDate = (withdraw) => {
     const raw = withdraw?.withdrawn_at ?? null;
     return raw ? dayjs(raw).format('YYYY-MM-DD') : '-';
+};
+
+const withdrawEditUrl = (withdraw) => route('withdraw.edit', {
+    withdraw: withdraw.id,
+});
+
+const deleteWithdraw = (withdraw) => {
+    if (!confirm('Confermi la cancellazione del ritiro?')) {
+        return;
+    }
+
+    router.delete(route('withdraw.destroy', { withdraw: withdraw.id }), {
+        preserveScroll: true,
+        preserveState: false,
+        onSuccess: () => {
+            router.reload({
+                only: ['customer', 'orders_by_site'],
+                preserveScroll: true,
+                preserveState: false,
+            });
+        },
+    });
 };
 </script>

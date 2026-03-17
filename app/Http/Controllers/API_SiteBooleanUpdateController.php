@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Site;
+use App\Services\CalculateRiskService;
 use Illuminate\Http\Request;
 
 class API_SiteBooleanUpdateController extends Controller
@@ -31,8 +32,23 @@ class API_SiteBooleanUpdateController extends Controller
     
         return response()->json(['message' => 'Site saved successfully.', 'site' => $site], 200);
     }
-}
 
+    public function recalculateRisk(Site $site, CalculateRiskService $calculateRiskService)
+    {
+        $updatedSite = $calculateRiskService->recalculateSiteRisk([
+            'siteId' => (int) $site->id,
+        ]);
+
+        return response()->json([
+            'message' => 'Site risk recalculated successfully.',
+            'site' => [
+                'id' => $updatedSite->id,
+                'calculated_risk_factor' => $updatedSite->calculated_risk_factor,
+                'days_until_next_withdraw' => $updatedSite->days_until_next_withdraw,
+            ],
+        ], 200);
+    }
+}
 
 
 

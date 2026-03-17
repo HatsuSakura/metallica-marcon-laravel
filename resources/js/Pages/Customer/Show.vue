@@ -42,30 +42,15 @@
                 </div>
             </Box>
         </div>
-
-
-<!--
-        <Box v-if="!hasSites" class="flex md:col-span-3 items-center">
-            <div class="w-full text-center font-medium text-gray-500">
-                Nessuna Sede associata
-            </div>
-        </Box>
-        <div v-else class="md:col-span-3 items-center">
-            <Box v-for="site in customer.sites" :key="site.id" class="mb-4">
-                <template #header>Sede {{ site.name }}</template>
-                <SiteSpace :site="site"/>
-            </Box>
-        </div>
-    -->
-
     </section>
 
     <!-- SEZIONE TAB PER LE DIVERSE SEDI -->
     <section>
-        <div role="tablist" class="tabs tabs-bordered">
+        <div role="tablist" class="tabs tabs-lifted">
             <TabSite 
                 v-for="(site, index) in reactiveCustomer.sites" 
                 :site="site"
+                :customer-sites-count="reactiveCustomer.sites.length"
                 :areas="props.areas"
                 :orders="(orders_by_site[site.id] ?? [])"
                 @siteUpdated="updateSite"
@@ -126,5 +111,4 @@ const updateSite = (updatedSite) => {
 
 
 </script>
-
 

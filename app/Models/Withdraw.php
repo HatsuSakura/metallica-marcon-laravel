@@ -30,5 +30,12 @@ class Withdraw extends Model
         return $this->belongsTo(Vehicle::class, 'vehicle_id');
     }
 
-}
+    public function site(): BelongsTo{
+        return $this->belongsTo(Site::class, 'site_id');
+    }
 
+    public function customer(): BelongsTo{
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+}

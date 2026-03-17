@@ -45,6 +45,7 @@ use App\Http\Controllers\API_WarehouseJourneyCargosController;
 use App\Http\Controllers\API_SiteBooleanUpdateController;
 use App\Http\Controllers\API_UserResetAndResendController;
 use App\Http\Controllers\API_DriverJourneyStopsController;
+use App\Http\Controllers\API_OrderDocumentsController;
 use App\Http\Controllers\WarehouseManagerOrderItemImageController;
 use App\Http\Controllers\API_NlpLogisticsParseController;
 
@@ -245,7 +246,7 @@ Route::middleware(['auth', 'verified'])->group(function() {
 
     // WITHDRAW
     Route::resource('withdraw', WithdrawController::class)
-    ->only(['create', 'store', 'update', 'destroy'])
+    ->only(['create', 'store', 'edit', 'update', 'destroy'])
     ->withTrashed();  
 
     Route::resource('order', OrderController::class)
@@ -370,8 +371,15 @@ Route::prefix('api')
         //Route::get('/timetable/{site}', [API_SiteTimetableController::class, 'show']);
         Route::post('/timetable/{site}', [API_SiteTimetableController::class, 'store']);
         Route::put('/site/updateBooleans/{site}', [API_SiteBooleanUpdateController ::class, 'update']);
+        Route::post('/site/{site}/recalculate-risk', [API_SiteBooleanUpdateController::class, 'recalculateRisk']);
+        Route::post('/customer/{customer}/recalculate-risk', [CustomerController::class, 'recalculateRisk']);
         Route::put('/journey/updateState/{journey}', [API_DriverJourneyUpdateController ::class, 'updateState']);
         Route::put('/order/updateState/{order}', [API_DriverOrderUpdateController ::class, 'updateState']);
+        Route::post('/orders/{order}/generate-documents', [API_OrderDocumentsController::class, 'generate']);
+        Route::get('/orders/{order}/document-status', [API_OrderDocumentsController::class, 'status']);
+        Route::get('/orders/{order}/documents', [API_OrderDocumentsController::class, 'list']);
+        Route::get('/orders/{order}/documents/{document}/download', [API_OrderDocumentsController::class, 'download'])
+            ->where('document', '.*');
         Route::post('/driver/journeys/{journey}/start', [API_DriverJourneyStopsController::class, 'startJourney']);
         Route::put('/driver/journeys/{journey}/stops/reorder', [API_DriverJourneyStopsController::class, 'reorder']);
         Route::put('/driver/journeys/{journey}/stops/{stop}/complete', [API_DriverJourneyStopsController::class, 'complete']);

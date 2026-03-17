@@ -25,3 +25,10 @@ Dialog refinement planned but not in MVP.
 ## D7: No runtime-compiled Vue components
 Use only standard SFC `.vue` components imported by parent pages.
 Avoid runtime templates in JS objects (`template: '...'`) to prevent production-only rendering issues.
+
+## D8: Dispatch as dedicated domain module (GLE-53)
+- `Dashboard/Logistic.vue` remains entry-only.
+- New workflow implemented under `Pages/LogisticDispatch/*`.
+- State transitions exposed as explicit command endpoints.
+- Legacy non-production journey cargo/warehouse process removed, not preserved.
+Reference: `.ai/decisions/2026-03-17-logistic-dispatch-implementation-strategy.md`

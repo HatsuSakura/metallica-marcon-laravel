@@ -1,6 +1,6 @@
 <template>
     <section v-if="site" class="mb-8"> <!-- SERVE per evitare errori in apertura se VUEX STORE non è in sync-->
-      <form @submit.prevent="create">   
+      <form @submit.prevent="create('create_stay')">   
 
         <!-- Intestazione + Buttons to Open/Close All -->
         <div class="mb-4 flex items-center justify-between">
@@ -84,7 +84,7 @@
             <div class="flex content-center">
               <div>
                 <div class="flex content-center pr-4">
-                  <div class="radial-progress" :style="{ '--value': site.calculated_risk_factor * 100, color: backgroundColor }" role="progressbar">{{ site.calculated_risk_factor * 100 }}%</div>
+                  <div class="radial-progress" :style="{ '--value': riskPercent, color: backgroundColor }" role="progressbar">{{ riskPercent }}%</div>
                   <font-awesome-icon :icon="['fas', buildingFaIcon]" class="text-4xl p-4" :style="{ color: backgroundColor }" />
                 </div>
                 
@@ -194,8 +194,10 @@
             :initialOpen=true
             @register="registerSection"
           >
-            <div>
-              <label class="label">Annotazioni operative del ritiro</label>
+
+          <div class="flex flex-row gap-4 justify-stretch w-full">
+            <div class="w-1/2">
+              <label class="label">Annotazioni aggiuntive per il ritiro</label>
               <textarea
                 v-model="form.notes"
                 class="textarea textarea-bordered w-full"
@@ -206,6 +208,18 @@
                 {{ form.errors.notes }}
               </div>
             </div>
+
+            <div class="w-1/2">
+              <label class="label">Note di questa sede</label>
+              <textarea
+                :value="siteNotesText"
+                class="textarea textarea-bordered w-full"
+                rows="4"
+                readonly
+              />
+            </div>
+          </div>
+
           </AccordionRow>
 
 
@@ -295,8 +309,18 @@
 
         </div>
 
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary">Crea Ordine</button>
+        <div class="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            class="btn btn-outline"
+            :disabled="form.processing"
+            @click="create('create_exit')"
+          >
+            Crea & Esci
+          </button>
+          <button type="submit" class="btn btn-primary" :disabled="form.processing">
+            Crea
+          </button>
         </div>
     
       </form>
@@ -340,6 +364,9 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
 
     const store = useStore();
     const site = props.site;
+    const siteNotesText = site?.notes?.trim()
+      ? site.notes
+      : 'nessuna nota particoalre per questa sede';
     const customer = props.customer;
 
     const currentDate = computed(
@@ -352,6 +379,11 @@ const totalItemsWeight = computed(() => {
       }
       return 0;
     });
+
+const riskPercent = computed(() => {
+  const value = Number(site?.calculated_risk_factor ?? 0) * 100;
+  return Number.isFinite(value) ? Number(value.toFixed(1)) : 0;
+});
 
 const groupedItems = computed(() => {
   const cerById = new Map((props.cerList || []).map((c) => [Number(c.id), c]));
@@ -411,6 +443,7 @@ const groupedItems = computed(() => {
       requested_at: currentDate.value,
       expected_withdraw_at: null,
       notes: '',
+      post_action: 'create_stay',
       logistics_user_id: user ? user.value.id : null, // Fallback to null if user is not defined
       has_adr_consultant: site.has_adr_consultant ?? '',
       customer_id: site.customer_id,
@@ -650,7 +683,7 @@ const removeItem = (index) => {
       }
     }, { immediate: true });
     
-    const create = () => {
+    const create = (postAction = 'create_stay') => {
       // Ensure filled_holders_count and empty_holders_count is set to 0 if empty
       form.holders.forEach(holder => {
         if (holder.filled_holders_count === "") {
@@ -665,6 +698,7 @@ const removeItem = (index) => {
       form.requested_at = dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss');
 
       form.is_urgent = form.is_urgent === true;
+      form.post_action = postAction;
       form.post(route('order.store'));
     }
        
@@ -696,6 +730,3 @@ const removeItem = (index) => {
       border-radius: 0.375rem;
     }
     </style>
-
-
-
