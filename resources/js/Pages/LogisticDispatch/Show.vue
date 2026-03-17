@@ -6,9 +6,10 @@
     <div class="mb-4">
         <Link
             :href="route('logistic-dispatch.index')"
-            class="btn btn-ghost btn-sm"
+            class="btn btn-ghost"
         >
-            Torna alla board
+            <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl" />
+            Torna a Dispatch
         </Link>
     </div>
 
