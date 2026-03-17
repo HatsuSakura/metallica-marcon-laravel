@@ -32,3 +32,8 @@ Avoid runtime templates in JS objects (`template: '...'`) to prevent production-
 - State transitions exposed as explicit command endpoints.
 - Legacy non-production journey cargo/warehouse process removed, not preserved.
 Reference: `.ai/decisions/2026-03-17-logistic-dispatch-implementation-strategy.md`
+
+## D9: Logistic Dispatch board isolated from GLE-55-56-63
+- New branch `feature/logistic-dispatch-board` from `main`.
+- Dispatch flow developed as dedicated module (`Pages/LogisticDispatch/*`) with command endpoints under `/api/logistic/dispatch/*`.
+- Initial scaffold tracks decisions in `.ai/decisions/2026-03-17-logistic-dispatch-pr01-scaffold.md`.

@@ -110,5 +110,15 @@ class Journey extends Model
         return $this->hasMany(JourneyStopOrder::class);
     }
 
+    public function primaryWarehouse()
+    {
+        return $this->belongsTo(Warehouse::class, 'primary_warehouse_id');
+    }
+
+    public function secondaryWarehouse()
+    {
+        return $this->belongsTo(Warehouse::class, 'secondary_warehouse_id');
+    }
+
 }
 

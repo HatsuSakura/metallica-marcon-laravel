@@ -16,6 +16,12 @@
         >
             Viaggi
         </Link>
+        <Link
+            :href="route('logistic-dispatch.index')"
+            class="btn btn-secondary"
+        >
+            Dispatch Board
+        </Link>
     </div>
 </template>
 
@@ -23,4 +29,3 @@
 import DashboardHeader from '@/Components/UI/HeaderForDashboard.vue';
 import { Link } from '@inertiajs/vue3';
 </script>
-
