@@ -2,6 +2,7 @@
 
 namespace App\Services\Dispatch;
 
+use App\Enums\JourneyStatus;
 use App\Models\Journey;
 use App\Models\JourneyEvent;
 use Illuminate\Support\Facades\DB;
@@ -27,10 +28,11 @@ class JourneyDispatchPlanService
 
             JourneyEvent::create([
                 'journey_id' => $journey->id,
-                'status' => (string) $journey->status,
+                'status' => null,
                 'payload' => [
                     'event' => 'dispatch_plan_updated',
                     'plan_version' => $journey->plan_version,
+                    'journey_status' => $this->journeyStatusValue($journey),
                     'is_double_load' => $journey->is_double_load,
                     'is_temporary_storage' => $journey->is_temporary_storage,
                     'primary_warehouse_id' => $journey->primary_warehouse_id,
@@ -53,12 +55,24 @@ class JourneyDispatchPlanService
     {
         JourneyEvent::create([
             'journey_id' => $journey->id,
-            'status' => (string) $journey->status,
+            'status' => null,
             'payload' => [
                 'event' => $eventCode,
+                'journey_status' => $this->journeyStatusValue($journey),
                 'notes' => $notes,
             ],
             'created_by_user_id' => $actorUserId,
         ]);
+    }
+
+    private function journeyStatusValue(Journey $journey): ?string
+    {
+        $status = $journey->status;
+
+        if ($status instanceof JourneyStatus) {
+            return $status->value;
+        }
+
+        return is_scalar($status) ? (string) $status : null;
     }
 }
