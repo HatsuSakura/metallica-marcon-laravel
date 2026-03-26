@@ -2,6 +2,7 @@
 
 namespace App\Services\Dispatch;
 
+use App\Enums\DispatchStatus;
 use App\Enums\JourneyStatus;
 use App\Models\Journey;
 use App\Models\JourneyEvent;
@@ -24,6 +25,12 @@ class JourneyDispatchPlanService
             $journey->primary_warehouse_download_at = $data['primary_warehouse_download_at'] ?? null;
             $journey->secondary_warehouse_download_at = $data['secondary_warehouse_download_at'] ?? null;
             $journey->plan_version = (int) ($journey->plan_version ?? 0) + 1;
+
+            if (DispatchStatus::fromMixed($journey->dispatch_status)->value === DispatchStatus::PENDING->value) {
+                $journey->dispatch_status = DispatchStatus::IN_PROGRESS->value;
+                $journey->dispatch_started_at = $journey->dispatch_started_at ?? now();
+            }
+            $journey->dispatch_updated_at = now();
             $journey->save();
 
             JourneyEvent::create([
@@ -53,16 +60,44 @@ class JourneyDispatchPlanService
 
     public function addOperationalEvent(Journey $journey, string $eventCode, ?string $notes, ?int $actorUserId): void
     {
-        JourneyEvent::create([
-            'journey_id' => $journey->id,
-            'status' => null,
-            'payload' => [
-                'event' => $eventCode,
-                'journey_status' => $this->journeyStatusValue($journey),
-                'notes' => $notes,
-            ],
-            'created_by_user_id' => $actorUserId,
-        ]);
+        DB::transaction(function () use ($journey, $eventCode, $notes, $actorUserId) {
+            $journey = Journey::query()
+                ->whereKey($journey->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            JourneyEvent::create([
+                'journey_id' => $journey->id,
+                'status' => null,
+                'payload' => [
+                    'event' => $eventCode,
+                    'journey_status' => $this->journeyStatusValue($journey),
+                    'notes' => $notes,
+                ],
+                'created_by_user_id' => $actorUserId,
+            ]);
+
+            $dispatchStatus = DispatchStatus::fromMixed($journey->dispatch_status)->value;
+            if (in_array($eventCode, ['dispatch_plan_updated', 'dispatch_resume'], true)) {
+                $journey->dispatch_status = DispatchStatus::IN_PROGRESS->value;
+                if (empty($journey->dispatch_started_at)) {
+                    $journey->dispatch_started_at = now();
+                }
+                $journey->dispatch_updated_at = now();
+            } elseif ($eventCode === 'dispatch_hold') {
+                $journey->dispatch_status = DispatchStatus::ON_HOLD->value;
+                if (empty($journey->dispatch_started_at)) {
+                    $journey->dispatch_started_at = now();
+                }
+                $journey->dispatch_updated_at = now();
+            } elseif ($dispatchStatus === DispatchStatus::PENDING->value) {
+                $journey->dispatch_status = DispatchStatus::IN_PROGRESS->value;
+                $journey->dispatch_started_at = $journey->dispatch_started_at ?? now();
+                $journey->dispatch_updated_at = now();
+            }
+
+            $journey->save();
+        });
     }
 
     private function journeyStatusValue(Journey $journey): ?string

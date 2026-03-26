@@ -4,15 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Enums\JourneyStatus;
 use App\Enums\JourneyStopStatus;
+use App\Enums\OrderDocumentsStatus;
+use App\Enums\OrderStatus;
 use App\Models\Journey;
 use App\Models\JourneyEvent;
 use App\Models\JourneyStop;
+use App\Services\Dispatch\JourneyWorkspaceInitializer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class API_DriverJourneyStopsController extends Controller
 {
+    public function __construct(
+        private JourneyWorkspaceInitializer $journeyWorkspaceInitializer
+    ) {
+    }
+
     private const SKIP_REASON_CODES = [
         'traffic',
         'over_capacity',
@@ -82,9 +90,7 @@ class API_DriverJourneyStopsController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $currentState = $journey->status instanceof JourneyStatus
-                ? $journey->status
-                : JourneyStatus::from((string) $journey->status);
+            $currentState = JourneyStatus::fromMixed($journey->status);
 
             if ($currentState === JourneyStatus::STATUS_CREATED) {
                 $hasOtherActiveJourney = Journey::query()
@@ -96,12 +102,25 @@ class API_DriverJourneyStopsController extends Controller
                 if ($hasOtherActiveJourney) {
                     abort(422, 'Hai gia un altro viaggio attivo.');
                 }
+
+                $notReadyOrders = $journey->orders()
+                    ->where(function ($query) {
+                        $query->where('status', '!=', OrderStatus::STATUS_READY->value)
+                            ->orWhere('documents_status', '!=', OrderDocumentsStatus::GENERATED->value);
+                    })
+                    ->count();
+
+                if ($notReadyOrders > 0) {
+                    abort(422, 'Impossibile avviare il viaggio: tutti gli ordini devono essere READY con documenti generati.');
+                }
             }
 
             if ($currentState === JourneyStatus::STATUS_CREATED) {
                 $journey->status = JourneyStatus::STATUS_ACTIVE->value;
                 $journey->actual_start_at = now();
                 $journey->save();
+
+                $this->journeyWorkspaceInitializer->initializeForJourney($journey);
             }
 
             $current = $this->currentStop($journey);
@@ -121,7 +140,7 @@ class API_DriverJourneyStopsController extends Controller
 
             $this->logEvent($request, $journey, $current, [
                 'event' => 'journey_started',
-            ], $current?->status);
+            ], $current ? $this->stopStatusValue($current->status) : null);
 
             $this->loadJourneyStops($journey);
 
@@ -144,12 +163,12 @@ class API_DriverJourneyStopsController extends Controller
         return DB::transaction(function () use ($request, $journey, $validated) {
             $stops = $journey->stops()->orderBy('sequence')->get();
 
-            $reorderable = $stops->filter(fn ($s) => in_array($s->status, [
+            $reorderable = $stops->filter(fn ($s) => in_array($this->stopStatusValue($s->status), [
                 JourneyStopStatus::Planned->value,
                 JourneyStopStatus::InProgress->value,
             ], true));
 
-            $locked = $stops->filter(fn ($s) => in_array($s->status, [
+            $locked = $stops->filter(fn ($s) => in_array($this->stopStatusValue($s->status), [
                 JourneyStopStatus::Done->value,
                 JourneyStopStatus::Skipped->value,
                 JourneyStopStatus::Cancelled->value,
@@ -211,7 +230,7 @@ class API_DriverJourneyStopsController extends Controller
             abort(404);
         }
 
-        if ($stop->status !== JourneyStopStatus::InProgress->value) {
+        if (JourneyStopStatus::fromMixed($stop->status) !== JourneyStopStatus::InProgress) {
             abort(422, 'Solo la tappa corrente puÃ² essere completata.');
         }
 
@@ -222,7 +241,7 @@ class API_DriverJourneyStopsController extends Controller
 
             $this->logEvent($request, $journey, $stop, [
                 'event' => 'stop_completed',
-            ], $stop->status);
+            ], $this->stopStatusValue($stop->status));
 
             $next = $this->nextPlannedStop($journey, $stop->sequence);
             if ($next) {
@@ -248,7 +267,7 @@ class API_DriverJourneyStopsController extends Controller
             abort(404);
         }
 
-        if ($stop->status !== JourneyStopStatus::InProgress->value) {
+        if (JourneyStopStatus::fromMixed($stop->status) !== JourneyStopStatus::InProgress) {
             abort(422, 'Solo la tappa corrente puÃ² essere saltata.');
         }
 
@@ -268,7 +287,7 @@ class API_DriverJourneyStopsController extends Controller
                 'event' => 'stop_skipped',
                 'reason_code' => $validated['reason_code'],
                 'driver_notes' => $validated['driver_notes'],
-            ], $stop->status);
+            ], $this->stopStatusValue($stop->status));
 
             $next = $this->nextPlannedStop($journey, $stop->sequence);
             if ($next) {
@@ -320,7 +339,7 @@ class API_DriverJourneyStopsController extends Controller
             $this->logEvent($request, $journey, $stop, [
                 'event' => 'technical_stop_created',
                 'technical_action_id' => $validated['technical_action_id'],
-            ], $stop->status);
+            ], $this->stopStatusValue($stop->status));
 
             $this->loadJourneyStops($journey);
 
@@ -330,9 +349,10 @@ class API_DriverJourneyStopsController extends Controller
             ], 201);
         });
     }
+
+    private function stopStatusValue(mixed $status): string
+    {
+        return JourneyStopStatus::fromMixed($status)->value;
+    }
 }
-
-
-
-
 

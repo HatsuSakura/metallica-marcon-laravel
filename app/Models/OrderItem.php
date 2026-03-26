@@ -2,6 +2,7 @@
 // app/Models/OrderItem.php
 namespace App\Models;
 
+use App\Enums\OrderItemStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Mpociot\Versionable\VersionableTrait;
@@ -17,7 +18,6 @@ class OrderItem extends Model
     protected $fillable = [
         'updated_by_user_id',
         'order_id',
-        'journey_cargo_id',
         'cer_code_id',
         'order_item_group_id',
         'holder_id',
@@ -81,10 +81,135 @@ class OrderItem extends Model
     protected $casts = [
         'has_exploded_children' => 'boolean',
         'is_bulk' => 'boolean',
+        'adr' => 'boolean',
+        'has_adr' => 'boolean',
+        'adr_totale' => 'boolean',
+        'is_adr_total' => 'boolean',
+        'adr_esenzione_totale' => 'boolean',
+        'has_adr_total_exemption' => 'boolean',
+        'adr_esenzione_parziale' => 'boolean',
+        'has_adr_partial_exemption' => 'boolean',
+        'has_selection' => 'boolean',
+        'is_crane_eligible' => 'boolean',
+        'is_machinery_time_manual' => 'boolean',
+        'is_transshipment' => 'boolean',
+        'is_not_found' => 'boolean',
+        'warehouse_download_at' => 'datetime',
+        'warehouse_weighing_dt' => 'datetime',
+        'warehouse_selection_dt' => 'datetime',
         'custom_l_cm'   => 'decimal:2',
         'custom_w_cm'   => 'decimal:2',
         'custom_h_cm'   => 'decimal:2',
+        'status' => OrderItemStatus::class,
     ];
+
+    public function setAdrAttribute($value): void
+    {
+        $normalized = $this->toBool($value);
+        $this->attributes['adr'] = $normalized;
+        $this->attributes['has_adr'] = $normalized;
+    }
+
+    public function setHasAdrAttribute($value): void
+    {
+        $normalized = $this->toBool($value);
+        $this->attributes['has_adr'] = $normalized;
+        $this->attributes['adr'] = $normalized;
+    }
+
+    public function setAdrLottoAttribute($value): void
+    {
+        $normalized = $this->toNullableString($value);
+        $this->attributes['adr_lotto'] = $normalized;
+        $this->attributes['adr_lot_code'] = $normalized;
+    }
+
+    public function setAdrLotCodeAttribute($value): void
+    {
+        $normalized = $this->toNullableString($value);
+        $this->attributes['adr_lot_code'] = $normalized;
+        $this->attributes['adr_lotto'] = $normalized;
+    }
+
+    public function setAdrTotaleAttribute($value): void
+    {
+        $normalized = $this->toBool($value);
+        $this->attributes['adr_totale'] = $normalized;
+        $this->attributes['is_adr_total'] = $normalized;
+    }
+
+    public function setIsAdrTotalAttribute($value): void
+    {
+        $normalized = $this->toBool($value);
+        $this->attributes['is_adr_total'] = $normalized;
+        $this->attributes['adr_totale'] = $normalized;
+    }
+
+    public function setAdrEsenzioneTotaleAttribute($value): void
+    {
+        $normalized = $this->toBool($value);
+        $this->attributes['adr_esenzione_totale'] = $normalized;
+        $this->attributes['has_adr_total_exemption'] = $normalized;
+    }
+
+    public function setHasAdrTotalExemptionAttribute($value): void
+    {
+        $normalized = $this->toBool($value);
+        $this->attributes['has_adr_total_exemption'] = $normalized;
+        $this->attributes['adr_esenzione_totale'] = $normalized;
+    }
+
+    public function setAdrEsenzioneParzialeAttribute($value): void
+    {
+        $normalized = $this->toBool($value);
+        $this->attributes['adr_esenzione_parziale'] = $normalized;
+        $this->attributes['has_adr_partial_exemption'] = $normalized;
+    }
+
+    public function setHasAdrPartialExemptionAttribute($value): void
+    {
+        $normalized = $this->toBool($value);
+        $this->attributes['has_adr_partial_exemption'] = $normalized;
+        $this->attributes['adr_esenzione_parziale'] = $normalized;
+    }
+
+    public function setMachineryTimeFractionAttribute($value): void
+    {
+        $normalized = $this->toNullableInt($value);
+        $this->attributes['machinery_time_fraction'] = $normalized;
+        $this->attributes['machinery_time_share'] = $normalized;
+    }
+
+    public function setMachineryTimeShareAttribute($value): void
+    {
+        $normalized = $this->toNullableInt($value);
+        $this->attributes['machinery_time_share'] = $normalized;
+        $this->attributes['machinery_time_fraction'] = $normalized;
+    }
+
+    private function toBool($value): int
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
+    }
+
+    private function toNullableString($value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim((string) $value);
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    private function toNullableInt($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (int) $value;
+    }
 
     public function getWarehouseDownloadAttribute()
     {
@@ -157,6 +282,16 @@ class OrderItem extends Model
         return $this->belongsToMany(JourneyCargo::class, 'journey_cargo_order_item')
                     ->withPivot('is_double_load', 'download_warehouse_id')
                     ->withTimestamps();
+    }
+
+    public function loadCensusItems()
+    {
+        return $this->hasMany(JourneyLoadCensusItem::class);
+    }
+
+    public function cargoAllocations()
+    {
+        return $this->hasMany(JourneyCargoAllocation::class);
     }
 
     // 2) l’accessor che restituisce SEMPRE il primo (e unico) JourneyCargo

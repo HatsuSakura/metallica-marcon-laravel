@@ -16,9 +16,7 @@ class API_OrderDocumentsController extends Controller
     {
         Gate::authorize('update', $order);
 
-        $documentsState = $order->documents_status instanceof OrderDocumentsStatus
-            ? $order->documents_status
-            : (OrderDocumentsStatus::tryFrom((string) $order->documents_status) ?? OrderDocumentsStatus::NOT_GENERATED);
+        $documentsState = OrderDocumentsStatus::fromMixed($order->documents_status ?? OrderDocumentsStatus::NOT_GENERATED->value);
 
         if ($documentsState === OrderDocumentsStatus::GENERATING) {
             if ($service->isGeneratingStateStale($order)) {
@@ -27,7 +25,7 @@ class API_OrderDocumentsController extends Controller
             } else {
                 return response()->json([
                     'type' => 'warning',
-                    'message' => 'Generazione documenti già in corso per questo ordine.',
+                    'message' => 'Generazione documenti giÃ  in corso per questo ordine.',
                     'data' => $service->statusPayload($order),
                 ], 409);
             }
@@ -81,4 +79,5 @@ class API_OrderDocumentsController extends Controller
         );
     }
 }
+
 

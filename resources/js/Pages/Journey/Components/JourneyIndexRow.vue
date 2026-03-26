@@ -13,6 +13,15 @@
 
     <div>
       <Link
+        :href="route('journey.show', { journey: journey.id, return_to: currentUrl })"
+        method="get"
+        as="button"
+        class="btn btn-outline btn-circle mr-2"
+      >
+        <font-awesome-icon :icon="['fas', 'eye']" class="text-lg" />
+      </Link>
+
+      <Link
         :href="route('journey.edit', { journey: journey.id })"
         method="get"
         as="button"
@@ -34,8 +43,9 @@
 </template>
 
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
+import { computed } from 'vue';
 
 defineProps({
   journey: {
@@ -43,4 +53,7 @@ defineProps({
     required: true,
   },
 });
+
+const page = usePage();
+const currentUrl = computed(() => page.url || route('journey.index'));
 </script>

@@ -133,9 +133,9 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
         'container': !isMapPage,
         'full-width': isMapPage,
         'absolute': isMapPage,
-        'pt-24': true,
-        'mx-auto': true,
-        'p-4': true,
+        'pt-24':  !isMapPage,
+        'mx-auto':  !isMapPage,
+        'p-4':  !isMapPage,
         'w-full': true,
       }">
 
@@ -268,7 +268,21 @@ const isMapPage = computed(
   () => page.url.startsWith('/map/site') 
 )
 */
-const isMapPage = computed(() => page.url.startsWith('/map/site'));
+const isMapPage = computed(() => {
+  const component = page.component ?? '';
+  if (component === 'Map/Index' || component.startsWith('Map/')) {
+    return true;
+  }
+
+  const rawUrl = page.url ?? '';
+  const normalized = rawUrl
+    .replace(/^https?:\/\/[^/]+/i, '')
+    .split('?')[0]
+    .split('#')[0]
+    .replace(/^\/+/, '');
+
+  return normalized === 'map/site' || normalized.startsWith('map/site/');
+});
 
 const removeMessage = (index) => {
   store.dispatch('flash/removeMessageByIndex', index);
@@ -344,4 +358,3 @@ const notificationsCount = computed(
 }
 
 </style>
-

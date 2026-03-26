@@ -16,7 +16,7 @@ class API_DriverOrderUpdateController extends Controller
     {
         $newState = OrderStatus::from($request->new_state);
 
-        if (!OrderStatus::from($order->status->value)->canTransitionTo($newState)) {
+        if (!OrderStatus::fromMixed($order->status)->canTransitionTo($newState)) {
             abort(403, 'Invalid state transition.');
         }
 
@@ -69,7 +69,6 @@ class API_DriverOrderUpdateController extends Controller
         return response()->json(['message' => 'Order saved successfully.', 'order' => $order], 200);
     }
 }
-
 
 
 

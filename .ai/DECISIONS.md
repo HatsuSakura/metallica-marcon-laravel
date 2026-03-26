@@ -42,3 +42,31 @@ Reference: `.ai/decisions/2026-03-17-logistic-dispatch-implementation-strategy.m
 - Renamed enum usage from `OrderDocumentsState` to `OrderDocumentsStatus`.
 - Renamed order field usage from `documents_state` to `documents_status`.
 - Added compatibility migration `2026_03_17_180000_rename_order_documents_state_to_status`.
+
+## D11: Source file encoding standard
+- All source files (`.vue`, `.js`, `.ts`, `.php`, `.md`, config text files) must be saved in UTF-8.
+- Avoid tools/commands that write in ANSI/Windows-1252 by default.
+- Reason: prevent mojibake and corrupted UI strings (for example `Quantità` -> `Quantit�`).
+
+## D12: Enum architecture standard for all status domains
+- Every new status enum must include:
+  - `fromMixed(...)` (and `tryFromMixed(...)` when nullable parsing is needed),
+  - `canTransitionTo(...)`,
+  - `allowedTransitions()`.
+- Every model status field must be cast to its enum in `$casts`.
+- Controllers/services must not compare raw status strings directly from model attributes:
+  - resolve state through enum (`fromMixed`) and use enum transitions.
+- Frontend must consume centralized status constants/helpers (`resources/js/Constants/*Status*.js`) for labels, badge classes, and guards.
+- Raw status literals are allowed only at integration boundaries (DB schema enum definitions, request query flags, or external payload contracts), then immediately normalized through enum/constants.
+
+## D13: Order controller refactor paused, resume from Driver flow first
+- The refactor of order controllers impacts both Driver and Warehouse processes and is currently paused by customer request.
+- `OrderController` remains the canonical order controller.
+- `DriverOrderController` is still active and is the first branch to analyze/absorb when the refactor resumes.
+- `WorkerOrderController` currently appears closer to legacy/dead code than to an active user-facing flow and must be verified before any rewrite.
+- `WarehouseManagerOrderController` is not a direct clone of canonical order CRUD and must be treated as a separate operational flow.
+- Do not mix this refactor with unrelated feature work; resume it only as a dedicated effort.
+- Functional context completed before pause:
+  - `fixed_withdraw_at` implemented on orders,
+  - logistic dashboard widget for fixed-date orders implemented,
+  - YouTrack issues `GLE-54` and `GLE-94` completed.

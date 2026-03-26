@@ -87,8 +87,8 @@
 
 <script setup>
 import { reactive, ref, watch } from 'vue';
-import axios from 'axios';
 import { useStore } from 'vuex';
+import { extractApiMessage, updateDispatchPlan } from '@/Pages/LogisticDispatch/api/dispatchApi';
 
 const props = defineProps({
     journey: {
@@ -128,15 +128,12 @@ async function savePlan() {
     errorMessage.value = '';
 
     try {
-        const { data } = await axios.put(
-            route('api.logistic-dispatch.update-plan', props.journey.id),
-            {
-                is_double_load: form.is_double_load,
-                is_temporary_storage: form.is_temporary_storage,
-                primary_warehouse_id: form.primary_warehouse_id,
-                secondary_warehouse_id: form.secondary_warehouse_id,
-            }
-        );
+        const data = await updateDispatchPlan(props.journey.id, {
+            is_double_load: form.is_double_load,
+            is_temporary_storage: form.is_temporary_storage,
+            primary_warehouse_id: form.primary_warehouse_id,
+            secondary_warehouse_id: form.secondary_warehouse_id,
+        });
 
         emit('updated', data.journey);
         store.dispatch('flash/queueMessage', {
@@ -144,7 +141,7 @@ async function savePlan() {
             text: 'Piano dispatch salvato correttamente.',
         });
     } catch (error) {
-        errorMessage.value = error?.response?.data?.message ?? 'Salvataggio non riuscito.';
+        errorMessage.value = extractApiMessage(error, 'Salvataggio non riuscito.');
         store.dispatch('flash/queueMessage', {
             type: 'error',
             text: errorMessage.value,

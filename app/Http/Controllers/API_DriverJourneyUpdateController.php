@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderDocumentsStatus;
+use App\Enums\OrderStatus;
 use App\Models\Journey;
 use App\Enums\JourneyStatus;
 use Illuminate\Http\Request;
@@ -16,7 +18,7 @@ class API_DriverJourneyUpdateController extends Controller
     {
         $newState = JourneyStatus::from($request->new_state);
 
-        if (!JourneyStatus::from($journey->status->value)->canTransitionTo($newState)) {
+        if (!JourneyStatus::fromMixed($journey->status)->canTransitionTo($newState)) {
             abort(403, 'Invalid state transition.');
         }
 
@@ -34,6 +36,17 @@ class API_DriverJourneyUpdateController extends Controller
                 break;
 
             case JourneyStatus::STATUS_ACTIVE:
+                $notReadyOrders = $journey->orders()
+                    ->where(function ($query) {
+                        $query->where('status', '!=', OrderStatus::STATUS_READY->value)
+                            ->orWhere('documents_status', '!=', OrderDocumentsStatus::GENERATED->value);
+                    })
+                    ->count();
+
+                if ($notReadyOrders > 0) {
+                    abort(422, 'Impossibile avviare il viaggio: tutti gli ordini devono essere READY con documenti generati.');
+                }
+
                 $journey->actual_start_at = $request->actual_start_at;
                 break;
 
@@ -72,8 +85,6 @@ class API_DriverJourneyUpdateController extends Controller
         return response()->json(['message' => 'Journey saved successfully.', 'journey' => $journey], 200);
     }
 }
-
-
 
 
 

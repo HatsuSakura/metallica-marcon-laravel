@@ -97,6 +97,7 @@ import { usePage } from '@inertiajs/vue3';
 import Box from '@/Components/UI/Box.vue';
 import HeaderForDashboard from '@/Components/UI/HeaderForDashboard.vue';
 import JourneyMainData from './Components/JourneyMainData.vue';
+import { journeyStopStatusLabel } from '@/Constants/journeyStopStatus';
 
 const props = defineProps({
     journey: {
@@ -162,19 +163,5 @@ const stopSubtitle = (stop) => {
     return firstOrder?.site?.address ?? null;
 };
 
-const stopStatusLabel = (status) => {
-    switch (status) {
-        case 'in_progress':
-            return 'In corso';
-        case 'done':
-            return 'Completata';
-        case 'skipped':
-            return 'Saltata';
-        case 'cancelled':
-            return 'Annullata';
-        default:
-            return 'Pianificata';
-    }
-};
+const stopStatusLabel = (status) => journeyStopStatusLabel(status);
 </script>
-

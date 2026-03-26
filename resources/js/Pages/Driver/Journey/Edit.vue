@@ -14,7 +14,7 @@
                     Stato: {{ journey.status }}
                 </span>
                 <button
-                    v-if="journey.status === 'creato'"
+                    v-if="isJourneyCreated(journey.status)"
                     type="button"
                     class="btn btn-success btn-sm"
                     :disabled="isLoading"
@@ -298,6 +298,8 @@ import draggable from 'vuedraggable'
 import Box from '@/Components/UI/Box.vue'
 import HeaderForDashboard from '@/Components/UI/HeaderForDashboard.vue'
 import JourneyMainData from './Components/JourneyMainData.vue'
+import { isJourneyCreated } from '@/Constants/journeyStatus'
+import { JOURNEY_STOP_STATUS, journeyStopStatusLabel, normalizeJourneyStopStatus } from '@/Constants/journeyStopStatus'
 
 const props = defineProps({
     journey: Object,
@@ -345,19 +347,19 @@ const normalizeStops = (list) => {
 
 const selectedStop = computed(() => stops.value.find((stop) => stop.id === selectedStopId.value) || null)
 
-const currentStop = computed(() => stops.value.find((stop) => stop.status === 'in_progress') || null)
+const currentStop = computed(() => stops.value.find((stop) => normalizeJourneyStopStatus(stop.status) === JOURNEY_STOP_STATUS.IN_PROGRESS) || null)
 
 const isCurrentSelected = computed(() => currentStop.value && selectedStop.value?.id === currentStop.value.id)
 
 const reorderableStops = computed(() =>
-    stops.value.filter((stop) => ['planned', 'in_progress'].includes(stop.status))
+    stops.value.filter((stop) => [JOURNEY_STOP_STATUS.PLANNED, JOURNEY_STOP_STATUS.IN_PROGRESS].includes(normalizeJourneyStopStatus(stop.status)))
 )
 
 const refreshFromJourney = (data) => {
     journey.value = data
     stops.value = normalizeStops(data?.stops || [])
     if (!selectedStopId.value) {
-        const current = stops.value.find((stop) => stop.status === 'in_progress')
+        const current = stops.value.find((stop) => normalizeJourneyStopStatus(stop.status) === JOURNEY_STOP_STATUS.IN_PROGRESS)
         selectedStopId.value = current?.id ?? stops.value[0]?.id ?? null
     }
     if (reorderEnabled.value) {
@@ -398,20 +400,7 @@ const stopSubtitle = (stop) => {
     return firstOrder?.site?.address ?? null
 }
 
-const stopStatusLabel = (status) => {
-    switch (status) {
-        case 'in_progress':
-            return 'In corso'
-        case 'done':
-            return 'Completata'
-        case 'skipped':
-            return 'Saltata'
-        case 'cancelled':
-            return 'Annullata'
-        default:
-            return 'Pianificata'
-    }
-}
+const stopStatusLabel = (status) => journeyStopStatusLabel(status)
 
 const orderItems = (order) => {
     if (!order || !Array.isArray(order.items)) return []

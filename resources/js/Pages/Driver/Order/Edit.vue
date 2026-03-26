@@ -436,11 +436,19 @@ const groupedItems = computed(() => {
       { data: 'email' },
     ];
 
+    const normalizeDateOrFallback = (value, fallback = null) => {
+      if (!value) return fallback;
+
+      const normalized = value instanceof Date ? value : new Date(value);
+
+      return Number.isNaN(normalized.getTime()) ? new Date() : normalized;
+    };
+
     const form = useForm({
       id: props.order.id,
       is_urgent: Boolean(props.order.is_urgent),
       requested_at: props.order.created_at,
-      expected_withdraw_at: new Date(props.order.expected_withdraw_at),
+      expected_withdraw_at: normalizeDateOrFallback(props.order.expected_withdraw_at, null),
       logistics_user_id: props.order.logistics_user_id ? props.order.logistics_user_id : user ? user.value.id : null, // Fallback to null if user is not defined
       has_adr_consultant: currentSite.value?.has_adr_consultant ?? '',
       customer_id: currentSite.customer_id,
@@ -692,7 +700,9 @@ const groupedItems = computed(() => {
       });
       // Before submitting, format the date correctly
       form.requested_at = dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss');
-      form.expected_withdraw_at = dayjs(form.expected_withdraw_at).format('YYYY-MM-DD HH:mm:ss');
+      form.expected_withdraw_at = form.expected_withdraw_at
+        ? dayjs(form.expected_withdraw_at).format('YYYY-MM-DD HH:mm:ss')
+        : null;
       form.put(route('order.update', {order: props.order.id }));
     }
         
@@ -722,6 +732,5 @@ const groupedItems = computed(() => {
       border-radius: 0.375rem;
     }
     </style>
-
 
 

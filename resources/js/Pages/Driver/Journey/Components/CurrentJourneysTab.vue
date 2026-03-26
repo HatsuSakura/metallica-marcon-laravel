@@ -13,11 +13,11 @@
                         <div v-else class="italic opacity-70 text-sm">Nessuna nota generale: verifica eventuali note per singola tappa.</div>
                     </div>
                 </div>
-                <div v-if="journey.status != 'eseguito'" class="flex flex-col items-end gap-2">
+                <div v-if="normalizeJourneyStatus(journey.status) !== JOURNEY_STATUS.EXECUTED" class="flex flex-col items-end gap-2">
                     <span
-                        v-if="journey.status === 'creato'"
-                        :class="{ tooltip: isBlockedByActiveJourney(journey) } "
-                        :data-tip="isBlockedByActiveJourney(journey) ? 'Hai già un viaggio attivo' : null"
+                        v-if="normalizeJourneyStatus(journey.status) === JOURNEY_STATUS.CREATED"
+                        :class="{ tooltip: !!getStartBlockReason(journey) }"
+                        :data-tip="getStartBlockReason(journey) || null"
                         class="tooltip-warning"
                     >
                         <button
@@ -94,6 +94,7 @@ import Box from '@/Components/UI/Box.vue';
 import EmptyState from '@/Components/UI/EmptyState.vue';
 import JourneyMainData from './JourneyMainData.vue';
 import JourneyOrdersList from './JourneyOrdersList.vue';
+import { JOURNEY_STATUS, normalizeJourneyStatus } from '@/Constants/journeyStatus';
 
 defineProps({
     journeys: {
@@ -104,7 +105,7 @@ defineProps({
         type: [Array, Object],
         required: true,
     },
-    isBlockedByActiveJourney: {
+    getStartBlockReason: {
         type: Function,
         required: true,
     },
@@ -124,3 +125,4 @@ defineEmits([
     'reorder-changed',
 ]);
 </script>
+

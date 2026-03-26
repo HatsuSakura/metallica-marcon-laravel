@@ -1,10 +1,24 @@
 <template>
 
-    <section>
-        <div class="mb-2">Per creare un nuovo ordine:</div>
-        <Link :href="route('customer.index')" class="btn btn-primary mb-4">
-            Inizia da un cliente
+    <section class="flex items-center gap-2 justify-between">
+
+        <Link :href="route('logistic.home')" class="btn btn-ghost btn-sm">
+            <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-lg"/>
+            Torna a Dashboard
         </Link>
+
+        <div>
+            <span>
+                Per creare un nuovo ordine 
+                <font-awesome-icon :icon="['fas', 'arrow-right']" class="text-lg"/>
+                &nbsp;
+            </span>
+            <Link :href="route('customer.index')" class="btn btn-primary btn-sm">
+                <font-awesome-icon :icon="['fas', 'user-tie']" class="text-lg"/>
+                Inizia da un cliente
+            </Link>
+        </div>
+        
     </section>
     
     <section>
@@ -50,6 +64,11 @@
                         Data ipotesi ritiro:
                             <span class="font-medium">{{ order.expected_withdraw_at? dayjs(order.expected_withdraw_at).format('YYYY-MM-DD'): 'NON impostata' }} </span>
                     </div>
+                    <div>
+                        <font-awesome-icon :icon="['fas', 'clock']" class="text-2xl"/>
+                        Data fissa:
+                            <span class="font-medium">{{ order.fixed_withdraw_at ? dayjs(order.fixed_withdraw_at).format('YYYY-MM-DD HH:mm') : 'NON impostata' }} </span>
+                    </div>
                     <OrderSummaryItems :items="order.items" :holders="props.holders" />
                     <OrderSummaryHolders :items="order.holders" :holders="props.holders" />
                 
@@ -57,16 +76,6 @@
             </div>
     
             <div class="flex flex-row justify-end gap-2">
-                <button
-                    type="button"
-                    class="btn btn-outline btn-sm"
-                    :disabled="generatingOrderId === order.id"
-                    @click="generateDocuments(order.id)"
-                >
-                    <font-awesome-icon :icon="['fas', 'file-export']" />
-                    {{ generatingOrderId === order.id ? 'Avvio...' : 'Genera documenti' }}
-                </button>
-
                 <Link
                 :href="route('order.edit', {order: order.id} )"
                 method="get"
@@ -98,10 +107,7 @@
 <script setup>
 import Box from '@/Components/UI/Box.vue';
 import dayjs from 'dayjs';
-import axios from 'axios';
-import { Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import { useStore } from 'vuex';
+import { Link } from '@inertiajs/vue3';
 import OrderSummaryItems from './Components/OrderSummaryItems.vue';
 import OrderSummaryHolders from './Components/OrderSummaryHolders.vue';
     
@@ -109,9 +115,6 @@ const props = defineProps({
         orders : Object,
         holders: Object,
     })
-
-const store = useStore();
-const generatingOrderId = ref(null);
 
 const documentsStateLabel = (state) => {
     switch (state) {
@@ -141,27 +144,6 @@ const documentsStateBadgeClass = (state) => {
     }
 };
 
-const generateDocuments = async (orderId) => {
-    if (!orderId || generatingOrderId.value) {
-        return;
-    }
-
-    generatingOrderId.value = orderId;
-
-    try {
-        const response = await axios.post(`/api/orders/${orderId}/generate-documents`);
-        store.dispatch('flash/queueMessage', {
-            type: response?.data?.type ?? 'success',
-            text: response?.data?.message ?? 'Generazione documenti avviata.',
-        });
-        router.reload({ only: ['orders'] });
-    } catch (error) {
-        const message = error?.response?.data?.message ?? 'Errore durante l’avvio della generazione documenti.';
-        store.dispatch('flash/queueMessage', { type: 'error', text: message });
-    } finally {
-        generatingOrderId.value = null;
-    }
-};
 
 </script>
 

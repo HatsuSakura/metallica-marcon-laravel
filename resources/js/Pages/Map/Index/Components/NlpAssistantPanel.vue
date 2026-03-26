@@ -24,7 +24,7 @@
     <div class="flex gap-2">
       <button class="btn btn-primary btn-sm" :disabled="isParsing || !queryText.trim()" @click="parseQuery">
         <span v-if="isParsing" class="loading loading-spinner loading-xs" />
-        {{ isParsing ? 'Parsing...' : 'Parse' }}
+        {{ isParsing ? 'Analizzando...' : 'Pensa' }}
       </button>
       <button class="btn btn-ghost btn-sm" :disabled="!parsedQuery" @click="resetAll">Reset</button>
     </div>

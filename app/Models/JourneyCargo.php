@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\JourneyCargoStatus;
 use App\Enums\OrdersTruckLocation;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,12 +11,16 @@ class JourneyCargo extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'status' => JourneyCargoStatus::class,
+    ];
 
     protected $fillable = [
         'cargo_id',
         'journey_id',
         'cargo_location',
         'is_grounded',
+        'operation_mode',
         'warehouse_id',
         'download_sequence',
         'status',
@@ -79,6 +84,16 @@ class JourneyCargo extends Model
         return $this->belongsToMany(OrderItem::class, 'journey_cargo_order_item')
                     ->withPivot('is_double_load', 'download_warehouse_id')
                     ->withTimestamps();
+    }
+
+    public function allocations()
+    {
+        return $this->hasMany(JourneyCargoAllocation::class);
+    }
+
+    public function mismatchDecisions()
+    {
+        return $this->hasMany(JourneyCargoMismatchDecision::class);
     }
     
     public function doubleLoadItems()

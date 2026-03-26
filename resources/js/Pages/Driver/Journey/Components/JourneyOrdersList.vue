@@ -12,7 +12,7 @@
                     <span>
                         <font-awesome-icon :icon="['fas', 'route']" class="text-4xl"/>
                     </span>
-                    <span v-if="journey.status == 'attivo' || journey.status == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
+                    <span v-if="[JOURNEY_STATUS.ACTIVE, JOURNEY_STATUS.EXECUTED].includes(normalizeJourneyStatus(journey.status))" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
                         <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
                     </span>
 
@@ -181,7 +181,7 @@
                         <font-awesome-icon :icon="['fas', 'warehouse']" class="text-4xl"/>
                     </span>
 
-                        <span v-if="journey.status == 'eseguito'" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
+                        <span v-if="normalizeJourneyStatus(journey.status) === JOURNEY_STATUS.EXECUTED" class="inline-flex items-center justify-center w-10 h-10 p-4 rounded-full bg-success text-white">
                             <font-awesome-icon :icon="['fas', 'check']" class="text-lg"/>
                         </span>
 
@@ -196,6 +196,8 @@
 import { defineProps, ref, watch } from 'vue'
 import draggable from 'vuedraggable'
 import Box from '@/Components/UI/Box.vue'
+import { JOURNEY_STATUS, normalizeJourneyStatus } from '@/Constants/journeyStatus'
+import { JOURNEY_STOP_STATUS, normalizeJourneyStopStatus } from '@/Constants/journeyStopStatus'
 
 const props = defineProps({
     journey : Object,
@@ -225,7 +227,9 @@ watch(
         if (!isDragging.value) {
             const normalized = normalizeStops(stops)
             localStops.value = normalized
-            reorderStops.value = normalized.filter((stop) => ['planned', 'in_progress'].includes(stop.status))
+            reorderStops.value = normalized.filter((stop) =>
+                [JOURNEY_STOP_STATUS.PLANNED, JOURNEY_STOP_STATUS.IN_PROGRESS].includes(normalizeJourneyStopStatus(stop.status))
+            )
         }
     },
     { immediate: true }
@@ -289,7 +293,7 @@ const itemSummary = (item) => {
 const isStopCompleted = (stop) => {
     if (!stop) return false
     if (stop.completed_at) return true
-    const status = String(stop.status ?? '').toLowerCase()
+    const status = normalizeJourneyStopStatus(stop.status)
     return ['completed', 'executed', 'done'].includes(status)
 }
 

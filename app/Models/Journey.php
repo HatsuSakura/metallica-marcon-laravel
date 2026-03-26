@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DispatchStatus;
 use App\Enums\JourneyStatus;
 use Illuminate\Database\Eloquent\Model;
 use Mpociot\Versionable\VersionableTrait;
@@ -17,6 +18,7 @@ class Journey extends Model
 
     protected $casts = [
         'status' => JourneyStatus::class,
+        'dispatch_status' => DispatchStatus::class,
         'plan_version' => 'integer',
 
         // datetime
@@ -26,6 +28,9 @@ class Journey extends Model
         'actual_end_at'            => 'datetime',
         'primary_warehouse_download_at' => 'datetime',
         'secondary_warehouse_download_at' => 'datetime',
+        'dispatch_started_at'          => 'datetime',
+        'dispatch_managed_at'          => 'datetime',
+        'dispatch_updated_at'          => 'datetime',
 
         // boolean
         'is_double_load'           => 'boolean',
@@ -49,6 +54,10 @@ class Journey extends Model
         'driver_id',
         'logistics_user_id',
         'status',
+        'dispatch_status',
+        'dispatch_started_at',
+        'dispatch_managed_at',
+        'dispatch_updated_at',
         'notes',
         'plan_version',
 
@@ -105,6 +114,26 @@ class Journey extends Model
         return $this->hasMany(JourneyEvent::class);
     }
 
+    public function loadCensusItems(): HasMany
+    {
+        return $this->hasMany(JourneyLoadCensusItem::class);
+    }
+
+    public function cargoAllocations(): HasMany
+    {
+        return $this->hasMany(JourneyCargoAllocation::class);
+    }
+
+    public function transshipmentNeeds(): HasMany
+    {
+        return $this->hasMany(TransshipmentNeed::class);
+    }
+
+    public function cargoMismatchDecisions(): HasMany
+    {
+        return $this->hasMany(JourneyCargoMismatchDecision::class);
+    }
+
     public function stopOrders(): HasMany
     {
         return $this->hasMany(JourneyStopOrder::class);
@@ -121,4 +150,3 @@ class Journey extends Model
     }
 
 }
-

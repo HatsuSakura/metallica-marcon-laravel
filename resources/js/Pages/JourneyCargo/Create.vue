@@ -83,7 +83,7 @@
                   <DraggableItem
                     :element = "element"
                     :index = "index"
-                    :isDownloadable = "isDownloadableTrailer"
+                    :isDownloadable = "isDownloadableTruck"
                     :warehouse_id="form.warehouse_id_truck"
                     :warehouses="props.warehouses"
                     @edit-item="handleEditItem"
@@ -402,42 +402,32 @@ import ZeroPaddingId from '@/Components/UI/ZeroPaddingId.vue';
 
       // Iterate over each order and distribute items based on cargo_location.
       props.orders.forEach(order => {
-        console.log(order);
-        if (order.cargo_location === 'vehicle' && order.items.length > 0) {
-          order.items.forEach(item => {
-            // Add default pivot if not present.
-            if (!item.pivot) {
-              item.pivot = {
-                is_double_load: false,
-                download_warehouse_id: null,
-              };
-            }
-            listMotrice.value.push(item);
-          });
-          //listMotrice.value.push(...order.items);
-        } else if (order.cargo_location === 'trailer' && order.items.length > 0) {
-          order.items.forEach(item => {
-            if (!item.pivot) {
-              item.pivot = {
-                is_double_load: false,
-                download_warehouse_id: null,
-              };
-            }
+        const items = Array.isArray(order?.items) ? order.items : [];
+        if (items.length === 0) return;
+
+        // Legacy safety: old journeys may have null cargo_location.
+        const normalizedLocation = ['vehicle', 'trailer', 'fulfill'].includes(order?.cargo_location)
+          ? order.cargo_location
+          : 'vehicle';
+
+        items.forEach(item => {
+          if (!item.pivot) {
+            item.pivot = {
+              is_double_load: false,
+              download_warehouse_id: null,
+            };
+          }
+
+          if (normalizedLocation === 'trailer') {
             listRimorchio.value.push(item);
-          });
-          //listRimorchio.value.push(...order.items);
-        } else if (order.cargo_location === 'fulfill' && order.items.length > 0) {
-          order.items.forEach(item => {
-            if (!item.pivot) {
-              item.pivot = {
-                is_double_load: false,
-                download_warehouse_id: null,
-              };
-            }
+            return;
+          }
+          if (normalizedLocation === 'fulfill') {
             listRiempimento.value.push(item);
-          });
-          //listRiempimento.value.push(...order.items);
-        }
+            return;
+          }
+          listMotrice.value.push(item);
+        });
       });
     };
 
@@ -580,5 +570,4 @@ onUnmounted(() => {
     }
 
     </style>
-
 

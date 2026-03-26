@@ -9,5 +9,35 @@ enum JourneyStopStatus: string
     case Done = 'done';
     case Skipped = 'skipped';
     case Cancelled = 'cancelled';
-}
 
+    public function canTransitionTo(self $target): bool
+    {
+        return in_array($target, $this->allowedTransitions(), true);
+    }
+
+    /**
+     * @return array<self>
+     */
+    public function allowedTransitions(): array
+    {
+        return match ($this) {
+            self::Planned => [self::InProgress, self::Cancelled],
+            self::InProgress => [self::Done, self::Skipped, self::Cancelled],
+            self::Done => [],
+            self::Skipped => [],
+            self::Cancelled => [],
+        };
+    }
+
+    public static function fromMixed(self|string $value): self
+    {
+        return $value instanceof self ? $value : self::from((string) $value);
+    }
+
+    public static function tryFromMixed(mixed $value): ?self
+    {
+        if ($value instanceof self) return $value;
+        if (!is_string($value) && !is_int($value)) return null;
+        return self::tryFrom((string) $value);
+    }
+}

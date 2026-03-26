@@ -165,6 +165,7 @@
                       format="dd/MM/yyyy" 
                       auto-apply 
                       :enableTimePicker="false"
+                      :disabled="hasFixedWithdrawAt"
                       @update:model-value="manageDate()">
                     </VueDatePicker> 
                     <div class="input-error" v-if="form.errors.expected_withdraw_at">
@@ -181,6 +182,35 @@
                       class="input input-bordered w-full"
                       placeholder="Orari popolati automaticamente"
                     />
+                  </div>
+                </div>
+
+                <div class="mt-4 flex flex-row items-center gap-4">
+                  <label for="fixed_withdraw_toggle" class="label w-64">Data fissa</label>
+                  <input
+                    id="fixed_withdraw_toggle"
+                    :checked="hasFixedWithdrawAt"
+                    type="checkbox"
+                    class="toggle"
+                    @change="toggleFixedWithdraw($event.target.checked)"
+                  />
+                  <span class="text-sm opacity-70 flex-1">Se attiva, blocca la data presunta e la sincronizza con la data fissa.</span>
+                  <div class="flex items-center gap-2 min-w-[24rem]">
+                    <label for="fixed_withdraw_at" class="label">Data e ora</label>
+                    <VueDatePicker
+                      id="fixed_withdraw_at"
+                      v-model="form.fixed_withdraw_at"
+                      format="dd/MM/yyyy, HH:mm"
+                      auto-apply
+                      :enableTimePicker="true"
+                      :disabled="!hasFixedWithdrawAt"
+                      @update:model-value="onFixedWithdrawChanged()"
+                    />
+                  </div>
+                </div>
+                <div class="mt-1">
+                  <div class="input-error" v-if="form.errors.fixed_withdraw_at">
+                    {{ form.errors.fixed_withdraw_at }}
                   </div>
                 </div>
 
@@ -438,21 +468,54 @@ const groupedItems = computed(() => {
       { data: 'email' },
     ];
 
-    const form = useForm({
-      is_urgent: false,
-      requested_at: currentDate.value,
-      expected_withdraw_at: null,
-      notes: '',
-      post_action: 'create_stay',
-      logistics_user_id: user ? user.value.id : null, // Fallback to null if user is not defined
+	    const form = useForm({
+	      is_urgent: false,
+	      requested_at: currentDate.value,
+	      expected_withdraw_at: null,
+	      fixed_withdraw_at: null,
+	      notes: '',
+	      post_action: 'create_stay',
+	      logistics_user_id: user ? user.value.id : null, // Fallback to null if user is not defined
       has_adr_consultant: site.has_adr_consultant ?? '',
       customer_id: site.customer_id,
       site_id: site.id,
       user_id: user ? user.id : null, // Fallback to null if user is not defined
       code: null,
       items: [], // Start with an empty items array
-      holders: []
-    })
+	      holders: []
+	    })
+
+      const hasFixedWithdrawAt = computed(() => form.fixed_withdraw_at !== null);
+
+      const normalizeDateOrNull = (value) => {
+        if (!value) return null;
+
+        const normalized = value instanceof Date ? value : new Date(value);
+
+        return Number.isNaN(normalized.getTime()) ? null : normalized;
+      };
+
+      const syncExpectedWithFixed = () => {
+        if (!hasFixedWithdrawAt.value || !form.fixed_withdraw_at) return;
+
+        form.expected_withdraw_at = normalizeDateOrNull(form.fixed_withdraw_at);
+        manageDate();
+      };
+
+      const toggleFixedWithdraw = (enabled) => {
+        if (!enabled) {
+          form.fixed_withdraw_at = null;
+          return;
+        }
+
+        form.fixed_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at) ?? new Date();
+        syncExpectedWithFixed();
+      };
+
+      const onFixedWithdrawChanged = () => {
+        form.fixed_withdraw_at = normalizeDateOrNull(form.fixed_withdraw_at);
+        syncExpectedWithFixed();
+      };
     
     // form ITEMS
 const addItem = () => {
@@ -596,11 +659,12 @@ const removeItem = (index) => {
 
 
   
-    const manageDate = (date) => {
-      console.log('gestisco la data')
-      if(form.expected_withdraw_at){
-        console.log('data inserita', form.expected_withdraw_at)
-        console.log('giorno della settimana', form.expected_withdraw_at.getDay())
+	    const manageDate = (date) => {
+	      console.log('gestisco la data')
+          form.expected_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at);
+	      if(form.expected_withdraw_at){
+	        console.log('data inserita', form.expected_withdraw_at)
+	        console.log('giorno della settimana', form.expected_withdraw_at.getDay())
         const hours = site.timetable.hours_json
         console.log('array Orari', hours)
     
@@ -692,13 +756,19 @@ const removeItem = (index) => {
         if (holder.empty_holders_count === "") {
           holder.empty_holders_count = 0;
         }
-      });
+	      });
 
-      // Before submitting, format the date correctly
-      form.requested_at = dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss');
+	      // Before submitting, format the date correctly
+	      form.requested_at = dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss');
+          form.expected_withdraw_at = form.expected_withdraw_at
+            ? dayjs(form.expected_withdraw_at).format('YYYY-MM-DD HH:mm:ss')
+            : null;
+          form.fixed_withdraw_at = form.fixed_withdraw_at
+            ? dayjs(form.fixed_withdraw_at).format('YYYY-MM-DD HH:mm:ss')
+            : null;
 
-      form.is_urgent = form.is_urgent === true;
-      form.post_action = postAction;
+	      form.is_urgent = form.is_urgent === true;
+	      form.post_action = postAction;
       form.post(route('order.store'));
     }
        

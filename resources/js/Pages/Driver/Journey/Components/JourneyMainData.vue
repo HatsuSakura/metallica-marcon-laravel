@@ -6,8 +6,8 @@
         <span class="font-bold"> | </span>
         {{ props.journey.stops_count ?? props.journey.orders_count ?? 0 }} tappa/e 
         <span class="font-bold"> | </span>
-        <span v-if="props.journey.status == 'creato'">PRONTI A PARTIRE</span>
-        <span v-else-if="props.journey.status == 'attivo'">IN VIAGGIO</span>
+        <span v-if="normalizeJourneyStatus(props.journey.status) === JOURNEY_STATUS.CREATED">PRONTI A PARTIRE</span>
+        <span v-else-if="normalizeJourneyStatus(props.journey.status) === JOURNEY_STATUS.ACTIVE">IN VIAGGIO</span>
     </div>
     <div>
         Autista: <span class="font-medium"> {{ props.journey.driver?.name ?? '-' }}</span>
@@ -24,8 +24,8 @@
 
 <script setup>
     import dayjs from 'dayjs';
+    import { JOURNEY_STATUS, normalizeJourneyStatus } from '@/Constants/journeyStatus';
     const props = defineProps({
         journey : Object,
     })
 </script>
-

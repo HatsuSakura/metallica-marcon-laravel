@@ -284,6 +284,9 @@ class JourneyCargoController extends Controller
                 'journey_id' => null,
                 'status' => $this->statusAfterJourneyDetach($order),
                 'cargo_location' => null,
+                'documents_status' => OrderDocumentsStatus::NOT_GENERATED->value,
+                'documents_generated_at' => null,
+                'documents_error' => null,
             ]);
         }
 
@@ -299,14 +302,6 @@ class JourneyCargoController extends Controller
 
     private function statusAfterJourneyDetach(Order $order): string
     {
-        $documentsState = $order->documents_status instanceof OrderDocumentsStatus
-            ? $order->documents_status
-            : OrderDocumentsStatus::tryFrom((string) $order->documents_status);
-
-        if ($documentsState === OrderDocumentsStatus::GENERATED) {
-            return OrderStatus::STATUS_READY->value;
-        }
-
         return OrderStatus::STATUS_CREATED->value;
     }
 

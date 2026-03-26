@@ -1,28 +1,29 @@
-<template>
+﻿<template>
     <DashboardHeader>
-        Dispatch Board Logistica
+        Dashboard chiusura viaggi - Logistica
     </DashboardHeader>
 
     <div class="flex flex-wrap items-center gap-2 mb-4">
         <Link
-            :href="route('dashboard.logistic.full')"
+            :href="route('logistic.home')"
             class="btn btn-ghost btn-sm"
         >
-            Dashboard completa
+            <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl" />    
+            Torna a Dashboard
         </Link>
         <Link
-            :href="route('logistic-dispatch.index', { status: 'open' })"
+            :href="route('logistic-dispatch.index', { status: 'to_manage' })"
             class="btn btn-sm"
-            :class="status === 'open' ? 'btn-primary' : 'btn-outline'"
+            :class="status === 'to_manage' ? 'btn-primary' : 'btn-outline'"
         >
-            Viaggi aperti
+            Viaggi da gestire
         </Link>
         <Link
-            :href="route('logistic-dispatch.index', { status: 'closed' })"
+            :href="route('logistic-dispatch.index', { status: 'managed' })"
             class="btn btn-sm"
-            :class="status === 'closed' ? 'btn-primary' : 'btn-outline'"
+            :class="status === 'managed' ? 'btn-primary' : 'btn-outline'"
         >
-            Viaggi chiusi
+            Viaggi gestiti
         </Link>
     </div>
 
@@ -50,6 +51,12 @@
                     Rimorchio: {{ journey.trailer?.plate ?? '-' }}
                 </div>
                 <div class="text-sm opacity-80">
+                    Chiusura viaggio:
+                    <span class="badge ml-1" :class="dispatchStatusBadgeClass(journey.dispatch_status)">
+                        {{ dispatchStatusLabel(journey.dispatch_status) }}
+                    </span>
+                </div>
+                <div class="text-sm opacity-80">
                     Ordini: {{ journey.orders?.length ?? 0 }} |
                     Primario: {{ journey.primary_warehouse?.name ?? '-' }} |
                     Secondario: {{ journey.secondary_warehouse?.name ?? '-' }}
@@ -69,6 +76,10 @@
 <script setup>
 import DashboardHeader from '@/Components/UI/HeaderForDashboard.vue';
 import { Link } from '@inertiajs/vue3';
+import {
+    dispatchStatusBadgeClass as getDispatchStatusBadgeClass,
+    dispatchStatusLabel as getDispatchStatusLabel,
+} from '@/Constants/dispatchStatus';
 
 defineProps({
     journeys: {
@@ -85,4 +96,13 @@ function fullName(user) {
     if (!user) return '-';
     return `${user.name ?? ''} ${user.surname ?? ''}`.trim();
 }
+
+function dispatchStatusLabel(status) {
+    return getDispatchStatusLabel(status);
+}
+
+function dispatchStatusBadgeClass(status) {
+    return getDispatchStatusBadgeClass(status);
+}
 </script>
+

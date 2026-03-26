@@ -160,7 +160,7 @@ class JourneyCargoService
 
         $items = OrderItem::whereIn('id', $ids)->get(['id', 'status']);
         foreach ($items as $item) {
-            $current = OrderItemStatus::from($item->status);
+            $current = OrderItemStatus::fromMixed($item->status);
             if ($current->canTransitionTo(OrderItemStatus::STATUS_LOADED)) {
                 $item->status = OrderItemStatus::STATUS_LOADED;
                 $item->save();
@@ -170,4 +170,3 @@ class JourneyCargoService
         }
     }
 }
-

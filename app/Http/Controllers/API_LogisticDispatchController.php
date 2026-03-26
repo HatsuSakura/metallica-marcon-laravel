@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Journey;
 use App\Services\Dispatch\JourneyDispatchPlanService;
+use App\Services\Dispatch\JourneyDispatchStatusService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class API_LogisticDispatchController extends Controller
 {
     public function __construct(
-        private JourneyDispatchPlanService $dispatchPlanService
+        private JourneyDispatchPlanService $dispatchPlanService,
+        private JourneyDispatchStatusService $dispatchStatusService
     ) {
     }
 
@@ -57,6 +58,20 @@ class API_LogisticDispatchController extends Controller
 
     public function hold(Request $request, Journey $journey)
     {
+        $dispatchStatus = $this->dispatchStatusService->resolveCurrentStatus($journey);
+        if ($dispatchStatus === JourneyDispatchStatusService::STATUS_ON_HOLD) {
+            return response()->json([
+                'type' => 'warning',
+                'message' => 'Il dispatch Ã¨ giÃ  in attesa.',
+            ], 422);
+        }
+        if ($dispatchStatus === JourneyDispatchStatusService::STATUS_MANAGED) {
+            return response()->json([
+                'type' => 'warning',
+                'message' => 'Il dispatch è già gestito.',
+            ], 422);
+        }
+
         $validated = $request->validate([
             'notes' => ['required', 'string', 'max:2000'],
         ]);
@@ -70,11 +85,20 @@ class API_LogisticDispatchController extends Controller
 
         return response()->json([
             'type' => 'success',
+            'dispatch_status' => JourneyDispatchStatusService::STATUS_ON_HOLD,
         ]);
     }
 
     public function resume(Request $request, Journey $journey)
     {
+        $dispatchStatus = $this->dispatchStatusService->resolveCurrentStatus($journey);
+        if ($dispatchStatus !== JourneyDispatchStatusService::STATUS_ON_HOLD) {
+            return response()->json([
+                'type' => 'warning',
+                'message' => 'Riprendi Ã¨ disponibile solo quando il dispatch Ã¨ in attesa.',
+            ], 422);
+        }
+
         $validated = $request->validate([
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
@@ -88,25 +112,8 @@ class API_LogisticDispatchController extends Controller
 
         return response()->json([
             'type' => 'success',
-        ]);
-    }
-
-    public function complete(Request $request, Journey $journey)
-    {
-        $validated = $request->validate([
-            'completion_code' => ['required', Rule::in(['single_load_done', 'double_load_done', 'temporary_storage_done'])],
-            'notes' => ['nullable', 'string', 'max:2000'],
-        ]);
-
-        $this->dispatchPlanService->addOperationalEvent(
-            $journey,
-            (string) $validated['completion_code'],
-            $validated['notes'] ?? null,
-            $request->user()?->id
-        );
-
-        return response()->json([
-            'type' => 'success',
+            'dispatch_status' => JourneyDispatchStatusService::STATUS_IN_PROGRESS,
         ]);
     }
 }
+

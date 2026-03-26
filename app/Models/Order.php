@@ -21,6 +21,7 @@ class Order extends Model
         'documents_status' => OrderDocumentsStatus::class,
         'requested_at' => 'datetime',
         'expected_withdraw_at' => 'datetime',
+        'fixed_withdraw_at' => 'datetime',
         'actual_withdraw_at' => 'datetime',
         'documents_generated_at' => 'datetime',
     ];
@@ -36,6 +37,7 @@ class Order extends Model
         'status',
         'cargo_location',
         'expected_withdraw_at',
+        'fixed_withdraw_at',
         'actual_withdraw_at',
         'worker_id',
         'has_crane',
@@ -51,6 +53,10 @@ class Order extends Model
 protected static function booted()
     {
         static::creating(function ($order) {
+            if (blank($order->status)) {
+                $order->status = OrderStatus::STATUS_CREATED->value;
+            }
+
             $year_2  = now()->format('y');                     // es. "25"
             $year_4  = (int) now()->format('Y');               // es. "2025"
             $month   = now()->format('m');                     // es. "06"

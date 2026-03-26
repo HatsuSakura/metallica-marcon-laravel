@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\JourneyStopKind;
+use App\Enums\JourneyStopStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -37,6 +39,8 @@ class JourneyStop extends Model
         'location_lng' => 'decimal:7',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
+        'kind' => JourneyStopKind::class,
+        'status' => JourneyStopStatus::class,
     ];
 
     public function journey(): BelongsTo

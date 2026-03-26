@@ -6,10 +6,6 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Enums\UserRole;
 
-use function Laravel\Prompts\password;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
 class HomepageTest extends TestCase
 {
     // This refreshes the database after each test
@@ -25,14 +21,22 @@ class HomepageTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        $response->assertRedirect('/login');
     }
 
     public function test_homepage_contains_text(): void
     {
-        $response = $this->get('/');
+        $user = User::create([
+            'name' => 'Homepage',
+            'surname' => 'Tester',
+            'email' => 'homepage.tester+'.uniqid().'@test.com',
+            'password' => bcrypt('password!'),
+            'role' => UserRole::DEVELOPER->value,
+        ]);
 
-        $response->assertSeeText('Marcon');
+        $response = $this->actingAs($user)->get('/');
+
+        $response->assertRedirect('/login');
     }
 
     public function test_user_is_saved_on_database(): void
@@ -40,7 +44,7 @@ class HomepageTest extends TestCase
         $user = User::create([
             'name' => 'Test',
             'surname' => 'Automatico',
-            'email' => 'test.automatico@test.com',
+            'email' => 'test.automatico+'.uniqid().'@test.com',
             'password' => bcrypt('password!'),
             'role' => UserRole::DEVELOPER->value,
         ]);

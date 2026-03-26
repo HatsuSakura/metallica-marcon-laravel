@@ -15,13 +15,25 @@ use App\Models\Warehouse;
 use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Support\Orders\FixedWithdrawSynchronizer;
 use App\Services\OrderItemGroupResolver;
 use App\Services\OrderDocumentGenerationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Carbon;
 
 class OrderController extends Controller
 {
+    private function normalizeLegacyEpochDate(mixed $value): mixed
+    {
+        if (!$value) {
+            return null;
+        }
+
+        $date = $value instanceof Carbon ? $value : Carbon::parse($value);
+
+        return $date->year <= 1970 ? null : $date;
+    }
 
     public function index(Request $request){
 
@@ -104,9 +116,10 @@ class OrderController extends Controller
         $CUSTOM_HOLDER_ID = 1;
 
         $validatedData = $request->validate([
-            'is_urgent' => 'boolean',
+            'is_urgent' => 'required|boolean',
             'requested_at' => 'required|date',
             'expected_withdraw_at' => 'nullable|date',
+            'fixed_withdraw_at' => 'nullable|date',
             'notes' => 'nullable|string',
             'customer_id'=> 'required',
             'site_id'=> 'required',
@@ -155,7 +168,7 @@ class OrderController extends Controller
             'items.*.adr' => 'nullable|boolean',
             'items.*.adr_un_code' => 'nullable|string',
             'items.*.adr_hp' => 'nullable|string',
-            'items.*.adr_lotto' => 'nullable|string',
+            'items.*.adr_lot_code' => 'nullable|string',
             'items.*.adr_volume' => 'nullable|numeric',	 
             'items.*.warehouse_id' => 'nullable|numeric',
             'items.*.warehouse_notes' => 'nullable|string',
@@ -164,9 +177,9 @@ class OrderController extends Controller
             'items.*.machinery_time_share' => 'nullable|numeric',
             'items.*.recognized_price' => 'nullable|numeric',
             'items.*.recognized_weight' => 'nullable|numeric',
-            'items.*.adr_totale' => 'nullable|boolean',
-            'items.*.adr_esenzione_totale' => 'nullable|boolean',
-            'items.*.adr_esenzione_parziale' => 'nullable|boolean',
+            'items.*.is_adr_total' => 'nullable|boolean',
+            'items.*.has_adr_total_exemption' => 'nullable|boolean',
+            'items.*.has_adr_partial_exemption' => 'nullable|boolean',
             'holders' => 'nullable|array', // Make holders optional
             'holders.*.holder_id' => 'required|exists:holders,id',
             'holders.*.filled_holders_count' => 'required|integer',
@@ -174,15 +187,18 @@ class OrderController extends Controller
             'holders.*.total_holders_count' => 'required|integer',
         ]);
 
+        $validatedData = FixedWithdrawSynchronizer::synchronize($validatedData);
 
         $order = Order::create([
             'is_urgent' => $validatedData['is_urgent'] ?? false,
             'requested_at' => $validatedData['requested_at'],
             'expected_withdraw_at' => $validatedData['expected_withdraw_at'] ?? null,
+            'fixed_withdraw_at' => $validatedData['fixed_withdraw_at'] ?? null,
             'notes' => $validatedData['notes'] ?? null,
             'customer_id' => $validatedData['customer_id'],
             'site_id' => $validatedData['site_id'],
             'logistics_user_id' => $validatedData['logistics_user_id'] ?? null,
+            'status' => OrderStatus::STATUS_CREATED->value,
         ]);
 
         // If there are items, attach them to the order
@@ -218,6 +234,9 @@ class OrderController extends Controller
     public function edit(Order $order)
     {
         Gate::authorize('update', $order);
+
+        $order->expected_withdraw_at = $this->normalizeLegacyEpochDate($order->expected_withdraw_at);
+        $order->fixed_withdraw_at = $this->normalizeLegacyEpochDate($order->fixed_withdraw_at);
 
         $order_items = $order->items()->with('orderItemGroup:id,order_id,cer_code_id,label')->get();
         $order_holders = $order->holders()->get();
@@ -259,9 +278,10 @@ class OrderController extends Controller
         Gate::authorize('redirectAfterUpdate', $order);
 
         $validatedData =$request->validate([
-            'is_urgent' => 'boolean',
+            'is_urgent' => 'required|boolean',
             'requested_at' => 'required|date',
             'expected_withdraw_at' => 'nullable|date',
+            'fixed_withdraw_at' => 'nullable|date',
             'notes' => 'nullable|string',
             'customer_id'=> 'required',
             'site_id'=> 'required',
@@ -283,7 +303,7 @@ class OrderController extends Controller
             'items.*.adr' => 'nullable|boolean',
             'items.*.adr_un_code' => 'nullable|string',
             'items.*.adr_hp' => 'nullable|string',
-            'items.*.adr_lotto' => 'nullable|string',
+            'items.*.adr_lot_code' => 'nullable|string',
             'items.*.adr_volume' => 'nullable|numeric',	 
             'items.*.warehouse_id' => 'required|numeric',
             'items.*.warehouse_notes' => 'nullable|string',
@@ -292,20 +312,23 @@ class OrderController extends Controller
             'items.*.machinery_time_share' => 'nullable|numeric',
             'items.*.recognized_price' => 'nullable|numeric',
             'items.*.recognized_weight' => 'nullable|numeric',
-            'items.*.adr_totale' => 'nullable|boolean',
-            'items.*.adr_esenzione_totale' => 'nullable|boolean',
-            'items.*.adr_esenzione_parziale' => 'nullable|boolean',
+            'items.*.is_adr_total' => 'nullable|boolean',
+            'items.*.has_adr_total_exemption' => 'nullable|boolean',
+            'items.*.has_adr_partial_exemption' => 'nullable|boolean',
             'holders' => 'nullable|array', // Make holders optional
             'holders.*.holder_id' => 'required|exists:holders,id',
             'holders.*.filled_holders_count' => 'required|integer|min:0',
             'holders.*.empty_holders_count' => 'required|integer',
             'holders.*.total_holders_count' => 'required|integer',
         ]);
-        
+
+        $validatedData = FixedWithdrawSynchronizer::synchronize($validatedData);
+
         $order->update(array_merge(
             $validatedData,
             [
                 'expected_withdraw_at' => $validatedData['expected_withdraw_at'] ?? null,
+                'fixed_withdraw_at' => $validatedData['fixed_withdraw_at'] ?? null,
                 'logistics_user_id' => $validatedData['logistics_user_id'] ?? null,
             ]
         ));
@@ -415,7 +438,7 @@ public function updateState(Order $order, Request $request)
 {
     $newState = OrderStatus::from($request->new_state);
 
-    if (!OrderStatus::from($order->status)->canTransitionTo($newState)) {
+    if (!OrderStatus::fromMixed($order->status)->canTransitionTo($newState)) {
         abort(403, 'Invalid state transition.');
     }
 
@@ -444,6 +467,7 @@ public function updateState(Order $order, Request $request)
 
 
 }
+
 
 
 

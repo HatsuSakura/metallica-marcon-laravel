@@ -26,4 +26,16 @@ enum OrderStatus: string
 
         return isset($transitions[$this->value]) && in_array($nextState, $transitions[$this->value], true);
     }
+
+    public static function fromMixed(self|string $value): self
+    {
+        return $value instanceof self ? $value : self::from((string) $value);
+    }
+
+    public static function tryFromMixed(mixed $value): ?self
+    {
+        if ($value instanceof self) return $value;
+        if (!is_string($value) && !is_int($value)) return null;
+        return self::tryFrom((string) $value);
+    }
 }

@@ -19,11 +19,12 @@ use Illuminate\Http\Request;
 use App\Enums\OrdersTruckLocation;
 use App\Models\JourneyStop;
 use App\Models\JourneyStopOrder;
+use App\Services\OrderDocumentGenerationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class JourneyController extends Controller
 {
@@ -141,6 +142,70 @@ class JourneyController extends Controller
         }
     }
 
+    public function show(Journey $journey)
+    {
+        Gate::authorize('view', $journey);
+
+        $returnTo = request()->query('return_to');
+        if (!is_string($returnTo) || trim($returnTo) === '') {
+            $returnTo = url()->previous();
+        }
+
+        $appUrl = rtrim((string) config('app.url'), '/');
+        $isSafeReturnTo = Str::startsWith($returnTo, '/')
+            || ($appUrl !== '' && Str::startsWith($returnTo, $appUrl));
+
+        if (!$isSafeReturnTo) {
+            $returnTo = route('journey.index');
+        }
+
+        $journey = $journey->load(
+            'vehicle',
+            'trailer',
+            'driver',
+            'orders.customer',
+            'orders.site',
+            'orders.items',
+            'orders.items.cerCode',
+            'orders.holders',
+            'stops.customer',
+            'stops.technicalAction',
+            'stops.stopOrders.order.site',
+            'stops.stopOrders.order.customer',
+            'stops.stopOrders.order.items',
+            'stops.stopOrders.order.items.cerCode'
+        )->loadCount('stops');
+
+        $documentsService = app(OrderDocumentGenerationService::class);
+        $documentsByOrderId = [];
+
+        foreach ($journey->orders as $order) {
+            $documentsByOrderId[$order->id] = $documentsService->listDocuments($order);
+            $order->setAttribute('documents', $documentsByOrderId[$order->id]);
+        }
+
+        foreach ($journey->stops as $stop) {
+            foreach ($stop->stopOrders as $stopOrder) {
+                $order = $stopOrder->order;
+                if (!$order) {
+                    continue;
+                }
+
+                $documents = $documentsByOrderId[$order->id] ?? $documentsService->listDocuments($order);
+                $documentsByOrderId[$order->id] = $documents;
+                $order->setAttribute('documents', $documents);
+            }
+        }
+
+        return inertia(
+            'Journey/Show',
+            [
+                'journey' => $journey,
+                'returnTo' => $returnTo,
+            ]
+        );
+    }
+
 
 
     /**
@@ -161,7 +226,11 @@ class JourneyController extends Controller
             ->where('is_active', true)
             ->get(['id', 'label']);
         $orders = Order::query()
-            ->where('status', OrderStatus::STATUS_READY->value)
+            ->whereNull('journey_id')
+            ->whereIn('status', [
+                OrderStatus::STATUS_CREATED->value,
+                OrderStatus::STATUS_READY->value,
+            ])
             ->with([
                 'logistic:id,name',
                 'customer:id,company_name',
@@ -355,8 +424,8 @@ public function store(Request $request)
 
         // redirect nuova o legacy: per ora manteniamo legacy
             return redirect()
-                ->route('journey.index')
-                ->with('success', 'Viaggio inserito con successo!');
+                ->route('journey.edit', ['journey' => $journey->id])
+                ->with('success', 'Viaggio inserito con successo! Genera ora i documenti ordini dal pannello Journey.');
     });
 }
 
@@ -366,8 +435,7 @@ public function store(Request $request)
 private function applyOrdersToJourney(
     Journey $journey,
     array $orderIds,
-    string $truckLocation,
-    bool $allowAlreadyPlannedForCurrentJourney = false
+    string $truckLocation
 ): void
 {
     if (empty($orderIds)) return;
@@ -375,31 +443,15 @@ private function applyOrdersToJourney(
     $orders = Order::whereIn('id', $orderIds)->get();
 
     foreach ($orders as $order) {
-        $currentState = $order->status;
-        $documentsState = $order->documents_status instanceof OrderDocumentsStatus
-            ? $order->documents_status
-            : OrderDocumentsStatus::tryFrom((string) $order->documents_status);
+        $alreadyInJourney = (int) $order->journey_id === (int) $journey->id;
+        $order->cargo_location = $truckLocation;
+        $order->journey_id = $journey->id;
 
-        $isPlannedInCurrentJourney = $allowAlreadyPlannedForCurrentJourney
-            && $currentState === OrderStatus::STATUS_PLANNED
-            && (int) $order->journey_id === (int) $journey->id;
-
-        if (
-            !$isPlannedInCurrentJourney
-            && $documentsState !== OrderDocumentsStatus::GENERATED
-        ) {
-            Log::warning("Order ID {$order->id} is not plan-ready: documents are not generated.");
-            continue;
+        if (!$alreadyInJourney) {
+            $this->invalidateOrderReadyState($order);
         }
 
-        if ($currentState->canTransitionTo(OrderStatus::STATUS_PLANNED) || $isPlannedInCurrentJourney) {
-            $order->status = OrderStatus::STATUS_PLANNED->value;
-            $order->cargo_location = $truckLocation;
-            $order->journey_id = $journey->id;
-            $order->save();
-        } else {
-            Log::warning("Invalid state transition from {$currentState->value} for order ID {$order->id}");
-        }
+        $order->save();
     }
 }
 
@@ -423,7 +475,13 @@ private function applyOrdersToJourney(
 
         $orders = Order::query()
             ->where(function ($q) use ($journey) {
-                $q->where('status', OrderStatus::STATUS_READY->value)
+                $q->where(function ($available) {
+                    $available->whereNull('journey_id')
+                        ->whereIn('status', [
+                            OrderStatus::STATUS_CREATED->value,
+                            OrderStatus::STATUS_READY->value,
+                        ]);
+                })
                     ->orWhere('journey_id', $journey->id);
             })
             ->with([
@@ -514,7 +572,7 @@ private function applyOrdersToJourney(
             try {
                 $journeyState = $journey->status instanceof JourneyStatus
                     ? $journey->status
-                    : JourneyStatus::from((string) $journeyStatusRaw);
+                    : JourneyStatus::fromMixed($journeyStatusRaw);
             } catch (\ValueError $e) {
                 $journeyState = JourneyStatus::STATUS_CREATED;
             }
@@ -522,6 +580,16 @@ private function applyOrdersToJourney(
             if ($journeyState !== JourneyStatus::STATUS_CREATED) {
                 abort(422, 'Il viaggio puo essere modificato solo quando e in stato creato.');
             }
+
+            $before = [
+                'planned_start_at' => optional($journey->planned_start_at)->toDateTimeString(),
+                'planned_end_at' => optional($journey->planned_end_at)->toDateTimeString(),
+                'vehicle_id' => (int) $journey->vehicle_id,
+                'trailer_id' => $journey->trailer_id !== null ? (int) $journey->trailer_id : null,
+                'vehicle_cargo_id' => (int) $journey->vehicle_cargo_id,
+                'trailer_cargo_id' => $journey->trailer_cargo_id !== null ? (int) $journey->trailer_cargo_id : null,
+                'driver_id' => (int) $journey->driver_id,
+            ];
 
             $journey->update([
                 'planned_start_at' => $validated['planned_start_at'],
@@ -534,6 +602,17 @@ private function applyOrdersToJourney(
                 'driver_id' => $validated['driver_id'],
                 'logistics_user_id' => $validated['logistics_user_id'] ?? null,
             ]);
+
+            $after = [
+                'planned_start_at' => optional($journey->planned_start_at)->toDateTimeString(),
+                'planned_end_at' => optional($journey->planned_end_at)->toDateTimeString(),
+                'vehicle_id' => (int) $journey->vehicle_id,
+                'trailer_id' => $journey->trailer_id !== null ? (int) $journey->trailer_id : null,
+                'vehicle_cargo_id' => (int) $journey->vehicle_cargo_id,
+                'trailer_cargo_id' => $journey->trailer_cargo_id !== null ? (int) $journey->trailer_cargo_id : null,
+                'driver_id' => (int) $journey->driver_id,
+            ];
+            $journeyExecutionContextChanged = $before !== $after;
 
             $idsTruck = $validated['orders_truck'] ?? [];
             $idsTrailer = $validated['orders_trailer'] ?? [];
@@ -570,13 +649,27 @@ private function applyOrdersToJourney(
                         'journey_id' => null,
                         'cargo_location' => null,
                         'status' => $this->statusAfterJourneyDetach($orderToDetach),
+                        'documents_status' => OrderDocumentsStatus::NOT_GENERATED->value,
+                        'documents_generated_at' => null,
+                        'documents_error' => null,
                     ]);
                 }
             }
 
-            $this->applyOrdersToJourney($journey, $idsTruck, OrdersTruckLocation::TRUCK_MOTRICE->value, true);
-            $this->applyOrdersToJourney($journey, $idsTrailer, OrdersTruckLocation::TRUCK_RIMORCHIO->value, true);
-            $this->applyOrdersToJourney($journey, $idsFulfill, OrdersTruckLocation::TRUCK_RIEMPIMENTO->value, true);
+            $this->applyOrdersToJourney($journey, $idsTruck, OrdersTruckLocation::TRUCK_MOTRICE->value);
+            $this->applyOrdersToJourney($journey, $idsTrailer, OrdersTruckLocation::TRUCK_RIMORCHIO->value);
+            $this->applyOrdersToJourney($journey, $idsFulfill, OrdersTruckLocation::TRUCK_RIEMPIMENTO->value);
+
+            if ($journeyExecutionContextChanged) {
+                $ordersToInvalidate = Order::query()
+                    ->where('journey_id', $journey->id)
+                    ->get();
+
+                foreach ($ordersToInvalidate as $order) {
+                    $this->invalidateOrderReadyState($order);
+                    $order->save();
+                }
+            }
 
             JourneyStopOrder::query()->where('journey_id', $journey->id)->delete();
             JourneyStop::query()->where('journey_id', $journey->id)->delete();
@@ -683,6 +776,9 @@ private function applyOrdersToJourney(
                 'journey_id' => null,
                 'status' => $this->statusAfterJourneyDetach($order),
                 'cargo_location' => null,
+                'documents_status' => OrderDocumentsStatus::NOT_GENERATED->value,
+                'documents_generated_at' => null,
+                'documents_error' => null,
             ]);
         }
 
@@ -707,7 +803,7 @@ public function updateState(Journey $journey, Request $request)
 {
     $newState = JourneyStatus::from($request->new_state);
 
-    if (!JourneyStatus::from($journey->status)->canTransitionTo($newState)) {
+    if (!JourneyStatus::fromMixed($journey->status)->canTransitionTo($newState)) {
         abort(403, 'Invalid state transition.');
     }
 
@@ -718,6 +814,17 @@ public function updateState(Journey $journey, Request $request)
             break;
 
         case JourneyStatus::STATUS_ACTIVE:
+            $notReadyOrders = $journey->orders()
+                ->where(function ($query) {
+                    $query->where('status', '!=', OrderStatus::STATUS_READY->value)
+                        ->orWhere('documents_status', '!=', OrderDocumentsStatus::GENERATED->value);
+                })
+                ->count();
+
+            if ($notReadyOrders > 0) {
+                abort(422, 'Impossibile avviare il viaggio: tutti gli ordini devono essere READY con documenti generati.');
+            }
+
             $journey->executed_at = now();
             break;
 
@@ -735,15 +842,151 @@ public function updateState(Journey $journey, Request $request)
 
 private function statusAfterJourneyDetach(Order $order): string
 {
-    $documentsState = $order->documents_status instanceof OrderDocumentsStatus
-        ? $order->documents_status
-        : OrderDocumentsStatus::tryFrom((string) $order->documents_status);
+    return OrderStatus::STATUS_CREATED->value;
+}
 
-    if ($documentsState === OrderDocumentsStatus::GENERATED) {
-        return OrderStatus::STATUS_READY->value;
+private function invalidateOrderReadyState(Order $order): void
+{
+    $order->status = OrderStatus::STATUS_CREATED->value;
+    $order->documents_status = OrderDocumentsStatus::NOT_GENERATED->value;
+    $order->documents_generated_at = null;
+    $order->documents_error = null;
+}
+
+public function documentsStatus(Journey $journey): \Illuminate\Http\JsonResponse
+{
+    Gate::authorize('view', $journey);
+
+    $documentsService = app(OrderDocumentGenerationService::class);
+
+    $orders = Order::query()
+        ->where('journey_id', $journey->id)
+        ->with([
+            'customer:id,company_name',
+            'items:id,order_id,cer_code_id,has_adr,adr,adr_hp',
+            'items.cerCode:id,is_dangerous',
+        ])
+        ->orderBy('id')
+        ->get([
+            'id',
+            'journey_id',
+            'legacy_code',
+            'customer_id',
+            'cargo_location',
+            'status',
+            'documents_status',
+            'documents_generated_at',
+            'documents_error',
+            'documents_version',
+        ]);
+
+    $total = $orders->count();
+    $ready = $orders->filter(function (Order $order) {
+        return OrderStatus::fromMixed($order->status)->value === OrderStatus::STATUS_READY->value;
+    })->count();
+
+    return response()->json([
+        'journey_id' => $journey->id,
+        'summary' => [
+            'total' => $total,
+            'ready' => $ready,
+            'not_ready' => max(0, $total - $ready),
+            'all_ready' => $total > 0 && $ready === $total,
+        ],
+        'orders' => $orders->map(function (Order $order) use ($documentsService) {
+            $documents = $documentsService->listDocuments($order);
+            $modelDocument = collect($documents)->first(fn (array $document) => ($document['extension'] ?? null) === 'xlsx');
+            $adrHpDocument = collect($documents)->first(fn (array $document) => ($document['extension'] ?? null) === 'pdf');
+            $requiresAdrHp = $order->items->contains(function ($item): bool {
+                $adrEnabled = (bool) ($item->has_adr ?? $item->adr ?? false);
+                if ($adrEnabled) {
+                    return true;
+                }
+
+                $dangerousCer = (bool) ($item->cerCode?->is_dangerous ?? false);
+                $hasHpCode = trim((string) ($item->adr_hp ?? '')) !== '';
+
+                return $dangerousCer || $hasHpCode;
+            });
+
+            return [
+            'id' => $order->id,
+            'legacy_code' => $order->legacy_code,
+            'customer_name' => $order->customer?->company_name,
+            'status' => OrderStatus::fromMixed($order->status)->value,
+            'documents_status' => OrderDocumentsStatus::fromMixed($order->documents_status)->value,
+            'documents_generated_at' => $order->documents_generated_at,
+            'documents_error' => $order->documents_error,
+            'documents_version' => (int) ($order->documents_version ?? 0),
+            'has_model_document' => $modelDocument !== null,
+            'model_document_name' => $modelDocument['name'] ?? null,
+            'has_adr_hp_document' => $adrHpDocument !== null,
+            'adr_hp_document_name' => $adrHpDocument['name'] ?? null,
+            'requires_adr_hp_document' => $requiresAdrHp,
+        ];
+        })->values(),
+    ]);
+}
+
+public function generateDocuments(
+    Request $request,
+    Journey $journey,
+    OrderDocumentGenerationService $service
+): \Illuminate\Http\JsonResponse {
+    Gate::authorize('update', $journey);
+
+    $validated = $request->validate([
+        'order_ids' => ['nullable', 'array'],
+        'order_ids.*' => ['integer', 'exists:orders,id'],
+    ]);
+
+    $orderIds = array_values(array_unique(array_map('intval', $validated['order_ids'] ?? [])));
+    $query = Order::query()->where('journey_id', $journey->id);
+    if (!empty($orderIds)) {
+        $query->whereIn('id', $orderIds);
+    }
+    $orders = $query->get();
+
+    if ($orders->isEmpty()) {
+        return response()->json([
+            'type' => 'warning',
+            'message' => 'Nessun ordine trovato nel journey selezionato.',
+        ], 422);
     }
 
-    return OrderStatus::STATUS_CREATED->value;
+    $queued = [];
+    $skipped = [];
+
+    foreach ($orders as $order) {
+        $documentsState = OrderDocumentsStatus::fromMixed($order->documents_status ?? OrderDocumentsStatus::NOT_GENERATED->value);
+
+        if ($documentsState === OrderDocumentsStatus::GENERATING && !$service->isGeneratingStateStale($order)) {
+            $skipped[] = [
+                'order_id' => $order->id,
+                'reason' => 'already_generating',
+            ];
+            continue;
+        }
+
+        if ($documentsState === OrderDocumentsStatus::GENERATING && $service->isGeneratingStateStale($order)) {
+            $service->recoverStaleGeneratingState($order);
+            $order->refresh();
+        }
+
+        $service->enqueueGeneration($order);
+        $queued[] = $order->id;
+    }
+
+    return response()->json([
+        'type' => 'success',
+        'message' => sprintf(
+            'Generazione avviata per %d ordini%s.',
+            count($queued),
+            count($skipped) > 0 ? ' (alcuni ordini erano gia in generazione)' : ''
+        ),
+        'queued_order_ids' => $queued,
+        'skipped' => $skipped,
+    ], 202);
 }
 
 

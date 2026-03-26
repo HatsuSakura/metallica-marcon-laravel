@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Models\Journey;
 use Inertia\Inertia;
+use App\Policies\JourneyPolicy;
 use App\Policies\NotificationPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
@@ -28,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
         Gate::policy(DatabaseNotification::class, NotificationPolicy::class);
+        Gate::policy(Journey::class, JourneyPolicy::class);
         Inertia::share([
             'auth' => fn () => [
                 'user' => auth()->user(),

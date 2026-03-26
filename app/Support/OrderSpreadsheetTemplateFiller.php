@@ -492,8 +492,9 @@ class OrderSpreadsheetTemplateFiller
             return '';
         }
 
-        $parts = array_filter([(string) ($vehicle->name ?? ''), (string) ($vehicle->plate ?? '')]);
-        return trim(implode(' - ', $parts));
+        return trim((string) ($vehicle->plate ?? '')) !== ''
+            ? (string) $vehicle->plate
+            : '-';
     }
 
     private function trailerLabel(Order $order): string
@@ -503,8 +504,9 @@ class OrderSpreadsheetTemplateFiller
             return '';
         }
 
-        $parts = array_filter([(string) ($trailer->name ?? ''), (string) ($trailer->plate ?? '')]);
-        return trim(implode(' - ', $parts));
+        return trim((string) ($trailer->plate ?? '')) !== ''
+            ? (string) $trailer->plate
+            : '-';
     }
 
     private function formatDate(mixed $value): string

@@ -18,6 +18,8 @@
     import JourneyVehiclePanels from './Components/JourneyVehiclePanels.vue'
     import JourneySidebar from './Components/JourneySidebar.vue'
     import StopManagerDrawer from './Components/StopManagerDrawer.vue'
+    import JourneyDocumentGenerationPanel from './Components/JourneyDocumentGenerationPanel.vue'
+    import { JOURNEY_STOP_STATUS } from '@/Constants/journeyStopStatus'
 
 
     const props = defineProps({
@@ -78,6 +80,19 @@
         if (!byId.has(o.id)) byId.set(o.id, o)
       }
 
+      return Array.from(byId.values())
+    })
+
+    const selectedJourneyOrders = computed(() => {
+      const byId = new Map()
+      for (const order of [
+        ...(listMotrice.value || []),
+        ...(listRimorchio.value || []),
+        ...(listRiempimento.value || []),
+      ]) {
+        if (!order?.id) continue
+        if (!byId.has(order.id)) byId.set(order.id, order)
+      }
       return Array.from(byId.values())
     })
     const { customerById, siteByCustomerId } = useJourneyLookups(allOrders)
@@ -595,7 +610,7 @@ const addTechnicalStop = (actionId) => {
     local_id: `t${technicalStopCounter.value}`,
     technical_action_id: action.id,
     action_label: action.label,
-    status: 'planned',
+    status: JOURNEY_STOP_STATUS.PLANNED,
     orders: [],
     orders_count: 0,
     open: true,
@@ -1100,6 +1115,11 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
             </draggable>
           </div>
 
+          <JourneyDocumentGenerationPanel
+            :journey-id="props.journey.id"
+            :selected-orders="selectedJourneyOrders"
+          />
+
         </div>
 
         <!-- FLOATING INFO OBJECT -->
@@ -1214,4 +1234,3 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
     }
 
     </style>
-

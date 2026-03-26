@@ -50,6 +50,7 @@ use App\Http\Controllers\WarehouseManagerOrderItemImageController;
 use App\Http\Controllers\API_NlpLogisticsParseController;
 use App\Http\Controllers\LogisticDispatchController;
 use App\Http\Controllers\API_LogisticDispatchController;
+use App\Http\Controllers\API_LogisticDispatchWorkspaceController;
 
 
 //Route::get('/', [IndexController::class, 'login']);
@@ -162,12 +163,15 @@ Route::get('/dashboard-warehouse', fn() => Inertia::render('Dashboard/Warehouse'
     ->name('warehouse.home');
 
 // LOGISTIC
-Route::get('/dashboard-logistic', fn() => Inertia::render('Dashboard/Logistic'))
+Route::get('/dashboard-logistic', [DashboardController::class, 'logisticHome'])
     ->middleware(['auth', 'verified'])
     ->name('logistic.home');
 Route::get('/dashboard-logistic/full', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard.logistic.full');
+Route::get('/dashboard-logistic/operations', [DashboardController::class, 'logisticOperations'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.logistic.operations');
 Route::get('/logistic/dispatch', [LogisticDispatchController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('logistic-dispatch.index');
@@ -388,6 +392,8 @@ Route::prefix('api')
         Route::get('/orders/{order}/documents', [API_OrderDocumentsController::class, 'list']);
         Route::get('/orders/{order}/documents/{document}/download', [API_OrderDocumentsController::class, 'download'])
             ->where('document', '.*');
+        Route::get('/journeys/{journey}/documents-status', [JourneyController::class, 'documentsStatus']);
+        Route::post('/journeys/{journey}/generate-documents', [JourneyController::class, 'generateDocuments']);
         Route::post('/driver/journeys/{journey}/start', [API_DriverJourneyStopsController::class, 'startJourney']);
         Route::put('/driver/journeys/{journey}/stops/reorder', [API_DriverJourneyStopsController::class, 'reorder']);
         Route::put('/driver/journeys/{journey}/stops/{stop}/complete', [API_DriverJourneyStopsController::class, 'complete']);
@@ -396,7 +402,14 @@ Route::prefix('api')
         Route::put('/logistic/dispatch/{journey}/plan', [API_LogisticDispatchController::class, 'updatePlan'])->name('api.logistic-dispatch.update-plan');
         Route::post('/logistic/dispatch/{journey}/hold', [API_LogisticDispatchController::class, 'hold'])->name('api.logistic-dispatch.hold');
         Route::post('/logistic/dispatch/{journey}/resume', [API_LogisticDispatchController::class, 'resume'])->name('api.logistic-dispatch.resume');
-        Route::post('/logistic/dispatch/{journey}/complete', [API_LogisticDispatchController::class, 'complete'])->name('api.logistic-dispatch.complete');
+        Route::get('/logistic/dispatch/{journey}/workspace', [API_LogisticDispatchWorkspaceController::class, 'workspace'])->name('api.logistic-dispatch.workspace');
+        Route::put('/logistic/dispatch/{journey}/cargos', [API_LogisticDispatchWorkspaceController::class, 'upsertCargos'])->name('api.logistic-dispatch.cargos.save');
+        Route::put('/logistic/dispatch/{journey}/workspace', [API_LogisticDispatchWorkspaceController::class, 'saveWorkspace'])->name('api.logistic-dispatch.workspace.save');
+        Route::post('/logistic/dispatch/{journey}/confirm', [API_LogisticDispatchWorkspaceController::class, 'confirm'])->name('api.logistic-dispatch.confirm');
+        Route::post('/logistic/dispatch/{journey}/events', [API_LogisticDispatchWorkspaceController::class, 'appendEvent'])->name('api.logistic-dispatch.events');
+        Route::post('/logistic/transshipments/{transshipment}/approve', [API_LogisticDispatchWorkspaceController::class, 'approveTransshipment'])->name('api.logistic-transshipments.approve');
+        Route::post('/logistic/transshipments/{transshipment}/cancel', [API_LogisticDispatchWorkspaceController::class, 'cancelTransshipment'])->name('api.logistic-transshipments.cancel');
+        Route::post('/logistic/dispatch/{journey}/close', [API_LogisticDispatchWorkspaceController::class, 'close'])->name('api.logistic-dispatch.close');
         Route::post('/nlp/logistics/parse', [API_NlpLogisticsParseController::class, 'parse']);
         Route::put('/warehouse-orders/{order}', [API_WarehouseOrdersController::class, 'update'])->name('update');
         Route::post('/warehouse-order-items/move-journey-cargo/{orderItem}', [API_WarehouseOrderItemsController::class, 'moveJourneyCargo'])->name('warehouse-order-items.move-journey-cargo');

@@ -12,8 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('journey_cargos') || !Schema::hasColumn('journey_cargos', 'warehouse_chief_id')) {
+            return;
+        }
+
         Schema::table('journey_cargos', function (Blueprint $table) {
-            $table->dropForeign(['worker_id']);
+            $table->dropForeign(['warehouse_chief_id']);
             $table->dropColumn('warehouse_chief_id');
         });
     }
@@ -23,6 +27,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('journey_cargos') || Schema::hasColumn('journey_cargos', 'warehouse_chief_id')) {
+            return;
+        }
+
         Schema::table('journey_cargos', function (Blueprint $table) {
             $table->foreignIdFor(
                 User::class,

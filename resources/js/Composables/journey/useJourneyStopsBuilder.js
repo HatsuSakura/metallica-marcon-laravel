@@ -1,4 +1,5 @@
 import { computed } from 'vue'
+import { JOURNEY_STOP_STATUS } from '@/Constants/journeyStopStatus'
 
 /**
  * V1: stops derivati dagli ordini selezionati (truck+trailer+fulfill).
@@ -48,7 +49,7 @@ export function useJourneyStopsBuilder({ listMotrice, listRimorchio, listRiempim
         customer_visit_index: 1,
         sequence: seq,
         planned_sequence: seq,
-        status: 'planned',
+        status: JOURNEY_STOP_STATUS.PLANNED,
         orders: orderIds,
         orders_count: orderIds.length,
       })

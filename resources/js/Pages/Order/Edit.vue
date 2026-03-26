@@ -185,6 +185,7 @@
                       format="dd/MM/yyyy" 
                       auto-apply 
                       :enableTimePicker="false"
+                      :disabled="hasFixedWithdrawAt"
                       @update:model-value="manageExpectedDate()">
                     </VueDatePicker> 
                     <div class="input-error" v-if="form.errors.expected_withdraw_at">
@@ -204,31 +205,31 @@
                   </div>
                 </div>
 
-                <div class="mt-2 flex flex-row justify-between align-middle gap-4">
-                  <div class="flex w-full">
-                    <label for="data_corrente" class="label w-64">Data Corrente</label>
-                    <VueDatePicker disabled
-                      id="data_corrente" 
-                      v-model="currentDate" 
-                      format="dd/MM/yyyy" 
-                      auto-apply 
-                      :enableTimePicker="false"
-                    >
-                    </VueDatePicker> 
-                    <div class="input-error" v-if="form.errors.data_corrente">
-                      {{ form.errors.data_corrente }}
-                    </div>
-                  </div>
-
-                  <div class="flex w-full">
-                    <label for="orariAperturaCorrenti" class="label w-48">Orari sede: </label>
-                    <input disabled
-                      v-model.text="orariAperturaCorrenti" 
-                      id="orariAperturaCorrenti"
-                      type="text" 
-                      class="input input-bordered w-full"
-                      placeholder="Orari popolati automaticamente"
+                <div class="mt-4 flex flex-row items-center gap-4">
+                  <label for="fixed_withdraw_toggle" class="label w-64">Data fissa</label>
+                  <input
+                    id="fixed_withdraw_toggle"
+                    :checked="hasFixedWithdrawAt"
+                    type="checkbox"
+                    class="toggle"
+                    @change="toggleFixedWithdraw($event.target.checked)"
+                  />
+                  <span class="text-sm opacity-70 flex-1">Se attiva, blocca la data presunta e la sincronizza con la data fissa.</span>
+                  <div class="flex items-center gap-2 flex-1">
+                    <VueDatePicker
+                      id="fixed_withdraw_at"
+                      v-model="form.fixed_withdraw_at"
+                      format="dd/MM/yyyy, HH:mm"
+                      auto-apply
+                      :enableTimePicker="true"
+                      :disabled="!hasFixedWithdrawAt"
+                      @update:model-value="onFixedWithdrawChanged()"
                     />
+                  </div>
+                </div>
+                <div class="mt-1">
+                  <div class="input-error" v-if="form.errors.fixed_withdraw_at">
+                    {{ form.errors.fixed_withdraw_at }}
                   </div>
                 </div>
 
@@ -356,15 +357,6 @@
         <div class="mt-4 flex justify-end gap-2">
           <button
             type="button"
-            class="btn btn-secondary"
-            :disabled="generatingDocuments"
-            @click="generateDocuments"
-          >
-            <font-awesome-icon :icon="['fas', 'file-export']" class="text-lg"/>
-            {{ generatingDocuments ? 'Avvio...' : 'Genera documenti' }}
-          </button>
-          <button
-            type="button"
             class="btn btn-outline"
             :disabled="form.processing"
             @click="edit('save_stay')"
@@ -376,52 +368,6 @@
             Salva & Esci
           </button>
         </div>
-
-        <div class="mt-6 rounded-box border border-base-300 p-4">
-          <div class="mb-3 flex items-center justify-between">
-            <div class="text-lg font-semibold">Documenti generati</div>
-            <button type="button" class="btn btn-ghost btn-sm" :disabled="loadingDocuments" @click="fetchOrderDocuments">
-              <font-awesome-icon :icon="['fas', 'rotate-right']" />
-              Aggiorna elenco
-            </button>
-          </div>
-
-          <div v-if="loadingDocuments" class="text-sm opacity-70">Caricamento documenti...</div>
-          <div v-else-if="orderDocuments.length === 0" class="text-sm opacity-70">
-            Nessun documento generato per questo ordine.
-          </div>
-
-          <div v-else class="overflow-x-auto">
-            <table class="table table-zebra table-sm">
-              <thead>
-                <tr>
-                  <th>Nome file</th>
-                  <th>Tipo</th>
-                  <th>Dimensione</th>
-                  <th>Ultima modifica</th>
-                  <th class="text-right">Azioni</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="doc in orderDocuments" :key="doc.path">
-                  <td class="font-mono text-xs">{{ doc.name }}</td>
-                  <td>{{ (doc.extension || '-').toUpperCase() }}</td>
-                  <td>{{ formatBytes(doc.size) }}</td>
-                  <td>{{ formatTimestamp(doc.last_modified) }}</td>
-                  <td class="text-right">
-                    <a
-                      class="btn btn-outline btn-xs"
-                      :href="downloadDocumentHref(doc.name)"
-                    >
-                      <font-awesome-icon :icon="['fas', 'download']" />
-                      Download
-                    </a>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
     
       </form>
     </section>
@@ -430,7 +376,6 @@
     <script setup>
     import { computed, watch, ref, watchEffect , onMounted } from 'vue';
     import { createStore, useStore } from 'vuex';
-    import axios from 'axios';
     import { useForm, usePage, router } from '@inertiajs/vue3'
     import dayjs from 'dayjs';
     import VueDatePicker from '@vuepic/vue-datepicker';
@@ -457,9 +402,6 @@ import { uuid } from '@/utils/uuid';
     })
     
     const page = usePage();
-    const generatingDocuments = ref(false);
-    const loadingDocuments = ref(false);
-    const orderDocuments = ref([]);
     const user = computed(
       () => page.props.user
     )
@@ -474,10 +416,6 @@ import { uuid } from '@/utils/uuid';
         ? currentSite.value.notes
         : 'nessuna nota particoalre per questa sede'
     );
-    const currentDate = computed(
-      () => new Date()
-    )
-
 const totalItemsWeight = computed(() => {
       if (form.items.length){
         return form.items.reduce((total, element) => total + element.weight_declared, 0);
@@ -523,10 +461,8 @@ const groupedItems = computed(() => {
 
     // Declare the ref
     const orariApertura = ref('');
-    const orariAperturaCorrenti = ref('');
-
-    // Watch for changes in currentSite and update orariApertura dynamically
-    watchEffect(() => {
+	    // Watch for changes in currentSite and update orariApertura dynamically
+	    watchEffect(() => {
       if (currentSite.value.timetable?.hours_json) {
         orariApertura.value = 'Orari compilati automaticamente';
       } else {
@@ -544,14 +480,15 @@ const groupedItems = computed(() => {
       { data: 'email' },
     ];
 
-    const form = useForm({
-      id: props.order.id,
-      is_urgent: Boolean(props.order.is_urgent),
-      requested_at: props.order.created_at,
-      expected_withdraw_at: new Date(props.order.expected_withdraw_at),
-      notes: props.order.notes ?? '',
-      post_action: 'save_exit',
-      logistics_user_id: props.order.logistics_user_id ? props.order.logistics_user_id : user ? user.value.id : null, // Fallback to null if user is not defined
+	    const form = useForm({
+	      id: props.order.id,
+	      is_urgent: Boolean(props.order.is_urgent),
+	      requested_at: props.order.requested_at ? new Date(props.order.requested_at) : new Date(),
+	      expected_withdraw_at: props.order.expected_withdraw_at ? new Date(props.order.expected_withdraw_at) : null,
+          fixed_withdraw_at: props.order.fixed_withdraw_at ? new Date(props.order.fixed_withdraw_at) : null,
+	      notes: props.order.notes ?? '',
+	      post_action: 'save_exit',
+	      logistics_user_id: props.order.logistics_user_id ? props.order.logistics_user_id : user ? user.value.id : null, // Fallback to null if user is not defined
       has_adr_consultant: currentSite.value?.has_adr_consultant ?? '',
       customer_id: currentSite.customer_id,
       site_id: props.site.id,
@@ -561,8 +498,40 @@ const groupedItems = computed(() => {
         ...item,
         order_item_group_label: item.order_item_group?.label ?? null,
       })),
-      holders: props.order_holders,
-    })
+	      holders: props.order_holders,
+	    })
+
+      const hasFixedWithdrawAt = computed(() => form.fixed_withdraw_at !== null);
+
+      const normalizeDateOrNull = (value) => {
+        if (!value) return null;
+
+        const normalized = value instanceof Date ? value : new Date(value);
+
+        return Number.isNaN(normalized.getTime()) ? null : normalized;
+      };
+
+      const syncExpectedWithFixed = () => {
+        if (!hasFixedWithdrawAt.value || !form.fixed_withdraw_at) return;
+
+        form.expected_withdraw_at = normalizeDateOrNull(form.fixed_withdraw_at);
+        manageExpectedDate();
+      };
+
+      const toggleFixedWithdraw = (enabled) => {
+        if (!enabled) {
+          form.fixed_withdraw_at = null;
+          return;
+        }
+
+        form.fixed_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at) ?? new Date();
+        syncExpectedWithFixed();
+      };
+
+      const onFixedWithdrawChanged = () => {
+        form.fixed_withdraw_at = normalizeDateOrNull(form.fixed_withdraw_at);
+        syncExpectedWithFixed();
+      };
     
     // form ITEMS
     const addItem = () => {
@@ -677,12 +646,10 @@ const groupedItems = computed(() => {
     );
   
     
-    onMounted(() => {
-      manageExpectedDate();
-      manageCurrentDate();
-      parseBooleanValues();
-      fetchOrderDocuments();
-    });
+	    onMounted(() => {
+	      manageExpectedDate();
+	      parseBooleanValues();
+	    });
 
     const parseBooleanValues = () => {
       form.items.forEach((item) => {
@@ -693,11 +660,12 @@ const groupedItems = computed(() => {
       });
     }
 
-    const manageExpectedDate = () => {
-      console.log('gestisco la data')
-      if(form.expected_withdraw_at){
-        console.log('data inserita', form.expected_withdraw_at)
-        console.log('giorno della settimana', form.expected_withdraw_at.getDay())
+	    const manageExpectedDate = () => {
+	      console.log('gestisco la data')
+          form.expected_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at);
+	      if(form.expected_withdraw_at){
+	        console.log('data inserita', form.expected_withdraw_at)
+	        console.log('giorno della settimana', form.expected_withdraw_at.getDay())
         const hours = currentSite.value.timetable.hours_json
         console.log('array Orari', hours)
     
@@ -714,17 +682,6 @@ const groupedItems = computed(() => {
       }
     }
 
-    const manageCurrentDate = () => {
-      const currentDate = new Date();
-      const hours = currentSite.value.timetable.hours_json
-      const daySchedule = JSON.parse(hours).find(
-        (item) => item.position === currentDate.getDay()
-      );
-      if (daySchedule) {
-        orariAperturaCorrenti.value = daySchedule.orarioApM + " - " + daySchedule.orarioChM + " e " + daySchedule.orarioApP + " - " + daySchedule.orarioChP;
-      }
-    }
-    
     const updateAdrFieldsVisibility = () => {
       form.items.forEach((item, index) => {
         const adrField = document.querySelector(`#adr-fields-${index}`);
@@ -800,60 +757,18 @@ const groupedItems = computed(() => {
         if (holder.empty_holders_count === "") {
           holder.empty_holders_count = 0;
         }
-      });
-      // Before submitting, format the date correctly
-      form.requested_at = dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss');
-      form.expected_withdraw_at = dayjs(form.expected_withdraw_at).format('YYYY-MM-DD HH:mm:ss');
-      form.post_action = postAction;
-      form.put(route('order.update', {order: props.order.id }));
-    }
-
-    const generateDocuments = async () => {
-      if (generatingDocuments.value) {
-        return;
-      }
-
-      generatingDocuments.value = true;
-      try {
-        const response = await axios.post(`/api/orders/${props.order.id}/generate-documents`);
-        alert(response?.data?.message ?? 'Generazione documenti avviata.');
-        await fetchOrderDocuments();
-      } catch (error) {
-        alert(error?.response?.data?.message ?? 'Errore durante la generazione documenti.');
-      } finally {
-        generatingDocuments.value = false;
-      }
-    };
-
-    const fetchOrderDocuments = async () => {
-      if (loadingDocuments.value) {
-        return;
-      }
-
-      loadingDocuments.value = true;
-      try {
-        const response = await axios.get(`/api/orders/${props.order.id}/documents`);
-        orderDocuments.value = response?.data?.data ?? [];
-      } catch (error) {
-        orderDocuments.value = [];
-      } finally {
-        loadingDocuments.value = false;
-      }
-    };
-
-    const downloadDocumentHref = (fileName) =>
-      `/api/orders/${props.order.id}/documents/${encodeURIComponent(fileName)}/download`;
-
-    const formatTimestamp = (unixTimestamp) =>
-      unixTimestamp ? dayjs.unix(unixTimestamp).format('YYYY-MM-DD HH:mm:ss') : '-';
-
-    const formatBytes = (bytes) => {
-      const value = Number(bytes || 0);
-      if (value < 1024) return `${value} B`;
-      if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
-      return `${(value / (1024 * 1024)).toFixed(1)} MB`;
-    };
-        
+	      });
+	      // Before submitting, format the date correctly
+	      form.requested_at = dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss');
+	      form.expected_withdraw_at = form.expected_withdraw_at
+            ? dayjs(form.expected_withdraw_at).format('YYYY-MM-DD HH:mm:ss')
+            : null;
+          form.fixed_withdraw_at = form.fixed_withdraw_at
+            ? dayjs(form.fixed_withdraw_at).format('YYYY-MM-DD HH:mm:ss')
+            : null;
+	      form.post_action = postAction;
+	      form.put(route('order.update', {order: props.order.id }));
+	    }
     </script>
     
    

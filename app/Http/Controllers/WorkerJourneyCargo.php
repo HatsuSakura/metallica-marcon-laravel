@@ -126,7 +126,7 @@ class WorkerJourneyCargo extends Controller
             'items.*.adr' => 'nullable|boolean',
             'items.*.adr_un_code' => 'nullable|string',
             'items.*.adr_hp' => 'nullable|string',
-            'items.*.adr_lotto' => 'nullable|string',
+            'items.*.adr_lot_code' => 'nullable|string',
             'items.*.adr_volume' => 'nullable|numeric',	 
             'items.*.warehouse_id' => 'nullable|numeric',
             'items.*.warehouse_notes' => 'nullable|string',
@@ -135,9 +135,9 @@ class WorkerJourneyCargo extends Controller
             'items.*.machinery_time_share' => 'nullable|numeric',
             'items.*.recognized_price' => 'nullable|numeric',
             'items.*.recognized_weight' => 'nullable|numeric',
-            'items.*.adr_totale' => 'nullable|boolean',
-            'items.*.adr_esenzione_totale' => 'nullable|boolean',
-            'items.*.adr_esenzione_parziale' => 'nullable|boolean',
+            'items.*.is_adr_total' => 'nullable|boolean',
+            'items.*.has_adr_total_exemption' => 'nullable|boolean',
+            'items.*.has_adr_partial_exemption' => 'nullable|boolean',
             'holders' => 'nullable|array', // Make holders optional
             'holders.*.holder_id' => 'required|exists:holders,id',
             'holders.*.filled_holders_count' => 'required|integer',
@@ -261,7 +261,7 @@ class WorkerJourneyCargo extends Controller
             'items.*.adr' => 'nullable|boolean',
             'items.*.adr_un_code' => 'nullable|string',
             'items.*.adr_hp' => 'nullable|string',
-            'items.*.adr_lotto' => 'nullable|string',
+            'items.*.adr_lot_code' => 'nullable|string',
             'items.*.adr_volume' => 'nullable|numeric',	 
             'items.*.warehouse_id' => 'required|numeric',
             'items.*.warehouse_notes' => 'nullable|string',
@@ -270,9 +270,9 @@ class WorkerJourneyCargo extends Controller
             'items.*.machinery_time_share' => 'nullable|numeric',
             'items.*.recognized_price' => 'nullable|numeric',
             'items.*.recognized_weight' => 'nullable|numeric',
-            'items.*.adr_totale' => 'nullable|boolean',
-            'items.*.adr_esenzione_totale' => 'nullable|boolean',
-            'items.*.adr_esenzione_parziale' => 'nullable|boolean',
+            'items.*.is_adr_total' => 'nullable|boolean',
+            'items.*.has_adr_total_exemption' => 'nullable|boolean',
+            'items.*.has_adr_partial_exemption' => 'nullable|boolean',
             // HOLDERS
             'holders' => 'nullable|array', // Make holders optional
             'holders.*.holder_id' => 'required|exists:holders,id',
@@ -389,7 +389,7 @@ public function updateState(Order $order, Request $request)
 {
     $newState = OrderStatus::from($request->new_state);
 
-    if (!OrderStatus::from($order->status)->canTransitionTo($newState)) {
+    if (!OrderStatus::fromMixed($order->status)->canTransitionTo($newState)) {
         abort(403, 'Invalid state transition.');
     }
 
@@ -418,6 +418,7 @@ public function updateState(Order $order, Request $request)
 
 
 }
+
 
 
 

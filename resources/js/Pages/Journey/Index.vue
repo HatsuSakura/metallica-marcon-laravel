@@ -1,7 +1,13 @@
 <template>
-<section>
-    <Link :href="route('journey.create')" class="btn btn-primary">
-        <font-awesome-icon :icon="['fas', 'map-location-dot']" class="text-2xl"/>
+<section class="flex items-center gap-2 justify-between">
+
+    <Link :href="route('logistic.home')" class="btn btn-ghost btn-sm">
+        <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-lg"/>
+        Torna a Dashboard
+    </Link>
+
+    <Link :href="route('journey.create')" class="btn btn-primary btn-sm">
+        <font-awesome-icon :icon="['fas', 'map-location-dot']" class="text-lg"/>
         Pianifica nuovo viaggio
     </Link>
 </section>
