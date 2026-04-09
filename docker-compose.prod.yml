@@ -1,0 +1,64 @@
+# =============================================================
+# docker-compose.prod.yml — Metallica Marcon (produzione)
+# Usare come: cp docker-compose.prod.yml docker-compose.yml
+# sul VPS prima del primo deploy.
+# =============================================================
+
+services:
+
+  metallicamarcon:
+    build: .
+    container_name: metallicamarcon
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - metallicamarcon-db
+      - metallicamarcon-valkey
+    networks:
+      - vps-net
+      - metallicamarcon-internal
+
+  metallicamarcon-worker:
+    build: .
+    container_name: metallicamarcon-worker
+    restart: unless-stopped
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+    env_file: .env
+    depends_on:
+      - metallicamarcon-db
+      - metallicamarcon-valkey
+    networks:
+      - metallicamarcon-internal
+
+  metallicamarcon-db:
+    image: mariadb:10.11
+    container_name: metallicamarcon-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${DB_DATABASE}
+      MARIADB_USER: ${DB_USERNAME}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+      - metallicamarcon-db-data:/var/lib/mysql
+    networks:
+      - metallicamarcon-internal
+
+  metallicamarcon-valkey:
+    image: valkey/valkey:7.2-alpine
+    container_name: metallicamarcon-valkey
+    restart: unless-stopped
+    volumes:
+      - metallicamarcon-valkey-data:/data
+    networks:
+      - metallicamarcon-internal
+
+volumes:
+  metallicamarcon-db-data:
+  metallicamarcon-valkey-data:
+
+networks:
+  vps-net:
+    external: true
+  metallicamarcon-internal:
+    driver: bridge

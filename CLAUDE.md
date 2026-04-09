@@ -87,6 +87,9 @@ Dettaglio completo in `.claude/rules/decisions/001-core.md`.
 | D10 | Naming convention: `OrderDocumentsStatus` / `documents_status` |
 | D11 | Tutti i file sorgente in UTF-8 |
 
+## Active tasks
+@.claude/tasks.md
+
 ## Riferimenti
 
 | Argomento | File |
@@ -100,3 +103,4 @@ Dettaglio completo in `.claude/rules/decisions/001-core.md`.
 | Template documenti ordine | `.ai/docs_templates/` |
 | NLP engine docs completi | `.ai/nlp/` |
 | Authorization matrix (generata) | `.ai/decisions/generated/` |
+| Note operative e sessioni | Obsidian → `Metallica Marcon/` |
