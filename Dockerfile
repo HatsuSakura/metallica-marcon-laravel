@@ -15,7 +15,7 @@ RUN composer install \
     --prefer-dist \
     --ignore-platform-reqs
 COPY . .
-RUN composer dump-autoload \
+RUN mkdir -p bootstrap/cache && composer dump-autoload \
     --optimize \
     --classmap-authoritative \
     --ignore-platform-reqs
