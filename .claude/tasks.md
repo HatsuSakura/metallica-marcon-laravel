@@ -12,10 +12,10 @@
 ## Active
 
 ### M4 — Deploy produzione VPS
-- [ ] Creare Dockerfile (multi-stage: Composer → Node → PHP/Apache)
-- [ ] Creare docker-compose.prod.yml (app + worker + MariaDB + Valkey)
-- [ ] Creare deploy.sh
-- [ ] Aggiornare CLAUDE.md con riferimenti deploy
+- [x] Creare Dockerfile (multi-stage: Composer → Node → PHP/Apache)
+- [x] Creare docker-compose.prod.yml (app + worker + MariaDB + Valkey)
+- [x] Creare deploy.sh
+- [x] Aggiornare CLAUDE.md con riferimenti deploy
 - [ ] Attendere cambio record A DNS dal provider (35.214.194.1 → 76.13.137.60)
 - [ ] Emettere certificato Let's Encrypt dopo propagazione DNS
 - [ ] Configurare virtual host Nginx su VPS
