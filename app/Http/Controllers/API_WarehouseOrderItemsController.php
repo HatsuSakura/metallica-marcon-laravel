@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\OrderItemExplosionSync;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Gate;
 
 
 class API_WarehouseOrderItemsController extends Controller{
@@ -30,6 +31,7 @@ public function saveItems(
 
     if ($request->filled('order_id')) {
         $order = Order::findOrFail($request->input('order_id'));
+        Gate::authorize('warehouseManage', $order);
 
         // normalizza il gruista: ' => null
         $craneOperatorUserId = $request->input('crane_operator_user_id');
@@ -45,6 +47,7 @@ public function saveItems(
 
     foreach ($request->input('items', []) as $index => $data) {
         $item = OrderItem::findOrFail($data['id']);
+        Gate::authorize('warehouseManage', $item->order);
 
         // files caricati per questo indice
         $images = $request->file("items.$index.images", []);
@@ -103,6 +106,8 @@ public function update(
     OrderItemUpdater $updater,
     OrderItemExplosionSync $explosionSync,
 ) {
+    Gate::authorize('warehouseManage', $orderItem->order);
+
     $userId = $request->user()->id;
 
     // 1) PRIMITIVI (eccetto images/explosions)
@@ -152,6 +157,8 @@ public function update(
 
     public function moveJourneyCargo(Request $request, OrderItem $orderItem)
     {
+        Gate::authorize('warehouseManage', $orderItem->order);
+
         $data = $request->validate([
             'journey_cargo_id'      => ['required','integer','exists:journey_cargos,id'],
             'warehouse_id'          => ['required','integer','exists:warehouses,id'], // ← nuovo
@@ -204,6 +211,8 @@ public function update(
 
     public function flagNotFound(Request $request, OrderItem $orderItem)
     {
+        Gate::authorize('warehouseManage', $orderItem->order);
+
         $data = $request->validate([
             'is_not_found' => ['required','boolean'],
             'updated_at'   => ['nullable','date'], // per optimistic locking “soft”
@@ -284,8 +293,6 @@ public function update(
 
 
 }
-
-
 
 
 

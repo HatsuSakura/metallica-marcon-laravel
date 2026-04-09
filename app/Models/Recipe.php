@@ -2,14 +2,27 @@
 // app/Models/Recipe.php
 namespace App\Models;
 
+use App\Models\Concerns\HasDomainAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class Recipe extends Model
+class Recipe extends Model implements AuditableContract
 {
-    use SoftDeletes;
+    use SoftDeletes, HasDomainAudit;
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
 
     protected $fillable = [
+        'name',
+        'version',
+        'is_active',
+        'catalog_item_id',
+    ];
+
+    protected $auditInclude = [
         'name',
         'version',
         'is_active',

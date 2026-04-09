@@ -10,11 +10,14 @@ use App\Models\Warehouse;
 use Illuminate\Support\Arr;
 use App\Models\JourneyCargo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class WarehouseManagerOrderItemController extends Controller
 {
     public function index(Request $request)
     {
+        Gate::authorize('viewAny', Order::class);
+
         // Retrieve the logged in user's id
         $warehouseManagerId = $request->user()->id;
         
@@ -41,6 +44,8 @@ class WarehouseManagerOrderItemController extends Controller
 
     public function create(Order $order)
     {
+        Gate::authorize('warehouseManage', $order);
+
         // eager-load direttamente i journeyCargos
         $order->load('journeyCargos','JourneyCargos.cargo');
 
@@ -55,6 +60,7 @@ class WarehouseManagerOrderItemController extends Controller
 
     public function store(Request $request, Order $order)
     {
+        Gate::authorize('warehouseManage', $order);
 
         // 1) valida TUTTO
         $validated = $request->validate([
@@ -98,6 +104,5 @@ class WarehouseManagerOrderItemController extends Controller
 
 
 }
-
 
 

@@ -162,9 +162,9 @@
                     <VueDatePicker 
                       id="expected_withdraw_at" 
                       v-model="form.expected_withdraw_at" 
-                      format="dd/MM/yyyy" 
+                      format="dd/MM/yyyy, HH:mm" 
                       auto-apply 
-                      :enableTimePicker="false"
+                      :enableTimePicker="true"
                       :disabled="hasFixedWithdrawAt"
                       @update:model-value="manageDate()">
                     </VueDatePicker> 
@@ -697,6 +697,71 @@ const removeItem = (index) => {
       },
       { deep: true }
     );
+
+    const isBlank = (value) => value === null || value === undefined || `${value}`.trim() === '';
+    const isTruthy = (value) => value === true || value === 1 || value === '1';
+    const cerById = computed(() => {
+      const map = new Map();
+      (props.cerList || []).forEach((cer) => map.set(Number(cer.id), cer));
+      return map;
+    });
+
+    const runOrderPrecheck = () => {
+      const errors = {};
+
+      if (!form.expected_withdraw_at) {
+        errors.expected_withdraw_at = 'Data presunta ritiro obbligatoria.';
+      }
+
+      (form.items || []).forEach((item, index) => {
+        const prefix = `items.${index}`;
+        const cer = cerById.value.get(Number(item.cer_code_id));
+        const isBulk = isTruthy(item.is_bulk);
+        const adrActive = isTruthy(item.adr);
+
+        if (isBlank(item.cer_code_id)) {
+          errors[`${prefix}.cer_code_id`] = 'CER obbligatorio.';
+        }
+        if (!isBulk && isBlank(item.holder_id)) {
+          errors[`${prefix}.holder_id`] = 'Tipo contenitore obbligatorio se non sfuso.';
+        }
+        if (isBlank(item.description)) {
+          errors[`${prefix}.description`] = 'Descrizione obbligatoria.';
+        }
+        if (isBlank(item.weight_declared)) {
+          errors[`${prefix}.weight_declared`] = 'Peso stimato obbligatorio.';
+        }
+        if (isBlank(item.warehouse_id)) {
+          errors[`${prefix}.warehouse_id`] = 'Magazzino obbligatorio.';
+        }
+        if ((cer?.is_dangerous ?? false) && isBlank(item.adr_hp)) {
+          errors[`${prefix}.adr_hp`] = 'HP obbligatorio per CER pericoloso.';
+        }
+        if (adrActive) {
+          if (isBlank(item.adr_un_code)) {
+            errors[`${prefix}.adr_un_code`] = 'Codice UN obbligatorio quando ADR è attivo.';
+          }
+          const hasAdrFlag = isTruthy(item.is_adr_total)
+            || isTruthy(item.has_adr_total_exemption)
+            || isTruthy(item.has_adr_partial_exemption);
+          if (!hasAdrFlag) {
+            errors[`${prefix}.adr`] = 'Se ADR è attivo, seleziona almeno una modalità ADR.';
+          }
+        }
+      });
+
+      if (Object.keys(errors).length > 0) {
+        form.setError(errors);
+        const firstError = Object.values(errors)[0] ?? "Verifica i campi obbligatori dell'ordine.";
+        if (store?.dispatch) {
+          store.dispatch('flash/queueMessage', { type: 'error', text: firstError });
+        } else {
+          window.alert(firstError);
+        }
+        return false;
+      }
+      return true;
+    };
     
     // CUSTOM ACCORDION SECTIONS MANAGMENT
     const sections = ref([]); // Will hold section states dynamically
@@ -747,7 +812,8 @@ const removeItem = (index) => {
       }
     }, { immediate: true });
     
-    const create = (postAction = 'create_stay') => {
+	    const create = (postAction = 'create_stay') => {
+      form.clearErrors();
       // Ensure filled_holders_count and empty_holders_count is set to 0 if empty
       form.holders.forEach(holder => {
         if (holder.filled_holders_count === "") {
@@ -767,10 +833,15 @@ const removeItem = (index) => {
             ? dayjs(form.fixed_withdraw_at).format('YYYY-MM-DD HH:mm:ss')
             : null;
 
-	      form.is_urgent = form.is_urgent === true;
-	      form.post_action = postAction;
-      form.post(route('order.store'));
-    }
+		      form.is_urgent = form.is_urgent === true;
+		      form.post_action = postAction;
+
+      if (!runOrderPrecheck()) {
+        return;
+      }
+
+	      form.post(route('order.store'));
+	    }
        
     
     

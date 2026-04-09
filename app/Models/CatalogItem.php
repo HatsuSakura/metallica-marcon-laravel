@@ -2,15 +2,29 @@
 // app/Models/CatalogItem.php
 namespace App\Models;
 
+use App\Models\Concerns\HasDomainAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class CatalogItem extends Model
+class CatalogItem extends Model implements AuditableContract
 {
-    use SoftDeletes;
+    use SoftDeletes, HasDomainAudit;
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
 
     protected $fillable = [
         'name','type','code','is_active','parent_catalog_item_id',
+    ];
+
+    protected $auditInclude = [
+        'name',
+        'type',
+        'code',
+        'is_active',
+        'parent_catalog_item_id',
     ];
 
     public function parent()

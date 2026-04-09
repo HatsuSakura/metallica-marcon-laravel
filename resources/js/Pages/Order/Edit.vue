@@ -39,7 +39,7 @@
                 
               <div class="flex items-center">
                 <span class="font-medium">Data Richiesta: &nbsp;</span>  
-                <VueDatePicker v-model="form.requested_at" format="dd/MM/yyyy, HH:mm"></VueDatePicker> 
+                <VueDatePicker v-model="requestedAtPicker" format="dd/MM/yyyy, HH:mm"></VueDatePicker> 
               </div>
 
               <div class="flex items-center ">
@@ -181,12 +181,11 @@
                     <label for="expected_withdraw_at" class="label w-64">Data presunta ritiro</label>
                     <VueDatePicker 
                       id="expected_withdraw_at" 
-                      v-model="form.expected_withdraw_at" 
-                      format="dd/MM/yyyy" 
+                      v-model="expectedWithdrawAtPicker" 
+                      format="dd/MM/yyyy, HH:mm" 
                       auto-apply 
-                      :enableTimePicker="false"
-                      :disabled="hasFixedWithdrawAt"
-                      @update:model-value="manageExpectedDate()">
+                      :enableTimePicker="true"
+                      :disabled="hasFixedWithdrawAt">
                     </VueDatePicker> 
                     <div class="input-error" v-if="form.errors.expected_withdraw_at">
                       {{ form.errors.expected_withdraw_at }}
@@ -216,15 +215,14 @@
                   />
                   <span class="text-sm opacity-70 flex-1">Se attiva, blocca la data presunta e la sincronizza con la data fissa.</span>
                   <div class="flex items-center gap-2 flex-1">
-                    <VueDatePicker
-                      id="fixed_withdraw_at"
-                      v-model="form.fixed_withdraw_at"
-                      format="dd/MM/yyyy, HH:mm"
+	                    <VueDatePicker
+	                      id="fixed_withdraw_at"
+		                      v-model="fixedWithdrawAtPicker"
+		                      format="dd/MM/yyyy, HH:mm"
                       auto-apply
                       :enableTimePicker="true"
-                      :disabled="!hasFixedWithdrawAt"
-                      @update:model-value="onFixedWithdrawChanged()"
-                    />
+	                      :disabled="!hasFixedWithdrawAt"
+	                    />
                   </div>
                 </div>
                 <div class="mt-1">
@@ -368,6 +366,12 @@
             Salva & Esci
           </button>
         </div>
+
+        <AuditCollapse
+          :audits="props.audits || []"
+          :is-admin="Boolean(user?.is_admin)"
+          :field-labels="auditFieldLabels"
+        />
     
       </form>
     </section>
@@ -377,13 +381,15 @@
     import { computed, watch, ref, watchEffect , onMounted } from 'vue';
     import { createStore, useStore } from 'vuex';
     import { useForm, usePage, router } from '@inertiajs/vue3'
-    import dayjs from 'dayjs';
-    import VueDatePicker from '@vuepic/vue-datepicker';
-    import { getIconForSite } from '@/Composables/getIconForSite';
-    import { DataTable } from 'datatables.net-vue3';
-import ItemRow from './Components/ItemRow.vue';
+	    import dayjs from 'dayjs';
+	    import VueDatePicker from '@vuepic/vue-datepicker';
+	    import { getIconForSite } from '@/Composables/getIconForSite';
+	    import { DataTable } from 'datatables.net-vue3';
+	import { formatServerDateTime, parseServerDateTime } from '@/utils/serverDateTime';
+	import ItemRow from './Components/ItemRow.vue';
 import HolderRow from './Components/HolderRow.vue';
 import AccordionRow from './Components/AccordionRow.vue';
+import AuditCollapse from '@/Components/AuditCollapse.vue';
 import { uuid } from '@/utils/uuid';
  
     
@@ -398,18 +404,37 @@ import { uuid } from '@/utils/uuid';
         drivers: Array,
         cerList: Array,
         warehouses: Array,
-        currentUser: Object
+        currentUser: Object,
+        audits: Array,
     })
     
     const page = usePage();
     const user = computed(
       () => page.props.user
     )
+    const auditFieldLabels = {
+      customer_id: 'Cliente',
+      site_id: 'Sede',
+      logistics_user_id: 'Operatore Logistica',
+      journey_id: 'Viaggio',
+      status: 'Stato ordine',
+      documents_status: 'Stato documenti',
+      requested_at: 'Data richiesta',
+      expected_withdraw_at: 'Data presunta ritiro',
+      fixed_withdraw_at: 'Data fissa',
+      actual_withdraw_at: 'Data ritiro effettiva',
+      is_urgent: 'Urgenza',
+      cargo_location: 'Posizione carico',
+      has_crane: 'Uso gru',
+      crane_operator_user_id: 'Operatore gru',
+      machinery_time_minutes: 'Tempo macchinario',
+      notes: 'Note',
+    }
     const goBack = () => {
       window.history.back(); 
     }
 
-//    const store = useStore();
+    const store = useStore();
     const currentSite = computed(() => props.site );
     const siteNotesText = computed(() =>
       currentSite.value?.notes?.trim()
@@ -483,9 +508,9 @@ const groupedItems = computed(() => {
 	    const form = useForm({
 	      id: props.order.id,
 	      is_urgent: Boolean(props.order.is_urgent),
-	      requested_at: props.order.requested_at ? new Date(props.order.requested_at) : new Date(),
-	      expected_withdraw_at: props.order.expected_withdraw_at ? new Date(props.order.expected_withdraw_at) : null,
-          fixed_withdraw_at: props.order.fixed_withdraw_at ? new Date(props.order.fixed_withdraw_at) : null,
+	      requested_at: formatServerDateTime(parseServerDateTime(props.order.requested_at)) ?? formatServerDateTime(new Date()),
+	      expected_withdraw_at: formatServerDateTime(parseServerDateTime(props.order.expected_withdraw_at)),
+          fixed_withdraw_at: formatServerDateTime(parseServerDateTime(props.order.fixed_withdraw_at)),
 	      notes: props.order.notes ?? '',
 	      post_action: 'save_exit',
 	      logistics_user_id: props.order.logistics_user_id ? props.order.logistics_user_id : user ? user.value.id : null, // Fallback to null if user is not defined
@@ -501,15 +526,40 @@ const groupedItems = computed(() => {
 	      holders: props.order_holders,
 	    })
 
-      const hasFixedWithdrawAt = computed(() => form.fixed_withdraw_at !== null);
+	      const hasFixedWithdrawAt = computed(() => form.fixed_withdraw_at !== null);
 
-      const normalizeDateOrNull = (value) => {
-        if (!value) return null;
+		      const normalizeDateOrNull = (value) => {
+		        if (!value) return null;
 
-        const normalized = value instanceof Date ? value : new Date(value);
+		        const normalized = value instanceof Date ? value : parseServerDateTime(value);
 
-        return Number.isNaN(normalized.getTime()) ? null : normalized;
-      };
+		        return !normalized || Number.isNaN(normalized.getTime())
+                  ? null
+                  : formatServerDateTime(normalized);
+		      };
+
+              const requestedAtPicker = computed({
+                get: () => parseServerDateTime(form.requested_at),
+                set: (value) => {
+                  form.requested_at = normalizeDateOrNull(value);
+                },
+              });
+
+              const expectedWithdrawAtPicker = computed({
+                get: () => parseServerDateTime(form.expected_withdraw_at),
+                set: (value) => {
+                  form.expected_withdraw_at = normalizeDateOrNull(value);
+                  manageExpectedDate();
+                },
+              });
+
+              const fixedWithdrawAtPicker = computed({
+                get: () => parseServerDateTime(form.fixed_withdraw_at),
+                set: (value) => {
+                  form.fixed_withdraw_at = normalizeDateOrNull(value);
+                  syncExpectedWithFixed();
+                },
+              });
 
       const syncExpectedWithFixed = () => {
         if (!hasFixedWithdrawAt.value || !form.fixed_withdraw_at) return;
@@ -524,22 +574,18 @@ const groupedItems = computed(() => {
           return;
         }
 
-        form.fixed_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at) ?? new Date();
-        syncExpectedWithFixed();
-      };
+	        form.fixed_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at) ?? formatServerDateTime(new Date());
+	        syncExpectedWithFixed();
+	      };
 
-      const onFixedWithdrawChanged = () => {
-        form.fixed_withdraw_at = normalizeDateOrNull(form.fixed_withdraw_at);
-        syncExpectedWithFixed();
-      };
-    
-    // form ITEMS
+	    // form ITEMS
     const addItem = () => {
       form.items.push({
         id: uuid.v4(),
         cer_code_id: '', 
         order_item_group_id: null,
         order_item_group_label: null,
+        is_bulk: false,
         holder_id: '', 
         holder_quantity: '', 
         description: '', 
@@ -661,17 +707,18 @@ const groupedItems = computed(() => {
     }
 
 	    const manageExpectedDate = () => {
-	      console.log('gestisco la data')
-          form.expected_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at);
-	      if(form.expected_withdraw_at){
-	        console.log('data inserita', form.expected_withdraw_at)
-	        console.log('giorno della settimana', form.expected_withdraw_at.getDay())
-        const hours = currentSite.value.timetable.hours_json
-        console.log('array Orari', hours)
-    
-        const daySchedule = JSON.parse(hours).find(
-            (item) => item.position === form.expected_withdraw_at.getDay()
-        );
+//	      console.log('gestisco la data')
+	          form.expected_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at);
+              const expectedWithdrawAt = parseServerDateTime(form.expected_withdraw_at);
+		      if(expectedWithdrawAt){
+//	        console.log('data inserita', form.expected_withdraw_at)
+//	        console.log('giorno della settimana', form.expected_withdraw_at.getDay())
+	        const hours = currentSite.value.timetable.hours_json
+//        console.log('array Orari', hours)
+	    
+	        const daySchedule = JSON.parse(hours).find(
+	            (item) => item.position === expectedWithdrawAt.getDay()
+	        );
           if (daySchedule) {
             orariApertura.value = daySchedule.orarioApM + " - " + daySchedule.orarioChM + " e " + daySchedule.orarioApP + " - " + daySchedule.orarioChP;
           }
@@ -698,6 +745,71 @@ const groupedItems = computed(() => {
       },
       { deep: true }
     );
+
+    const isBlank = (value) => value === null || value === undefined || `${value}`.trim() === '';
+    const isTruthy = (value) => value === true || value === 1 || value === '1';
+    const cerById = computed(() => {
+      const map = new Map();
+      (props.cerList || []).forEach((cer) => map.set(Number(cer.id), cer));
+      return map;
+    });
+
+    const runOrderPrecheck = () => {
+      const errors = {};
+
+      if (!form.expected_withdraw_at) {
+        errors.expected_withdraw_at = 'Data presunta ritiro obbligatoria.';
+      }
+
+      (form.items || []).forEach((item, index) => {
+        const prefix = `items.${index}`;
+        const cer = cerById.value.get(Number(item.cer_code_id));
+        const isBulk = isTruthy(item.is_bulk);
+        const adrActive = isTruthy(item.adr);
+
+        if (isBlank(item.cer_code_id)) {
+          errors[`${prefix}.cer_code_id`] = 'CER obbligatorio.';
+        }
+        if (!isBulk && isBlank(item.holder_id)) {
+          errors[`${prefix}.holder_id`] = 'Tipo contenitore obbligatorio se non sfuso.';
+        }
+        if (isBlank(item.description)) {
+          errors[`${prefix}.description`] = 'Descrizione obbligatoria.';
+        }
+        if (isBlank(item.weight_declared)) {
+          errors[`${prefix}.weight_declared`] = 'Peso stimato obbligatorio.';
+        }
+        if (isBlank(item.warehouse_id)) {
+          errors[`${prefix}.warehouse_id`] = 'Magazzino obbligatorio.';
+        }
+        if ((cer?.is_dangerous ?? false) && isBlank(item.adr_hp)) {
+          errors[`${prefix}.adr_hp`] = 'HP obbligatorio per CER pericoloso.';
+        }
+        if (adrActive) {
+          if (isBlank(item.adr_un_code)) {
+            errors[`${prefix}.adr_un_code`] = 'Codice UN obbligatorio quando ADR è attivo.';
+          }
+          const hasAdrFlag = isTruthy(item.is_adr_total)
+            || isTruthy(item.has_adr_total_exemption)
+            || isTruthy(item.has_adr_partial_exemption);
+          if (!hasAdrFlag) {
+            errors[`${prefix}.adr`] = 'Se ADR è attivo, seleziona almeno una modalità ADR.';
+          }
+        }
+      });
+
+      if (Object.keys(errors).length > 0) {
+        form.setError(errors);
+        const firstError = Object.values(errors)[0] ?? "Verifica i campi obbligatori dell'ordine.";
+        if (store?.dispatch) {
+          store.dispatch('flash/queueMessage', { type: 'error', text: firstError });
+        } else {
+          window.alert(firstError);
+        }
+        return false;
+      }
+      return true;
+    };
     
     // CUSTOM ACCORDION SECTIONS MANAGMENT
     const sections = ref([]); // Will hold section states dynamically
@@ -748,7 +860,8 @@ const groupedItems = computed(() => {
       }
     }, { immediate: true });
     
-    const edit = (postAction = 'save_exit') => {
+	    const edit = (postAction = 'save_exit') => {
+      form.clearErrors();
       // Ensure filled_holders_count and empty_holders_count is set to 0 if empty
       form.holders.forEach(holder => {
         if (holder.filled_holders_count === "") {
@@ -759,16 +872,17 @@ const groupedItems = computed(() => {
         }
 	      });
 	      // Before submitting, format the date correctly
-	      form.requested_at = dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss');
-	      form.expected_withdraw_at = form.expected_withdraw_at
-            ? dayjs(form.expected_withdraw_at).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-          form.fixed_withdraw_at = form.fixed_withdraw_at
-            ? dayjs(form.fixed_withdraw_at).format('YYYY-MM-DD HH:mm:ss')
-            : null;
-	      form.post_action = postAction;
-	      form.put(route('order.update', {order: props.order.id }));
-	    }
+		      form.requested_at = normalizeDateOrNull(form.requested_at);
+		      form.expected_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at);
+	          form.fixed_withdraw_at = normalizeDateOrNull(form.fixed_withdraw_at);
+		      form.post_action = postAction;
+
+          if (!runOrderPrecheck()) {
+            return;
+          }
+
+		      form.put(route('order.update', {order: props.order.id }));
+		    }
     </script>
     
    

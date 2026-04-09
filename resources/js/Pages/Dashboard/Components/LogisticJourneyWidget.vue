@@ -34,8 +34,16 @@
     </div>
 
     <template #actions>
-      <Link :href="route('journey.index')" class="btn btn-sm btn-primary">Apri Viaggi</Link>
-      <Link :href="route('logistic-dispatch.index')" class="btn btn-sm btn-secondary">Apri Chiusure Viaggi</Link>
+      <Link :href="route('journey.index')" class="btn btn-sm btn-primary">
+        Apri Viaggi
+      </Link>
+      <Link :href="route('logistic-dispatch.index')" class="btn btn-sm btn-secondary">
+        Apri Chiusure Viaggi
+      </Link>
+      <Link :href="route('journey.create')" class="btn btn-primary btn-sm">
+        <font-awesome-icon :icon="['fas', 'map-location-dot']" class="text-lg"/>
+        Pianifica nuovo viaggio
+    </Link>
     </template>
   </LogisticKpiCard>
 </template>

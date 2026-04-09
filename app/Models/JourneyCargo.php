@@ -12,6 +12,7 @@ class JourneyCargo extends Model
     use HasFactory;
 
     protected $casts = [
+        'is_grounded' => 'boolean',
         'status' => JourneyCargoStatus::class,
     ];
 

@@ -60,6 +60,12 @@
         </div>
     </section>
 
+    <AuditCollapse
+        :audits="props.audits ?? []"
+        :is-admin="Boolean($page.props.user?.is_admin)"
+        :field-labels="auditFieldLabels"
+    />
+
 </template>
 
 <script setup>
@@ -71,13 +77,30 @@ import CustomerSpace from '@/Components/CustomerSpace.vue';
 import CustomerAddress from '@/Components/CustomerAddress.vue';
 import SiteSpace from '@/Components/SiteSpace.vue';
 import TabSite from './Components/TabSite.vue';
+import AuditCollapse from '@/Components/AuditCollapse.vue';
 
 
 const props = defineProps({
     customer:Object,
     areas: Array,
-    orders_by_site: { type: Object, default: () => ({}) }
+    orders_by_site: { type: Object, default: () => ({}) },
+    audits: { type: Array, default: () => [] },
 })
+
+const auditFieldLabels = {
+    is_occasional_customer: 'Cliente occasionale',
+    company_name: 'Ragione sociale',
+    vat_number: 'Partita IVA',
+    tax_code: 'Codice fiscale',
+    seller_id: 'Commerciale',
+    legal_address: 'Indirizzo legale',
+    sdi_code: 'Codice SDI',
+    business_type: 'Tipologia attività',
+    sales_email: 'Email commerciale',
+    administrative_email: 'Email amministrativa',
+    certified_email: 'PEC',
+    notes: 'Note',
+};
 
 const reactiveCustomer = reactive(props.customer);
 
@@ -111,4 +134,3 @@ const updateSite = (updatedSite) => {
 
 
 </script>
-

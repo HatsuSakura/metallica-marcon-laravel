@@ -9,6 +9,7 @@ use App\Enums\OrderStatus;
 use App\Models\Journey;
 use App\Models\JourneyEvent;
 use App\Models\JourneyStop;
+use App\Models\JourneyStopOrder;
 use App\Services\Dispatch\JourneyWorkspaceInitializer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +47,7 @@ class API_DriverJourneyStopsController extends Controller
             'stops.customer',
             'stops.technicalAction',
             'stops.stopOrders.order.site',
+            'stops.stopOrders.order.site.timetable',
             'stops.stopOrders.order.customer',
             'stops.stopOrders.order.items',
             'stops.stopOrders.order.items.cerCode',
@@ -208,9 +210,32 @@ class API_DriverJourneyStopsController extends Controller
                 $stop->save();
             }
 
+            // Se la tappa in corso non è più la prima utile, riallinea stati:
+            // la prima (planned|in_progress) diventa in corso, le altre planned.
+            $orderedActive = $journey->stops()
+                ->whereIn('status', [
+                    JourneyStopStatus::Planned->value,
+                    JourneyStopStatus::InProgress->value,
+                ])
+                ->orderBy('sequence')
+                ->get();
+
+            $firstActive = $orderedActive->first();
+            foreach ($orderedActive as $idx => $activeStop) {
+                if ($idx === 0) {
+                    $activeStop->status = JourneyStopStatus::InProgress->value;
+                    $activeStop->started_at = $activeStop->started_at ?? now();
+                } else {
+                    $activeStop->status = JourneyStopStatus::Planned->value;
+                    $activeStop->started_at = null;
+                }
+                $activeStop->save();
+            }
+
             $this->logEvent($request, $journey, null, [
                 'event' => 'stops_reordered',
                 'stop_ids' => $validated['stop_ids'],
+                'current_stop_id' => $firstActive?->id,
             ]);
 
             $this->loadJourneyStops($journey);
@@ -273,10 +298,38 @@ class API_DriverJourneyStopsController extends Controller
 
         $validated = $request->validate([
             'reason_code' => ['required', 'string', 'max:64', Rule::in(self::SKIP_REASON_CODES)],
-            'driver_notes' => ['required', 'string', 'max:2000'],
+            'driver_notes' => ['nullable', 'string', 'max:2000', 'required_if:reason_code,other'],
+            'confirm_release_orders' => ['required', 'accepted'],
         ]);
 
         return DB::transaction(function () use ($request, $journey, $stop, $validated) {
+            $releasedOrderIds = JourneyStopOrder::query()
+                ->where('journey_id', $journey->id)
+                ->where('journey_stop_id', $stop->id)
+                ->pluck('order_id')
+                ->map(fn ($id) => (int) $id)
+                ->values()
+                ->all();
+
+            if (!empty($releasedOrderIds)) {
+                DB::table('orders')
+                    ->whereIn('id', $releasedOrderIds)
+                    ->update([
+                        'journey_id' => null,
+                        'cargo_location' => null,
+                        'status' => OrderStatus::STATUS_CREATED->value,
+                        'documents_status' => OrderDocumentsStatus::NOT_GENERATED->value,
+                        'documents_generated_at' => null,
+                        'documents_error' => null,
+                        'updated_at' => now(),
+                    ]);
+
+                JourneyStopOrder::query()
+                    ->where('journey_id', $journey->id)
+                    ->where('journey_stop_id', $stop->id)
+                    ->delete();
+            }
+
             $stop->status = JourneyStopStatus::Skipped->value;
             $stop->completed_at = $stop->completed_at ?? now();
             $stop->reason_code = $validated['reason_code'];
@@ -287,6 +340,8 @@ class API_DriverJourneyStopsController extends Controller
                 'event' => 'stop_skipped',
                 'reason_code' => $validated['reason_code'],
                 'driver_notes' => $validated['driver_notes'],
+                'released_order_ids' => $releasedOrderIds,
+                'released_orders_count' => count($releasedOrderIds),
             ], $this->stopStatusValue($stop->status));
 
             $next = $this->nextPlannedStop($journey, $stop->sequence);
@@ -355,4 +410,3 @@ class API_DriverJourneyStopsController extends Controller
         return JourneyStopStatus::fromMixed($status)->value;
     }
 }
-

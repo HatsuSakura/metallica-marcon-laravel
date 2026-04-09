@@ -171,6 +171,12 @@
                 </div>
             </Box>
         </div>
+
+        <AuditCollapse
+            :audits="props.audits || []"
+            :is-admin="Boolean(page.props.user?.is_admin)"
+            :field-labels="auditFieldLabels"
+        />
     </section>
 </template>
 
@@ -179,6 +185,7 @@ import { computed, ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import dayjs from 'dayjs';
 import Box from '@/Components/UI/Box.vue';
+import AuditCollapse from '@/Components/AuditCollapse.vue';
 import JourneyDocumentGenerationPanel from './Components/JourneyDocumentGenerationPanel.vue';
 import { journeyStopStatusLabel } from '@/Constants/journeyStopStatus';
 
@@ -191,9 +198,27 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    audits: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const page = usePage();
+const auditFieldLabels = {
+    driver_id: 'Autista',
+    vehicle_id: 'Motrice',
+    trailer_id: 'Rimorchio',
+    vehicle_cargo_id: 'Cassone motrice',
+    trailer_cargo_id: 'Cassone rimorchio',
+    planned_start_at: 'Inizio pianificato',
+    planned_end_at: 'Fine pianificata',
+    actual_start_at: 'Inizio effettivo',
+    actual_end_at: 'Fine effettiva',
+    status: 'Stato viaggio',
+    dispatch_status: 'Stato dispatch',
+    notes: 'Note',
+};
 const journey = computed(() => props.journey);
 const returnToFromQuery = computed(() => {
     const rawUrl = page.url || '';

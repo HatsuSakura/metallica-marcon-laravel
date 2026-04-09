@@ -13,6 +13,34 @@
         </div>
     </div>
 <div class="flex flex-col gap-2">
+    <div class="flex flex-wrap items-center gap-2 mb-2">
+        <span class="text-sm opacity-70">Ordina per:</span>
+        <Link
+            :href="route('user.index', sortParams('name'))"
+            class="btn btn-sm"
+            :class="isSortedBy('name') ? 'btn-primary' : 'btn-outline'"
+        >
+            Nome
+            <span v-if="isSortedBy('name')">({{ sortDirectionLabel }})</span>
+        </Link>
+        <Link
+            :href="route('user.index', sortParams('surname'))"
+            class="btn btn-sm"
+            :class="isSortedBy('surname') ? 'btn-primary' : 'btn-outline'"
+        >
+            Cognome
+            <span v-if="isSortedBy('surname')">({{ sortDirectionLabel }})</span>
+        </Link>
+        <Link
+            :href="route('user.index', sortParams('role'))"
+            class="btn btn-sm"
+            :class="isSortedBy('role') ? 'btn-primary' : 'btn-outline'"
+        >
+            Ruolo
+            <span v-if="isSortedBy('role')">({{ sortDirectionLabel }})</span>
+        </Link>
+    </div>
+
     <Box v-for="user in props.users.data" :key="user.id" :class="{'border-dashed' : user.deleted_at}">
     <div class="flex flex-col md:flex-row gap-2 md:items-center justify-between">
         <div :class="{'opacity-25' : user.deleted_at}">
@@ -81,6 +109,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import Box from '@/Components/UI/Box.vue';
 import Pagination from '@/Components/UI/Pagination.vue';
 import { Link } from '@inertiajs/vue3';
@@ -89,9 +118,24 @@ import axios from 'axios';
 
 const props = defineProps({
     users: Object,
+    filters: Object,
 })
 
 const store = useStore();
+const currentSortBy = computed(() => props.filters?.sort_by ?? 'surname');
+const currentSortDir = computed(() => props.filters?.sort_dir ?? 'asc');
+const sortDirectionLabel = computed(() => (currentSortDir.value === 'desc' ? 'desc' : 'asc'));
+
+const isSortedBy = (key) => currentSortBy.value === key;
+
+const sortParams = (key) => {
+    const nextDir = currentSortBy.value === key && currentSortDir.value === 'asc' ? 'desc' : 'asc';
+    return {
+        ...props.filters,
+        sort_by: key,
+        sort_dir: nextDir,
+    };
+};
 
 const resendVerification = (userId) => {
     axios.post(`/api/user/resend-verification/${userId}`)

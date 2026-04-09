@@ -15,15 +15,27 @@ use App\Models\Warehouse;
 use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 use App\Support\Orders\FixedWithdrawSynchronizer;
 use App\Services\OrderItemGroupResolver;
 use App\Services\OrderDocumentGenerationService;
+use App\Support\Audit\AuditTrailPresenter;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Carbon;
 
 class OrderController extends Controller
 {
+    private function buildAuditTrail(Order $order): array
+    {
+        if (!Auth::user()?->is_admin) {
+            return [];
+        }
+
+        return AuditTrailPresenter::forOrder($order);
+    }
+
     private function normalizeLegacyEpochDate(mixed $value): mixed
     {
         if (!$value) {
@@ -36,6 +48,7 @@ class OrderController extends Controller
     }
 
     public function index(Request $request){
+        Gate::authorize('viewAny', Order::class);
 
         $query = Order::query()
         //->alphabetic()
@@ -112,13 +125,14 @@ class OrderController extends Controller
         OrderItemGroupResolver $groupResolver
     )
     {
+        Gate::authorize('create', Order::class);
 
         $CUSTOM_HOLDER_ID = 1;
 
-        $validatedData = $request->validate([
+        $validator = Validator::make($request->all(), [
             'is_urgent' => 'required|boolean',
             'requested_at' => 'required|date',
-            'expected_withdraw_at' => 'nullable|date',
+            'expected_withdraw_at' => 'required|date',
             'fixed_withdraw_at' => 'nullable|date',
             'notes' => 'nullable|string',
             'customer_id'=> 'required',
@@ -132,14 +146,8 @@ class OrderController extends Controller
             'items.*.order_item_group_label' => 'nullable|string|max:120',
             'items.*.is_bulk' => 'required|boolean',
             // se sfuso, ignoriamo il campo; se NON sfuso, è richiesto e min:1
-            'items.*.holder_quantity'       => [
-                'nullable',     // lo rendiamo ignorabile quando sfuso
-                'integer',
-                'required_unless:items.*.is_bulk,true',
-                'min:0',
-                'exclude_if:items.*.is_bulk,true',
-            ],
-            'items.*.holder_id' => 'nullable|integer|exists:holders,id|prohibited_if:is_bulk,true',
+            'items.*.holder_quantity' => 'nullable|integer|min:0',
+            'items.*.holder_id' => 'nullable|integer|exists:holders,id',
 
             'items.*.custom_l_cm' => [
                 'nullable','numeric','gt:0',
@@ -160,7 +168,7 @@ class OrderController extends Controller
                 'prohibited_if:items.*.is_bulk,1',
             ],
 
-            'items.*.description' => 'nullable|string',
+            'items.*.description' => 'required|string',
             'items.*.weight_declared' => 'required|numeric',
             'items.*.weight_gross' => 'nullable|numeric',
             'items.*.weight_tare' => 'nullable|numeric',
@@ -186,6 +194,9 @@ class OrderController extends Controller
             'holders.*.empty_holders_count' => 'required|integer',
             'holders.*.total_holders_count' => 'required|integer',
         ]);
+
+        $validatedData = $validator->validate();
+        $this->validateOrderItemBusinessRules($validatedData);
 
         $validatedData = FixedWithdrawSynchronizer::synchronize($validatedData);
 
@@ -260,7 +271,8 @@ class OrderController extends Controller
                 'holders' => $holders,
                 'drivers' => $drivers,
                 'cerList' => $cerList,
-                'warehouses' => $warehouses
+                'warehouses' => $warehouses,
+                'audits' => $this->buildAuditTrail($order),
             ]
         );
     }
@@ -277,10 +289,10 @@ class OrderController extends Controller
     {
         Gate::authorize('redirectAfterUpdate', $order);
 
-        $validatedData =$request->validate([
+        $validator = Validator::make($request->all(), [
             'is_urgent' => 'required|boolean',
             'requested_at' => 'required|date',
-            'expected_withdraw_at' => 'nullable|date',
+            'expected_withdraw_at' => 'required|date',
             'fixed_withdraw_at' => 'nullable|date',
             'notes' => 'nullable|string',
             'customer_id'=> 'required',
@@ -293,9 +305,10 @@ class OrderController extends Controller
             'items.*.cer_code_id' => 'required|exists:cer_codes,id',
             'items.*.order_item_group_id' => 'nullable|exists:order_item_groups,id',
             'items.*.order_item_group_label' => 'nullable|string|max:120',
-            'items.*.holder_id' => 'required|exists:holders,id',
-            'items.*.holder_quantity' => 'required|integer|min:1',
-            'items.*.description' => 'nullable|string',
+            'items.*.is_bulk' => 'required|boolean',
+            'items.*.holder_id' => 'nullable|integer|exists:holders,id',
+            'items.*.holder_quantity' => 'nullable|integer|min:0',
+            'items.*.description' => 'required|string',
             'items.*.weight_declared' => 'required|numeric',
             'items.*.weight_gross' => 'nullable|numeric',
             'items.*.weight_tare' => 'nullable|numeric',
@@ -322,6 +335,9 @@ class OrderController extends Controller
             'holders.*.total_holders_count' => 'required|integer',
         ]);
 
+        $validatedData = $validator->validate();
+        $this->validateOrderItemBusinessRules($validatedData);
+
         $validatedData = FixedWithdrawSynchronizer::synchronize($validatedData);
 
         $order->update(array_merge(
@@ -336,27 +352,24 @@ class OrderController extends Controller
         // If there are items, update them or create new ones
         if (!empty($validatedData['items'])) {
             $resolvedItems = $groupResolver->resolveForOrder($order, $validatedData['items']);
-            $existingItemIds = $order->items()->pluck('id')->toArray();
+            $existingItems = $order->items()->get()->keyBy('id');
+            $existingItemIds = $existingItems->keys()->all();
             $newItemIds = array_column($resolvedItems, 'id');
-            //Log::info($existingItemIds);
-            //Log::info($newItemIds);
 
-            // Delete items that are not in the new list
             $itemsToDelete = array_diff($existingItemIds, $newItemIds);
-            $order->items()->whereIn('id', $itemsToDelete)->delete();
+            foreach ($itemsToDelete as $itemId) {
+                $existingItems->get($itemId)?->delete();
+            }
 
             foreach ($resolvedItems as $item) {
                 if (isset($item['id']) && in_array($item['id'], $existingItemIds)) {
-                    // Update existing item
-                    $order->items()->where('id', $item['id'])->update($item);
+                    $existingItems->get($item['id'])?->update($item);
                 } else {
-                    // Create new item
                     $order->items()->create($item);
                 }
             }
         } else {
-            // If no items are provided, delete all existing items
-            $order->items()->delete();
+            $order->items()->get()->each->delete();
         }
 
         $groupResolver->cleanupUnusedGroups($order);
@@ -390,8 +403,7 @@ class OrderController extends Controller
                 }
             }
         } else {
-            // If no holders are provided, delete all existing holders
-            $order->holders()->delete();
+            $order->holders()->get()->each->delete();
         }
         
         $documentsService->invalidateAfterReadyOrderEdit($order->refresh());
@@ -409,6 +421,66 @@ class OrderController extends Controller
 
         //return redirect()->route('order.index')->with('success', 'Ritiro modificato con successo!');
         //return redirect()->back()->with('success', 'Ritiro modificato con successo!');
+    }
+
+    private function validateOrderItemBusinessRules(array $validatedData): void
+    {
+        $items = $validatedData['items'] ?? [];
+        if (empty($items)) {
+            return;
+        }
+
+        $cerIds = collect($items)
+            ->pluck('cer_code_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $dangerousByCerId = CerCode::query()
+            ->whereIn('id', $cerIds)
+            ->pluck('is_dangerous', 'id');
+
+        $errors = [];
+        foreach ($items as $index => $item) {
+            $cerId = (int) ($item['cer_code_id'] ?? 0);
+            $isBulk = (bool) ($item['is_bulk'] ?? false);
+
+            if (!$isBulk && empty($item['holder_id'])) {
+                $errors["items.$index.holder_id"] = 'Tipo contenitore obbligatorio se il materiale non è sfuso.';
+            }
+
+            if (empty($item['warehouse_id'])) {
+                $errors["items.$index.warehouse_id"] = 'Magazzino obbligatorio.';
+            }
+
+            $requiresHp = (bool) ($dangerousByCerId[$cerId] ?? false);
+            $adrHp = trim((string) ($item['adr_hp'] ?? ''));
+            if ($requiresHp && $adrHp === '') {
+                $errors["items.$index.adr_hp"] = 'HP obbligatorio per CER pericoloso.';
+            }
+
+            $adrActive = (bool) ($item['adr'] ?? false);
+            if ($adrActive) {
+                $adrUnCode = trim((string) ($item['adr_un_code'] ?? ''));
+                if ($adrUnCode === '') {
+                    $errors["items.$index.adr_un_code"] = 'Codice UN obbligatorio quando ADR è attivo.';
+                }
+
+                $hasAnyAdrFlag = (bool) ($item['is_adr_total'] ?? false)
+                    || (bool) ($item['has_adr_total_exemption'] ?? false)
+                    || (bool) ($item['has_adr_partial_exemption'] ?? false);
+
+                if (!$hasAnyAdrFlag) {
+                    $errors["items.$index.adr"] = 'Se ADR è attivo, seleziona almeno una modalità ADR (Totale o Esenzioni).';
+                }
+            }
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages($errors);
+        }
     }
 
 
@@ -436,6 +508,8 @@ class OrderController extends Controller
 
 public function updateState(Order $order, Request $request)
 {
+    Gate::authorize('update', $order);
+
     $newState = OrderStatus::from($request->new_state);
 
     if (!OrderStatus::fromMixed($order->status)->canTransitionTo($newState)) {
@@ -467,9 +541,3 @@ public function updateState(Order $order, Request $request)
 
 
 }
-
-
-
-
-
-

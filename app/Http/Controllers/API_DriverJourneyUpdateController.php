@@ -7,6 +7,7 @@ use App\Enums\OrderStatus;
 use App\Models\Journey;
 use App\Enums\JourneyStatus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class API_DriverJourneyUpdateController extends Controller
 {
@@ -16,6 +17,8 @@ class API_DriverJourneyUpdateController extends Controller
     */
     public function updateState(Journey $journey, Request $request)
     {
+        Gate::authorize('update', $journey);
+
         $newState = JourneyStatus::from($request->new_state);
 
         if (!JourneyStatus::fromMixed($journey->status)->canTransitionTo($newState)) {
@@ -70,6 +73,8 @@ class API_DriverJourneyUpdateController extends Controller
 
 
     public function update(Request $request, Journey $journey) {
+        Gate::authorize('update', $journey);
+
         $validated = $request->validate([
         ]);
     
@@ -85,6 +90,5 @@ class API_DriverJourneyUpdateController extends Controller
         return response()->json(['message' => 'Journey saved successfully.', 'journey' => $journey], 200);
     }
 }
-
 
 

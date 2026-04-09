@@ -19,3 +19,7 @@ This folder tracks the database standardization and migration process.
   - old/new backfill completed
 - Code refactor started (Phase 6, batch 1):
   - see `CODE_REFACTOR_PROGRESS.md`
+
+## Pending Data Sanitation
+- normalize legacy customer names with leading/trailing whitespace before final cutover
+- specifically sanitize `customers.company_name` for leading/trailing spaces, tabs, CR/LF

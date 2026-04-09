@@ -2,14 +2,23 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasDomainAudit;
 use App\Models\Site;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class Timetable extends Model
+class Timetable extends Model implements AuditableContract
 {
+    use HasDomainAudit;
+
     protected $dates = ['deleted_at'];
     protected $fillable = [
+        'site_id',
+        'hours_json',
+    ];
+
+    protected $auditInclude = [
         'site_id',
         'hours_json',
     ];

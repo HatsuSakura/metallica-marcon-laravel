@@ -3,14 +3,35 @@
 namespace App\Models;
 
 use App\Enums\InternalContactRole;
+use App\Models\Concerns\HasDomainAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class InternalContact extends Model
+class InternalContact extends Model implements AuditableContract
 {
-    use HasFactory;
+    use HasFactory, HasDomainAudit;
 
+    protected $fillable = [
+        'name',
+        'surname',
+        'phone',
+        'mobile',
+        'email',
+        'role',
+        'site_id',
+    ];
+
+    protected $auditInclude = [
+        'name',
+        'surname',
+        'phone',
+        'mobile',
+        'email',
+        'role',
+        'site_id',
+    ];
 
     /*
     It ensures that whenever you access the role field, it will return an instance of the SiteTipologia enum rather than just a string (e.g., 'worker').

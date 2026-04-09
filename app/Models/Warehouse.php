@@ -3,14 +3,24 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
+use App\Models\Concerns\HasDomainAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class Warehouse extends Model
+class Warehouse extends Model implements AuditableContract
 {
-    use HasFactory;
+    use HasFactory, HasDomainAudit;
 
     protected $fillable = [
+        'name',
+        'address',
+        'latitude',
+        'longitude',
+        'notes',
+    ];
+
+    protected $auditInclude = [
         'name',
         'address',
         'latitude',

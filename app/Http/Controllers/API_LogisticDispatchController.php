@@ -17,6 +17,8 @@ class API_LogisticDispatchController extends Controller
 
     public function updatePlan(Request $request, Journey $journey)
     {
+        $this->authorize('dispatchWorkspaceSave', $journey);
+
         $validated = $request->validate([
             'is_double_load' => ['required', 'boolean'],
             'is_temporary_storage' => ['required', 'boolean'],
@@ -58,6 +60,8 @@ class API_LogisticDispatchController extends Controller
 
     public function hold(Request $request, Journey $journey)
     {
+        $this->authorize('dispatchWorkspaceSave', $journey);
+
         $dispatchStatus = $this->dispatchStatusService->resolveCurrentStatus($journey);
         if ($dispatchStatus === JourneyDispatchStatusService::STATUS_ON_HOLD) {
             return response()->json([
@@ -91,6 +95,8 @@ class API_LogisticDispatchController extends Controller
 
     public function resume(Request $request, Journey $journey)
     {
+        $this->authorize('dispatchWorkspaceSave', $journey);
+
         $dispatchStatus = $this->dispatchStatusService->resolveCurrentStatus($journey);
         if ($dispatchStatus !== JourneyDispatchStatusService::STATUS_ON_HOLD) {
             return response()->json([
@@ -116,4 +122,3 @@ class API_LogisticDispatchController extends Controller
         ]);
     }
 }
-

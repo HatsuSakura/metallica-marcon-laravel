@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CatalogItem;
 use App\Models\Recipe;
 use App\Models\RecipeNode;
+use Illuminate\Support\Facades\Gate;
 
 class API_RecipeController extends Controller
 {
@@ -21,6 +22,8 @@ class API_RecipeController extends Controller
      */
     public function defaultTree()
     {
+        Gate::authorize('viewAny', CatalogItem::class);
+
         $catalogItemId = (int) request('catalog_item_id');
 
         // Carica il catalog item per sicurezza (e per eventuali check type)
@@ -153,6 +156,8 @@ class API_RecipeController extends Controller
      */
     public function recipeTree(Recipe $recipe)
     {
+        Gate::authorize('view', $recipe);
+
         // se questa ricetta non è legata a un component puoi anche decidere di tornare []:
         if (!$recipe->catalog_item_id) {
             return response()->json([]);
@@ -183,6 +188,5 @@ class API_RecipeController extends Controller
 
 
 }
-
 
 

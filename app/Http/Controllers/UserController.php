@@ -15,16 +15,46 @@ class UserController extends Controller
 {
 
     public function index(Request $request){
+        Gate::authorize('viewAny', User::class);
+
+        $sortBy = $request->query('sort_by', $request->query('by', 'surname'));
+        $sortDir = strtolower((string) $request->query('sort_dir', $request->query('order', 'asc')));
+        $allowedSortBy = ['name', 'surname', 'role'];
+        if (!in_array($sortBy, $allowedSortBy, true)) {
+            $sortBy = 'surname';
+        }
+        if (!in_array($sortDir, ['asc', 'desc'], true)) {
+            $sortDir = 'asc';
+        }
+
         $filters = [
             'deleted' => $request->boolean('deleted'),
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
             ...$request->only(['by', 'order']) // ... is like "merge array"
         ];
+
+        $usersQuery = User::query();
+        if ($sortBy === 'name') {
+            $usersQuery
+                ->orderBy('name', $sortDir)
+                ->orderBy('surname', $sortDir);
+        } elseif ($sortBy === 'role') {
+            $usersQuery
+                ->orderBy('role', $sortDir)
+                ->orderBy('surname', 'asc')
+                ->orderBy('name', 'asc');
+        } else {
+            $usersQuery
+                ->orderBy('surname', $sortDir)
+                ->orderBy('name', $sortDir);
+        }
 
         return inertia(
             'User/Index',
             [
                 'filters' => $filters,
-                'users' => User::query()
+                'users' => $usersQuery
                     //->users()
                     //->mostRecent() // managed by default 'by'
                     //->withCount('images')
@@ -36,6 +66,8 @@ class UserController extends Controller
     }
 
     public function show(User $user){
+        Gate::authorize('view', $user);
+
         return inertia(
             'User/Show',
             [
@@ -64,7 +96,8 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        
+        Gate::authorize('create', User::class);
+
         $validated = $request->validate([
             'name' => 'required',
             'surname' => 'required',
@@ -162,7 +195,9 @@ class UserController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, User $user)
-    {        
+    {
+        Gate::authorize('update', $user);
+
         $validated = $request->validate([
             'name' => 'required',
             'surname' => 'required',
@@ -246,7 +281,5 @@ class UserController extends Controller
     }
 
 }
-
-
 
 

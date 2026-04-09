@@ -349,6 +349,7 @@ import '@vuepic/vue-datepicker/dist/main.css';
 import dayjs from 'dayjs'
 import ImageUploader   from '@/Pages/Warehouse/Order/Components/ImageUploader.vue'
 import ExplosionEditor from '@/Pages/Warehouse/Order/Components/ExplosionEditor.vue'
+import { formatServerDateTime, parseServerDateTime } from '@/utils/serverDateTime'
 
 const props = defineProps({
   item: Object,
@@ -396,9 +397,17 @@ const emit = defineEmits([
 
 const store = useStore()
 
-const initialTotal = Number(props.item.machinery_time_fraction) || 0
+const normalizeServerDates = (item = {}) => ({
+  ...item,
+  warehouse_download_at: parseServerDateTime(item.warehouse_download_at),
+  warehouse_weighing_dt: parseServerDateTime(item.warehouse_weighing_dt),
+  warehouse_selection_dt: parseServerDateTime(item.warehouse_selection_dt),
+})
+
+const initialItem = normalizeServerDates(props.item)
+const initialTotal = Number(initialItem.machinery_time_fraction) || 0
 const localItem = reactive({ 
-  ...props.item,
+  ...initialItem,
   machinery_time_fraction_hh: Math.floor(initialTotal / 60),
   machinery_time_fraction_mm: initialTotal % 60
 })
@@ -412,7 +421,7 @@ const EMPTY = Object.freeze([]);
 
 // --- Helpers formato DATE ---
 function formatDate(d) {
-  return d ? dayjs(d).format('YYYY-MM-DD HH:mm:ss') : null
+  return formatServerDateTime(d)
 }
 
 function toDayjs(v) {
@@ -476,10 +485,11 @@ let prevSnapshot = pick(localItem, SCALAR_KEYS)
 // 1) quando il parent cambia item, si modifica porps.item. Ricarica l'item e aggiorna anche lo snapshot
 watch(() => props.item, (newItem) => {
   runAsParentPatch(() => {
+    const normalizedItem = normalizeServerDates(newItem)
     // 1) aggiorno tutti i campi
-    Object.assign(localItem, newItem)
+    Object.assign(localItem, normalizedItem)
     // 2) splitto subito la frazione in hh/mm
-    const total = Number(newItem.machinery_time_fraction) || 0
+    const total = Number(normalizedItem.machinery_time_fraction) || 0
     localItem.machinery_time_fraction_hh = Math.floor(total / 60)
     localItem.machinery_time_fraction_mm = total % 60
     prevSnapshot = pick(localItem, SCALAR_KEYS) // 🔴 reset snapshot
@@ -835,5 +845,4 @@ function toggleIsRagnabileInput() {
 
 
 </script>
-
 

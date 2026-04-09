@@ -3,63 +3,49 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Policies\Concerns\AuthorizesDomainRoles;
 
 class UserPolicy
 {
-    /**
-     * Determine whether the currentUser can view any models.
-     */
+    use AuthorizesDomainRoles;
+
     public function viewAny(User $currentUser): bool
     {
-        return true;
+        return $this->isControlRole($currentUser);
     }
 
-    /**
-     * Determine whether the currentUser can view the model.
-     */
     public function view(User $currentUser, User $managedUser): bool
     {
-        return true;
+        return $this->isControlRole($currentUser);
     }
 
-    /**
-     * Determine whether the currentUser can create models.
-     */
     public function create(User $currentUser): bool
     {
-        return true;
+        return $this->isControlRole($currentUser);
     }
 
-    /**
-     * Determine whether the currentUser can update the model.
-     */
     public function update(User $currentUser, User $managedUser): bool
     {
-        return true;
+        return $this->isControlRole($currentUser);
     }
 
-    /**
-     * Determine whether the currentUser can delete the model.
-     */
     public function delete(User $currentUser, User $managedUser): bool
     {
-        return true;
+        return $this->isControlRole($currentUser) && (int) $currentUser->id !== (int) $managedUser->id;
     }
 
-    /**
-     * Determine whether the currentUser can restore the model.
-     */
     public function restore(User $currentUser, User $managedUser): bool
     {
-        return true;
+        return $this->isControlRole($currentUser);
     }
 
-    /**
-     * Determine whether the currentUser can permanently delete the model.
-     */
     public function forceDelete(User $currentUser, User $managedUser): bool
     {
-        return true;
+        return $this->isControlRole($currentUser) && (int) $currentUser->id !== (int) $managedUser->id;
+    }
+
+    public function manageCredentials(User $currentUser, User $managedUser): bool
+    {
+        return $this->update($currentUser, $managedUser);
     }
 }

@@ -67,6 +67,7 @@ const stopOrderModel = computed({
         <font-awesome-icon :icon="['fas', 'person-walking-arrow-right']" class="text-xl"/>
         <VueDatePicker
           v-model="form.planned_start_at"
+          model-type="yyyy-MM-dd HH:mm:ss"
           locale="it"
           format="dd/MM/yyyy HH:mm"
           required
@@ -88,6 +89,7 @@ const stopOrderModel = computed({
         <font-awesome-icon :icon="['fas', 'person-walking-arrow-loop-left']" class="text-xl"/>
         <VueDatePicker
           v-model="form.planned_end_at"
+          model-type="yyyy-MM-dd HH:mm:ss"
           locale="it"
           format="dd/MM/yyyy HH:mm"
           required
@@ -302,4 +304,3 @@ const stopOrderModel = computed({
     </div>
   </div>
 </template>
-

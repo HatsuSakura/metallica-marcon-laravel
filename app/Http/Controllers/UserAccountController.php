@@ -18,6 +18,17 @@ use Intervention\Image\Laravel\Facades\Image;
 
 class UserAccountController extends Controller
 {
+    private function authorizeSelfOrAdmin(Request $request, User $user): void
+    {
+        $currentUser = $request->user();
+
+        if ((int) $currentUser->id === (int) $user->id) {
+            return;
+        }
+
+        abort_unless((bool) $currentUser->is_admin, 403);
+    }
+
     public function create(){
         return inertia('UserAccount/Create');
     }
@@ -75,6 +86,8 @@ class UserAccountController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        $this->authorizeSelfOrAdmin($request, $user);
+
         //dd(request()->all());
         $validated = $request->validate([
             'name' => 'required',
@@ -158,6 +171,5 @@ class UserAccountController extends Controller
 
 
 }
-
 
 

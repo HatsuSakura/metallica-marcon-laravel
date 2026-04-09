@@ -3,16 +3,18 @@
 namespace App\Models;
 
 use App\Enums\SiteTipologia;
+use App\Models\Concerns\HasDomainAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class Site extends Model
+class Site extends Model implements AuditableContract
 {
-    use SoftDeletes;
+    use SoftDeletes, HasDomainAudit;
 
     protected $dates = ['deleted_at'];
     protected $fillable = [
@@ -33,12 +35,33 @@ class Site extends Model
         'notes',
     ];
 
+    protected $auditInclude = [
+        'customer_id',
+        'name',
+        'is_main',
+        'site_type',
+        'address',
+        'latitude',
+        'longitude',
+        'has_muletto',
+        'has_electric_pallet_truck',
+        'has_manual_pallet_truck',
+        'other_machines',
+        'has_adr_consultant',
+        'notes',
+    ];
+
     /*
     Accessing `site_type` returns a SiteTipologia enum instance.
     Example: if ($site->site_type === SiteTipologia::FULLY_OPERATIVE)
     */
     protected $casts = [
+        'is_main' => 'boolean',
         'site_type' => SiteTipologia::class,
+        'has_muletto' => 'boolean',
+        'has_electric_pallet_truck' => 'boolean',
+        'has_manual_pallet_truck' => 'boolean',
+        'has_adr_consultant' => 'boolean',
     ];
 
 

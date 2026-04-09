@@ -37,6 +37,22 @@ $WinScpPreview = $false  # metti $false per fare il deploy reale
 $SyncVendor = $false
 
 # ============================
+# CLEANUP LOCALE
+# ============================
+
+$LocalDebugbarDir = Join-Path $LocalDir "storage\debugbar"
+
+if (Test-Path $LocalDebugbarDir) {
+    Write-Host "==> Pulisco storage/debugbar locale..." -ForegroundColor Cyan
+    Get-ChildItem $LocalDebugbarDir -Force |
+        Where-Object { $_.Name -ne ".gitignore" } |
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Host "==> storage/debugbar locale pulita." -ForegroundColor Green
+} else {
+    Write-Host "==> storage/debugbar locale non presente, nessuna pulizia necessaria." -ForegroundColor Yellow
+}
+
+# ============================
 # BUILD FRONTEND (opzionale)
 # ============================
 
@@ -147,12 +163,11 @@ Write-Host "==> Eseguo comandi Laravel sul server..." -ForegroundColor Cyan
 
 $remoteCommands = @(
     "cd $RemoteDir",
+    "composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction",
+    "php artisan optimize:clear",
     "php artisan migrate --force",
-    "php artisan config:clear",
     "php artisan config:cache",
-    "php artisan route:clear",
     "php artisan route:cache",
-    "php artisan view:clear",
     "php artisan view:cache"
 )
 

@@ -10,6 +10,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Site;
 use App\Models\User;
+use App\Support\Audit\AuditTrailPresenter;
 use App\Services\CalculateRiskService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -31,7 +32,7 @@ class CustomerController extends Controller
         return $isSafeReturnTo ? $returnTo : $fallback;
     }
 
-    public function __consruct()
+    public function __construct()
     {
         $this->authorizeResource(Customer::class, 'customer');
     }
@@ -103,6 +104,7 @@ class CustomerController extends Controller
         return inertia('Customer/Show', [
             'customer' => $customer,
             'areas' => $areas,
+            'audits' => auth()->user()?->is_admin ? AuditTrailPresenter::forCustomer($customer, 100) : [],
             'orders_by_site' => fn () => Order::query()
                 ->whereIn('site_id', $customer->sites()->pluck('id'))
                 ->withoutTrashed()
@@ -143,8 +145,8 @@ class CustomerController extends Controller
             'seller_id' => 'required|numeric|exists:users,id',
             'sdi_code' => 'required|string',
             'business_type' => ['required', 'string', Rule::in(array_column(CustomerJobType::cases(), 'value'))],
-            'sales_email' => 'required|email',
-            'administrative_email' => 'required|email',
+            'sales_email' => 'nullable|email',
+            'administrative_email' => 'nullable|email',
             'certified_email' => 'required|email',
             'notes' => 'nullable|string',
         ]);
@@ -158,8 +160,8 @@ class CustomerController extends Controller
             'legal_address' => $validatedData['legal_address'],
             'sdi_code' => $validatedData['sdi_code'],
             'business_type' => $validatedData['business_type'],
-            'sales_email' => $validatedData['sales_email'],
-            'administrative_email' => $validatedData['administrative_email'],
+            'sales_email' => $validatedData['sales_email'] ?? null,
+            'administrative_email' => $validatedData['administrative_email'] ?? null,
             'certified_email' => $validatedData['certified_email'],
             'notes' => $validatedData['notes'] ?? null,
         ]);
@@ -200,6 +202,7 @@ class CustomerController extends Controller
             'managers' => $managers,
             'jobTypes' => $jobTypes,
             'returnTo' => $returnTo,
+            'audits' => auth()->user()?->is_admin ? AuditTrailPresenter::forCustomer($customer, 100) : [],
         ]);
     }
 
@@ -216,8 +219,8 @@ class CustomerController extends Controller
             'seller_id' => 'required|numeric|exists:users,id',
             'sdi_code' => 'required|string',
             'business_type' => ['required', 'string', Rule::in(array_column(CustomerJobType::cases(), 'value'))],
-            'sales_email' => 'required|email',
-            'administrative_email' => 'required|email',
+            'sales_email' => 'nullable|email',
+            'administrative_email' => 'nullable|email',
             'certified_email' => 'required|email',
             'notes' => 'nullable|string',
             'return_to' => 'nullable|string',
@@ -232,8 +235,8 @@ class CustomerController extends Controller
             'legal_address' => $validatedData['legal_address'],
             'sdi_code' => $validatedData['sdi_code'],
             'business_type' => $validatedData['business_type'],
-            'sales_email' => $validatedData['sales_email'],
-            'administrative_email' => $validatedData['administrative_email'],
+            'sales_email' => $validatedData['sales_email'] ?? null,
+            'administrative_email' => $validatedData['administrative_email'] ?? null,
             'certified_email' => $validatedData['certified_email'],
             'notes' => $validatedData['notes'] ?? null,
         ]);
@@ -267,6 +270,8 @@ class CustomerController extends Controller
 
     public function recalculateRisk(Customer $customer, CalculateRiskService $calculateRiskService)
     {
+        Gate::authorize('update', $customer);
+
         $updatedSites = $calculateRiskService->recalculateCustomerRisk([
             'customerId' => (int) $customer->id,
         ]);
@@ -281,4 +286,3 @@ class CustomerController extends Controller
         ], 200);
     }
 }
-

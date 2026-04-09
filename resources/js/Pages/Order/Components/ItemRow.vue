@@ -15,10 +15,10 @@
             :searchable="true"
             placeholder="Cod. CER"
             class="custom-style-chooser w-36 min-w-max"
-            :class="getCerStyle(item.cer_code_id)"
+            :class="[getCerStyle(item.cer_code_id), guidanceClass('cer_code_id')]"
           >
             <template #option="{ code, description, is_dangerous }">
-              <span :class="is_dangerous === 1 ? 'cer-list-dangerous' : 'cer-list-normal'">{{ code }}</span>
+              <span :class="Number(is_dangerous) === 1 ? 'cer-list-dangerous' : 'cer-list-normal'">{{ code }}</span>
               <br />
               <span class="text-xs"><cite>{{ description }}</cite></span>
             </template>
@@ -71,6 +71,7 @@
         v-model.number="item.holder_quantity" 
         type="number" 
         class="input input-bordered w-12"
+        :class="guidanceClass('holder_quantity')"
         placeholder="Q.tà"
         min="1"
         :disabled="item.is_bulk"
@@ -82,6 +83,7 @@
           v-model="item.holder_id" 
           id="holder" 
           class="select select-bordered w-36"
+          :class="guidanceClass('holder_id')"
           :disabled="item.is_bulk"
         >
           <option disabled value="">Seleziona un contenitore</option>
@@ -112,6 +114,7 @@
         v-model="item.description" 
         type="text" 
         class="input input-bordered flex-1 min-w-36"
+        :class="guidanceClass('description')"
         placeholder="Descrizione"
       />
   
@@ -121,11 +124,12 @@
         type="number" 
         step="1"
         class="input input-bordered w-20"
+        :class="guidanceClass('weight_declared')"
         placeholder="Peso [Kg]"
       />
   
       <!-- MAGAZZINO Select/Option -->
-      <select v-model="item.warehouse_id" id="warehouse" class="select select-bordered w-36">
+      <select v-model="item.warehouse_id" id="warehouse" class="select select-bordered w-36" :class="guidanceClass('warehouse_id')">
         <option value="" disabled>Magazzino</option>
         <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
           {{ warehouse.name }}
@@ -137,6 +141,7 @@
         :disabled="!is_selected_cer_dangerous"
         type="text" 
         class="input input-bordered flex w-20"
+        :class="guidanceClass('adr_hp')"
         placeholder="HP"
       />
   
@@ -148,7 +153,7 @@
           id="adr" 
           type="checkbox" 
           class="toggle" 
-          @click="toggleAdrFields(index, item.adr)" 
+          @change="toggleAdrFields(index, item.adr)" 
         />
       </div>
   
@@ -168,6 +173,7 @@
         v-model="item.adr_un_code" 
         type="text" 
         class="input input-bordered flex basis-32"
+        :class="guidanceClass('adr_un_code')"
         placeholder="Cod. UN"
       />
 
@@ -176,7 +182,8 @@
         v-model="item.is_adr_total" 
         id="is_adr_total" 
         type="checkbox" 
-        class="toggle" 
+        class="toggle"
+        :class="guidanceClass('adr_flags')"
         @click="checkAdrEsenzioni('is_adr_total')" 
       />
 
@@ -185,7 +192,8 @@
         v-model="item.has_adr_total_exemption" 
         id="has_adr_total_exemption" 
         type="checkbox" 
-        class="toggle" 
+        class="toggle"
+        :class="guidanceClass('adr_flags')"
         @click="checkAdrEsenzioni('has_adr_total_exemption')" 
       />
 
@@ -194,7 +202,8 @@
         v-model="item.has_adr_partial_exemption" 
         id="has_adr_partial_exemption" 
         type="checkbox" 
-        class="toggle" 
+        class="toggle"
+        :class="guidanceClass('adr_flags')"
         @click="checkAdrEsenzioni('has_adr_partial_exemption')" 
       />
     </div>
@@ -237,6 +246,43 @@ const selectedCerCode = computed(() => {
   return props.cerList.find((c) => Number(c.id) === Number(item.value.cer_code_id)) ?? null;
 });
 
+const isBlank = (value) => value === null || value === undefined || `${value}`.trim() === '';
+const isTruthy = (value) => value === true || value === 1 || value === '1';
+const isBulkSelected = computed(() => isTruthy(item.value?.is_bulk));
+const adrEnabled = computed(() => isTruthy(item.value?.adr));
+const requiresHp = computed(() => Boolean(selectedCerCode.value?.is_dangerous));
+const hasAdrFlag = computed(() =>
+  isTruthy(item.value?.is_adr_total)
+  || isTruthy(item.value?.has_adr_total_exemption)
+  || isTruthy(item.value?.has_adr_partial_exemption)
+);
+
+const guidanceNextField = computed(() => {
+  if (isBlank(item.value?.cer_code_id)) return 'cer_code_id';
+
+  if (!isBulkSelected.value) {
+    if (isBlank(item.value?.holder_quantity) || Number(item.value?.holder_quantity) <= 0) return 'holder_quantity';
+    if (isBlank(item.value?.holder_id)) return 'holder_id';
+  }
+
+  if (isBlank(item.value?.description)) return 'description';
+  if (isBlank(item.value?.weight_declared)) return 'weight_declared';
+  if (isBlank(item.value?.warehouse_id)) return 'warehouse_id';
+
+  if (requiresHp.value && isBlank(item.value?.adr_hp)) return 'adr_hp';
+
+  if (adrEnabled.value) {
+    if (isBlank(item.value?.adr_un_code)) return 'adr_un_code';
+    if (!hasAdrFlag.value) return 'adr_flags';
+  }
+
+  return null;
+});
+
+const guidanceClass = (fieldKey) => (
+  guidanceNextField.value === fieldKey ? 'ring-2 ring-warning ring-offset-1' : ''
+);
+
 // === Imballo NON standard (holder is_custom) ===
 const customSelectedHolder = computed(() => {
   return props.holders.find(h => h.id === item.value.holder_id)?.is_custom
@@ -272,9 +318,9 @@ const getCerStyle = (cerId) => {
     is_selected_cer_dangerous.value = false;
     return "";
   } 
-  const cer = props.cerList.find((c) => c.id === cerId);
+  const cer = props.cerList.find((c) => Number(c.id) === Number(cerId));
   is_selected_cer_dangerous.value = Boolean(cer?.is_dangerous);
-  return cer?.is_dangerous === 1 ? "cer-selected-dangerous" : "cer-selected-normal";
+  return Number(cer?.is_dangerous) === 1 ? "cer-selected-dangerous" : "cer-selected-normal";
 };
 
 watch(is_selected_cer_dangerous, (newVal) => {
@@ -282,6 +328,24 @@ watch(is_selected_cer_dangerous, (newVal) => {
     item.value.adr_hp = '';
   }
 });
+
+watch(
+  () => item.value.adr,
+  (isAdrEnabled) => {
+    const enabled = isTruthy(isAdrEnabled);
+    toggleAdrFields(props.index, enabled);
+
+    if (enabled) {
+      return;
+    }
+
+    item.value.adr_un_code = null;
+    item.value.is_adr_total = false;
+    item.value.has_adr_total_exemption = false;
+    item.value.has_adr_partial_exemption = false;
+  },
+  { immediate: true }
+);
 
 function startCerEdit() {
   lastCerCodeBeforeEdit.value = item.value.cer_code_id ?? null;
@@ -479,12 +543,12 @@ watch(
 );
 
 // === Mantengo la tua gestione DOM per la riga ADR ===
-const toggleAdrFields = (index, isAdrEnabled) => {
+function toggleAdrFields(index, isAdrEnabled) {
   const adrFields = document.getElementById(`adr-fields-${index}`);
   if (adrFields) {
     adrFields.classList.toggle('hidden', !isAdrEnabled);
   }
-};
+}
 
 const checkAdrEsenzioni = (clickedElement) => {
   item.value.is_adr_total = false;
@@ -514,4 +578,3 @@ const checkAdrEsenzioni = (clickedElement) => {
   background-color: #ffe6e6; /* Light red background for dangerous items */
 }
 </style>
-

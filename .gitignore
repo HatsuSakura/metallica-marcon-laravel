@@ -40,6 +40,9 @@ _ide_helper.php
 .DS_Store
 Thumbs.db
 
+# Claude Code
+.claude/CLAUDE.local.md
+
 # Docker
 docker-compose.override.yml
 Homestead.*
@@ -54,3 +57,4 @@ TO_DO_LIST.txt
 # Directory "strane"
 \!DUMP/
 \!RELEASE/
+.claude/settings.local.json

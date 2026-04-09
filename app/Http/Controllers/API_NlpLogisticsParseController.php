@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\Nlp\NlpLogisticsParseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 class API_NlpLogisticsParseController extends Controller
@@ -16,6 +17,8 @@ class API_NlpLogisticsParseController extends Controller
 
     public function parse(Request $request): JsonResponse
     {
+        Gate::authorize('useLogisticsNlp');
+
         $payload = $request->validate([
             'query' => 'required|string|min:2|max:2000',
             'context' => 'nullable|array',
@@ -54,7 +57,6 @@ class API_NlpLogisticsParseController extends Controller
         }
     }
 }
-
 
 
 

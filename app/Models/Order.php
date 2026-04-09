@@ -4,21 +4,25 @@ namespace App\Models;
 
 use App\Enums\OrderDocumentsStatus;
 use App\Enums\OrderStatus;
+use App\Models\Concerns\HasDomainAudit;
 use Illuminate\Database\Eloquent\Model;
 use Mpociot\Versionable\VersionableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class Order extends Model
+class Order extends Model implements AuditableContract
 {
-    use HasFactory, SoftDeletes, VersionableTrait;
+    use HasFactory, SoftDeletes, VersionableTrait, HasDomainAudit;
 
     protected $keepOldVersions = true; // Keep all versions of the model
 
     protected $casts = [
         'status' => OrderStatus::class,
         'documents_status' => OrderDocumentsStatus::class,
+        'is_urgent' => 'boolean',
+        'has_crane' => 'boolean',
         'requested_at' => 'datetime',
         'expected_withdraw_at' => 'datetime',
         'fixed_withdraw_at' => 'datetime',
@@ -49,6 +53,25 @@ class Order extends Model
         'documents_error',
         'documents_version',
     ]; 
+
+    protected $auditInclude = [
+        'customer_id',
+        'site_id',
+        'logistics_user_id',
+        'journey_id',
+        'status',
+        'documents_status',
+        'requested_at',
+        'expected_withdraw_at',
+        'fixed_withdraw_at',
+        'actual_withdraw_at',
+        'is_urgent',
+        'cargo_location',
+        'has_crane',
+        'crane_operator_user_id',
+        'machinery_time_minutes',
+        'notes',
+    ];
 
 protected static function booted()
     {
@@ -151,4 +174,3 @@ protected static function booted()
     }
 
 }
-

@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
 use App\Enums\OrdersTruckLocation;
 use App\Models\JourneyStop;
 use App\Models\JourneyStopOrder;
+use App\Support\Audit\AuditTrailPresenter;
 use App\Services\OrderDocumentGenerationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -28,9 +29,18 @@ use Illuminate\Support\Str;
 
 class JourneyController extends Controller
 {
+    private function buildAuditTrail(Journey $journey): array
+    {
+        if (!optional(auth()->user())->is_admin) {
+            return [];
+        }
+
+        return AuditTrailPresenter::forModel($journey);
+    }
 
 
     public function index(Request $request){
+        Gate::authorize('viewAny', Journey::class);
 
         $activeTab = $request->query('tab', 'tutti');
 
@@ -202,6 +212,7 @@ class JourneyController extends Controller
             [
                 'journey' => $journey,
                 'returnTo' => $returnTo,
+                'audits' => $this->buildAuditTrail($journey),
             ]
         );
     }
@@ -512,6 +523,7 @@ private function applyOrdersToJourney(
                 'drivers' => $drivers,
                 'warehouses' => $warehouses,
                 'orders' => $orders,
+                'audits' => $this->buildAuditTrail($journey),
             ]
         );
     }
@@ -801,6 +813,8 @@ private function applyOrdersToJourney(
 
 public function updateState(Journey $journey, Request $request)
 {
+    Gate::authorize('update', $journey);
+
     $newState = JourneyStatus::from($request->new_state);
 
     if (!JourneyStatus::fromMixed($journey->status)->canTransitionTo($newState)) {
@@ -992,8 +1006,6 @@ public function generateDocuments(
 
 
 }
-
-
 
 
 

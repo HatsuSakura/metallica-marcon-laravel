@@ -7,11 +7,14 @@ use App\Models\RecipeNode;
 use App\Models\CatalogItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class RecipeNodeController extends Controller
 {
     public function sync(Recipe $recipe, Request $request)
     {
+        Gate::authorize('update', $recipe);
+
         $data = $request->validate([
             'nodes'                   => ['required', 'array'],
             'nodes.*.catalog_item_id' => ['required', 'integer', 'exists:catalog_items,id'],
@@ -87,6 +90,5 @@ class RecipeNodeController extends Controller
         return $rn;
     }
 }
-
 
 

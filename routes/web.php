@@ -158,32 +158,30 @@ Route::get('/dashboard', fn() => null)
 
 // WAREHOUSE
 Route::get('/dashboard-warehouse', fn() => Inertia::render('Dashboard/Warehouse'))
-    ->middleware(['auth'])
-    //->middleware(['auth', 'can:access-warehouse'])
+    ->middleware(['auth', 'verified', 'can:accessWarehouseArea'])
     ->name('warehouse.home');
 
 // LOGISTIC
 Route::get('/dashboard-logistic', [DashboardController::class, 'logisticHome'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'can:accessBackofficeArea'])
     ->name('logistic.home');
 Route::get('/dashboard-logistic/full', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'can:accessBackofficeArea'])
     ->name('dashboard.logistic.full');
 Route::get('/dashboard-logistic/operations', [DashboardController::class, 'logisticOperations'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'can:accessBackofficeArea'])
     ->name('dashboard.logistic.operations');
 Route::get('/logistic/dispatch', [LogisticDispatchController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'can:accessBackofficeArea'])
     ->name('logistic-dispatch.index');
 Route::get('/logistic/dispatch/{journey}', [LogisticDispatchController::class, 'show'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'can:accessBackofficeArea'])
     ->name('logistic-dispatch.show');
 
 
 // DRIVER
 Route::get('/dashboard-driver', fn() => Inertia::render('Dashboard/Driver'))
-    ->middleware(['auth'])
-    //->middleware(['auth', 'can:access-warehouse'])
+    ->middleware(['auth', 'verified', 'can:accessDriverArea'])
     ->name('driver.home');
 
 // CUSTOMER
@@ -210,28 +208,29 @@ Route::middleware('auth')->get('/home', fn() => Inertia::render('Generic/Home'))
 
 
 Route::resource('journey', JourneyController::class)
+->middleware(['auth', 'verified', 'can:accessBackofficeArea'])
 ->withTrashed();  
 
 Route::name('journeyCargo.create')
-->middleware(['auth', 'verified'])
+->middleware(['auth', 'verified', 'can:accessWarehouseArea'])
 ->get(
     'journeyCargo/{journey}/create',
     [JourneyCargoController::class, 'create']
 )->withTrashed();
 Route::name('journeyCargo.edit')
-->middleware(['auth', 'verified'])
+->middleware(['auth', 'verified', 'can:accessWarehouseArea'])
 ->get(
     'journeyCargo/{journey}/edit',
     [JourneyCargoController::class, 'edit']
 )->withTrashed();
 Route::name('journeyCargo.manage')
-->middleware(['auth', 'verified'])
+->middleware(['auth', 'verified', 'can:accessWarehouseArea'])
 ->get(
     'journeyCargo/{journeyCargo}/manage',
     [JourneyCargoController::class, 'manage']
 )->withTrashed();
 Route::resource('journeyCargo', JourneyCargoController::class)
-->middleware(['auth', 'verified'])
+->middleware(['auth', 'verified', 'can:accessWarehouseArea'])
 ->only(['index', 'show', 'store', 'update', 'destroy'])
 ->withTrashed();
 
@@ -239,7 +238,7 @@ Route::resource('holder', HolderController::class)
 ->middleware(['auth', 'verified']);
 
 // Backoffice resources (canonical, no relator prefix)
-Route::middleware(['auth', 'verified'])->group(function() {
+Route::middleware(['auth', 'verified', 'can:accessBackofficeArea'])->group(function() {
     // listings removed
 
 
@@ -283,7 +282,7 @@ Route::middleware(['auth', 'verified'])->group(function() {
 // DRIVER
 Route::prefix('driver')
 ->name('driver.')
-->middleware(['auth', 'verified'])
+->middleware(['auth', 'verified', 'can:accessDriverArea'])
 ->group(function() {
 
     Route::resource('order', DriverOrderController::class)
@@ -296,7 +295,7 @@ Route::prefix('driver')
 // WORKER
 Route::prefix('worker')
 ->name('worker.')
-->middleware(['auth', 'verified'])
+->middleware(['auth', 'verified', 'can:accessWarehouseArea'])
 ->group(function() {
 
     Route::resource('journeyCargo', WorkerJourneyCargo::class)
@@ -307,21 +306,24 @@ Route::prefix('worker')
 // WAREHOUSE MANAGER
 Route::prefix('warehouse-manager')
 ->name('warehouse-manager.')
-//->middleware(['auth', 'role:warehouse_manager'])
-->middleware(['auth'])
+->middleware(['auth', 'verified', 'can:accessWarehouseArea'])
 ->group(function () {
     Route::get('order-items', [WarehouseManagerOrderItemController::class, 'index'])
     ->name('order-items.index');   
     Route::resource('orders', WarehouseManagerOrderController::class);
     //->only('create', 'store', 'destroy');
 });
-Route::prefix('warehouse-manager/orders')->group(function() {
+Route::prefix('warehouse-manager/orders')
+    ->middleware(['auth', 'verified', 'can:accessWarehouseArea'])
+    ->group(function() {
     Route::get('{order}/items/create', [WarehouseManagerOrderItemController::class, 'create'])->name('warehouse.orders.items.create');
     Route::post('{order}/items', [WarehouseManagerOrderItemController::class, 'store'])->name('warehouse.orders.items.store');
 });
 
 
-Route::prefix('warehouse-manager/order-item')->group(function() {
+Route::prefix('warehouse-manager/order-item')
+    ->middleware(['auth', 'verified', 'can:accessWarehouseArea'])
+    ->group(function() {
     Route::get('{orderItem}/image', [WarehouseManagerOrderItemImageController::class, 'create'])->name('warehouse-manager.order-item.image.create');
     Route::post('{orderItem}/image/create', [WarehouseManagerOrderItemImageController::class, 'store'])->name('warehouse-manager.order-item.image.store');
     Route::delete('{orderItem}/image/{image}', [WarehouseManagerOrderItemImageController::class, 'destroy'])->name('warehouse-manager.order-item.image.destroy');
@@ -332,7 +334,7 @@ Route::prefix('warehouse-manager/order-item')->group(function() {
 
 Route::prefix('map')
 ->name('map.')
-->middleware(['auth', 'verified'])
+->middleware(['auth', 'verified', 'can:accessBackofficeArea'])
 ->group(function() {
 
     Route::resource('site', MapController::class)
@@ -351,7 +353,7 @@ Route::get('/map', function() {
 
 // routes/web.php
 //Route::middleware(['auth', 'can:admin'])->group(function () {
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified', 'can:accessWarehouseArea'])->group(function () {
     Route::resource('catalog-items', CatalogItemController::class);
     Route::resource('recipes', RecipeController::class);
 
@@ -378,7 +380,7 @@ Route::middleware(['auth'])->group(function () {
 
 // Define API routes separately, still using `web.php` for Inertia
 Route::prefix('api')
-    ->middleware(['auth'])
+    ->middleware(['auth', 'verified'])
     ->group(function () {
         //Route::get('/timetable/{site}', [API_SiteTimetableController::class, 'show']);
         Route::post('/timetable/{site}', [API_SiteTimetableController::class, 'store']);
@@ -442,7 +444,9 @@ Route::prefix('api')
     });
 
 
-Route::prefix('withdraws/{withdraw}')->group(function () {
+Route::prefix('withdraws/{withdraw}')
+    ->middleware(['auth', 'verified'])
+    ->group(function () {
     Route::put('/update-state', [WithdrawController::class, 'updateState'])->name('withdraws.update-state');
     Route::post('/attach-file', [WithdrawController::class, 'attachFile'])->name('withdraws.attach-file'); // pronta per quando la faremo
     // Other state-related actions

@@ -185,6 +185,12 @@
     </div>
   </div>
 
+  <AuditCollapse
+    :audits="props.audits ?? []"
+    :is-admin="Boolean($page.props.user?.is_admin)"
+    :field-labels="auditFieldLabels"
+  />
+
   <dialog ref="addSiteDialog" class="modal">
     <div class="modal-box w-11/12 max-w-5xl">
       <h3 class="font-bold text-lg mb-3">{{ isEditingSite ? 'Modifica sede' : 'Aggiungi sede' }}</h3>
@@ -283,13 +289,30 @@ import { AdvancedMarker, GoogleMap } from 'vue3-google-map';
 import { CUSTOM_MARKER_ELEMENTS } from '@/googleMapsConfig';
 import SiteBooleanParameter from './Components/SiteBooleanParameter.vue';
 import { useDebouncedGeocoding } from '@/Composables/useDebouncedGeocoding';
+import AuditCollapse from '@/Components/AuditCollapse.vue';
 
 const props = defineProps({
   customer: Object,
   managers: Array,
   jobTypes: Array,
   returnTo: String,
+  audits: { type: Array, default: () => [] },
 });
+
+const auditFieldLabels = {
+  is_occasional_customer: 'Cliente occasionale',
+  company_name: 'Ragione sociale',
+  vat_number: 'Partita IVA',
+  tax_code: 'Codice fiscale',
+  seller_id: 'Commerciale',
+  legal_address: 'Indirizzo legale',
+  sdi_code: 'Codice SDI',
+  business_type: 'Tipologia attività',
+  sales_email: 'Email commerciale',
+  administrative_email: 'Email amministrativa',
+  certified_email: 'PEC',
+  notes: 'Note',
+};
 
 const store = useStore();
 const addSiteDialog = ref(null);

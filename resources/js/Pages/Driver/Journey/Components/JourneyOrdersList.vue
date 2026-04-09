@@ -92,6 +92,25 @@
                             <span class="font-semibold">Note Cliente:</span>
                             {{ customerNotesForStop(stop) }}
                         </div>
+                        <div v-if="stop.kind !== 'technical' && stopPrimarySite(stop)" class="mt-2 text-sm">
+                            <span class="font-semibold">Macchinari sede:</span>
+                            {{ stopMachinerySummary(stop) }}
+                        </div>
+                        <div v-if="stop.kind !== 'technical'" class="mt-1 text-sm">
+                            <span class="font-semibold">Orari sede:</span>
+                            <span v-if="stopTimetableSummary(stop).length === 0" class="italic opacity-70">
+                                non disponibili
+                            </span>
+                            <ul v-else class="list-disc ml-5 mt-1">
+                                <li
+                                    v-for="slot in stopTimetableSummary(stop)"
+                                    :key="slot.dayNumber"
+                                    :class="{ 'font-bold': slot.isToday }"
+                                >
+                                    {{ slot.label }} {{ slot.output }}
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="timeline-middle">
@@ -288,6 +307,67 @@ const itemSummary = (item) => {
     const description = item?.description ? ` - ${item.description}` : ''
     const weight = item?.weight_declared ? ` (${item.weight_declared} kg)` : ''
     return `CER ${cer}${description}${weight}`
+}
+
+const stopPrimarySite = (stop) => stopOrders(stop)[0]?.site ?? null
+
+const stopMachinerySummary = (stop) => {
+    const site = stopPrimarySite(stop)
+    if (!site) return 'non disponibile'
+
+    const machines = []
+    if (site.has_muletto) machines.push('Muletto')
+    if (site.has_electric_pallet_truck ?? site.has_transpallet_el) machines.push('Transpallet elettrico')
+    if (site.has_manual_pallet_truck ?? site.has_transpallet_ma) machines.push('Transpallet manuale')
+    if (site.other_machines) machines.push(site.other_machines)
+
+    return machines.length > 0 ? machines.join(', ') : 'nessuna attrezzatura indicata'
+}
+
+const stopTimetableSummary = (stop) => {
+    const site = stopPrimarySite(stop)
+    const raw = site?.timetable?.hours_json
+    if (!raw) return []
+
+    try {
+        const dayLabels = {
+            1: 'Lun',
+            2: 'Mar',
+            3: 'Mer',
+            4: 'Gio',
+            5: 'Ven',
+            6: 'Sab',
+            7: 'Dom',
+        }
+        const rows = JSON.parse(raw)
+        if (!Array.isArray(rows)) return []
+        const today = new Date()
+        const todayPos = today.getDay() === 0 ? 7 : today.getDay()
+
+        return rows
+            .sort((a, b) => Number(a.position ?? 0) - Number(b.position ?? 0))
+            .map((row) => {
+                const dayNumber = Number(row.position ?? 0)
+                const day = dayLabels[dayNumber] ?? `G${dayNumber || '-'}`
+                const morning = formatTimeRange(row.orarioApM, row.orarioChM)
+                const afternoon = formatTimeRange(row.orarioApP, row.orarioChP)
+                return {
+                    dayNumber,
+                    label: day,
+                    output: `${morning} - ${afternoon}`,
+                    isToday: dayNumber === todayPos,
+                }
+            })
+    } catch (error) {
+        return []
+    }
+}
+
+const formatTimeRange = (from, to) => {
+    const start = (from ?? '00:00').toString().trim()
+    const end = (to ?? '00:00').toString().trim()
+    if (start === '00:00' && end === '00:00') return 'Chiuso'
+    return `${start}-${end}`
 }
 
 const isStopCompleted = (stop) => {

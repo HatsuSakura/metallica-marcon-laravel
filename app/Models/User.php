@@ -3,14 +3,16 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
+use App\Models\Concerns\HasDomainAudit;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements MustVerifyEmail, AuditableContract
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasDomainAudit;
 
     /**
      * The attributes that are mass assignable.
@@ -22,6 +24,16 @@ class User extends Authenticatable implements MustVerifyEmail
         'surname',
         'email',
         'password',
+        'role',
+        'is_admin',
+        'user_code',
+        'is_crane_operator',
+    ];
+
+    protected $auditInclude = [
+        'name',
+        'surname',
+        'email',
         'role',
         'is_admin',
         'user_code',
@@ -55,17 +67,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
+            'is_crane_operator' => 'boolean',
+            'role' => UserRole::class,
         ];
     }
-
-
-    /*
-    It ensures that whenever you access the role field, it will return an instance of the SiteTipologia enum rather than just a string (e.g., 'worker').
-    if ($user->role === UserRole::WORKER)
-    */
-    protected $casts = [
-        'role' => UserRole::class,
-    ];
 
     /**
      * Scope a query to only include drivers.

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Gate;
 
 
 
@@ -13,6 +14,8 @@ class API_UserResetAndResendController extends Controller
 {
     public function resendVerification(Request $request, User $user)
     {
+        Gate::authorize('manageCredentials', $user);
+
         // Ensure the user is not already verified
         if ($user->hasVerifiedEmail()) {
             return response()->json(['type' => 'info', 'message' => 'L\'utente risulta aver già verificato la mail'], 200);
@@ -25,6 +28,8 @@ class API_UserResetAndResendController extends Controller
 
     public function sendPasswordResetEmail(Request $request, User $user)
     {
+        Gate::authorize('manageCredentials', $user);
+
         try {
             $status = Password::sendResetLink(['email' => $user->email]);
     
@@ -43,7 +48,6 @@ class API_UserResetAndResendController extends Controller
     }
 
 }
-
 
 
 

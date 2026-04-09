@@ -7,11 +7,14 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Gate;
 
 
 class API_WarehouseJourneyCargosController extends Controller{
 
     public function update(Request $request, JourneyCargo $journeyCargo) {
+        Gate::authorize('warehouseManage', $journeyCargo->journey);
+
         $validated = $request->validate([
             'has_crane' => 'required|boolean',
             'crane_operator_user_id' => 'required|integer',
@@ -26,7 +29,6 @@ class API_WarehouseJourneyCargosController extends Controller{
     }
 
 }
-
 
 
 

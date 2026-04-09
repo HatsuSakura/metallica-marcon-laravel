@@ -19,7 +19,9 @@
     import JourneySidebar from './Components/JourneySidebar.vue'
     import StopManagerDrawer from './Components/StopManagerDrawer.vue'
     import JourneyDocumentGenerationPanel from './Components/JourneyDocumentGenerationPanel.vue'
+    import AuditCollapse from '@/Components/AuditCollapse.vue'
     import { JOURNEY_STOP_STATUS } from '@/Constants/journeyStopStatus'
+    import { formatServerDateTime, parseServerDateTime } from '@/utils/serverDateTime'
 
 
     const props = defineProps({
@@ -32,6 +34,7 @@
       drivers: Array,
       warehouses: Array,
       orders: Array,
+      audits: Array,
     })
     
     const page = usePage()
@@ -43,6 +46,21 @@
     const user = computed(
       () => page.props.user
     )
+
+    const auditFieldLabels = {
+      driver_id: 'Autista',
+      vehicle_id: 'Motrice',
+      trailer_id: 'Rimorchio',
+      vehicle_cargo_id: 'Cassone motrice',
+      trailer_cargo_id: 'Cassone rimorchio',
+      planned_start_at: 'Inizio pianificato',
+      planned_end_at: 'Fine pianificata',
+      actual_start_at: 'Inizio effettivo',
+      actual_end_at: 'Fine effettiva',
+      status: 'Stato viaggio',
+      dispatch_status: 'Stato dispatch',
+      notes: 'Note',
+    }
 
     const goBackToOrders = () => {
         router.visit(route('journey.index'))
@@ -218,8 +236,8 @@
     
     const updateJourney = () => {
       // Before submitting, format the date correctly
-      form.planned_start_at = dayjs(form.planned_start_at).format('YYYY-MM-DD HH:mm:ss');
-      form.planned_end_at   = dayjs(form.planned_end_at  ).format('YYYY-MM-DD HH:mm:ss');
+      form.planned_start_at = formatServerDateTime(form.planned_start_at);
+      form.planned_end_at   = formatServerDateTime(form.planned_end_at);
       // Map each list to only send IDs
       form.orders_truck    = listMotrice.value.map(order => order.id);
       form.orders_trailer  = listRimorchio.value.map(order => order.id);
@@ -551,7 +569,7 @@ const manageDate = () => {
   if (form.planned_start_at) {
         const startDate = dayjs(form.planned_start_at);
         const endDate = startDate.add(1, 'hour'); // Aggiunge un'ora di default
-        form.planned_end_at = endDate.toDate();
+        form.planned_end_at = formatServerDateTime(endDate);
   }
 }
 
@@ -652,8 +670,8 @@ const hydrateFromJourney = () => {
   const journeyOrders = Array.isArray(journey.orders) ? journey.orders : []
   const allOrdersById = new Map((props.orders || []).map((o) => [o.id, o]))
 
-  form.planned_start_at = journey.planned_start_at ? dayjs(journey.planned_start_at).toDate() : ''
-  form.planned_end_at = journey.planned_end_at ? dayjs(journey.planned_end_at).toDate() : ''
+  form.planned_start_at = formatServerDateTime(parseServerDateTime(journey.planned_start_at)) ?? ''
+  form.planned_end_at = formatServerDateTime(parseServerDateTime(journey.planned_end_at)) ?? ''
   form.notes = journey.notes ?? ''
   form.vehicle_id = journey.vehicle_id ? Number(journey.vehicle_id) : ''
   form.vehicle_cargo_id = journey.vehicle_cargo_id ? Number(journey.vehicle_cargo_id) : ''
@@ -1157,6 +1175,12 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
       </div>
 
     </form>
+
+    <AuditCollapse
+      :audits="props.audits || []"
+      :is-admin="Boolean(page.props.user?.is_admin)"
+      :field-labels="auditFieldLabels"
+    />
 
     <StopManagerDrawer
       v-if="stopsDrawerOpen"

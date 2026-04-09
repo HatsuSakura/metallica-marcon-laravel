@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class API_OrderDocumentsController extends Controller
 {
@@ -74,10 +75,9 @@ class API_OrderDocumentsController extends Controller
         abort_if($filePath === null, 404, 'Documento non trovato.');
 
         return response()->download(
-            storage_path('app/private/' . $filePath),
+            Storage::disk('local')->path($filePath),
             basename($filePath)
         );
     }
 }
-
 

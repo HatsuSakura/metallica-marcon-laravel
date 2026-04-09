@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class TrailerController extends Controller
 {
 
-    public function __consruct(){
+    public function __construct(){
         $this->authorizeResource(Trailer::class, 'trailer');
     }
 
@@ -121,7 +121,6 @@ class TrailerController extends Controller
     }
 
 }
-
 
 
 

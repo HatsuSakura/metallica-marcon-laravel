@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\DispatchStatus;
+use App\Enums\JourneyStatus;
 use App\Enums\TranshipmentStatus;
 use App\Models\Journey;
 use App\Models\JourneyCargoAllocation;
@@ -604,6 +605,13 @@ class API_LogisticDispatchWorkspaceController extends Controller
         $this->authorize('dispatchWorkspaceClose', $journey);
         $this->ensureJourneyCanBeClosed($journey);
 
+        $currentJourneyStatus = JourneyStatus::fromMixed($journey->status);
+        if ($currentJourneyStatus->canTransitionTo(JourneyStatus::STATUS_EXECUTED)) {
+            $journey->status = JourneyStatus::STATUS_EXECUTED->value;
+        }
+        if (!$journey->actual_end_at) {
+            $journey->actual_end_at = now();
+        }
         $journey->dispatch_status = DispatchStatus::MANAGED->value;
         $journey->dispatch_managed_at = now();
         $journey->dispatch_updated_at = now();
@@ -623,7 +631,9 @@ class API_LogisticDispatchWorkspaceController extends Controller
             'message' => 'Journey chiuso',
             'journey' => [
                 'id' => $journey->id,
+                'status' => $journey->status,
                 'dispatch_status' => $journey->dispatch_status,
+                'actual_end_at' => optional($journey->actual_end_at)?->toISOString(),
                 'audit_frozen_at' => optional($journey->dispatch_managed_at)?->toISOString(),
             ],
         ]);

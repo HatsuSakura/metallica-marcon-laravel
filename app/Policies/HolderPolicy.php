@@ -2,41 +2,46 @@
 
 namespace App\Policies;
 
-use App\Enums\UserRole;
 use App\Models\Holder;
 use App\Models\User;
+use App\Policies\Concerns\AuthorizesDomainRoles;
 
 class HolderPolicy
 {
-    public function before(?User $user, $ability)
-    {
-        if ($user?->is_admin) {
-            return true;
-        }
-    }
+    use AuthorizesDomainRoles;
 
     public function viewAny(User $user): bool
     {
-        return $user->role === UserRole::LOGISTIC;
+        return $this->isControlRole($user);
     }
 
     public function view(User $user, Holder $holder): bool
     {
-        return $user->role === UserRole::LOGISTIC;
+        return $this->viewAny($user);
     }
 
     public function create(User $user): bool
     {
-        return $user->role === UserRole::LOGISTIC;
+        return $this->isControlRole($user);
     }
 
     public function update(User $user, Holder $holder): bool
     {
-        return $user->role === UserRole::LOGISTIC;
+        return $this->isControlRole($user);
     }
 
     public function delete(User $user, Holder $holder): bool
     {
-        return $user->role === UserRole::LOGISTIC;
+        return $this->isControlRole($user);
+    }
+
+    public function restore(User $user, Holder $holder): bool
+    {
+        return $this->isControlRole($user);
+    }
+
+    public function forceDelete(User $user, Holder $holder): bool
+    {
+        return $this->isControlRole($user);
     }
 }

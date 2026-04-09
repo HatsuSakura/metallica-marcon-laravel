@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Services\OrderItemUpdater;
 use Illuminate\Support\Facades\DB; 
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Gate;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
@@ -20,6 +21,8 @@ class API_WarehouseOrdersController extends Controller{
     // app/Http/Controllers/WarehouseOrderApiController.php
 public function update(Request $request, Order $order, OrderItemUpdater $updater)
 {
+    Gate::authorize('warehouseManage', $order);
+
     $request->validate([
       'has_crane'     => 'required|boolean',
       'crane_operator_user_id'   => 'nullable|exists:users,id',
@@ -83,6 +86,5 @@ public function update(Request $request, Order $order, OrderItemUpdater $updater
 
 
 }
-
 
 

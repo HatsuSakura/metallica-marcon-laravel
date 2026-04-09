@@ -47,6 +47,7 @@ class DriverJourneyController extends Controller
                 'stops.customer',
                 'stops.technicalAction',
                 'stops.stopOrders.order.site',
+                'stops.stopOrders.order.site.timetable',
                 'stops.stopOrders.order.customer',
                 'stops.stopOrders.order.items',
                 'stops.stopOrders.order.items.cerCode',
@@ -121,6 +122,7 @@ class DriverJourneyController extends Controller
                     'stops.customer',
                     'stops.technicalAction',
                     'stops.stopOrders.order.site',
+                    'stops.stopOrders.order.site.timetable',
                     'stops.stopOrders.order.customer',
                     'stops.stopOrders.order.items',
                     'stops.stopOrders.order.items.cerCode'
@@ -158,6 +160,7 @@ class DriverJourneyController extends Controller
                     'stops.customer',
                     'stops.technicalAction',
                     'stops.stopOrders.order.site',
+                    'stops.stopOrders.order.site.timetable',
                     'stops.stopOrders.order.customer',
                     'stops.stopOrders.order.items',
                     'stops.stopOrders.order.items.cerCode'
@@ -267,7 +270,6 @@ class DriverJourneyController extends Controller
 
 
 }
-
 
 
 

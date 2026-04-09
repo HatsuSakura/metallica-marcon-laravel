@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CustomerJobType;
+use App\Models\Concerns\HasDomainAudit;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
@@ -11,10 +12,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class Customer extends Model
+class Customer extends Model implements AuditableContract
 {
-    use SoftDeletes;
+    use SoftDeletes, HasDomainAudit;
 
     private static ?bool $hasCanonicalFulltextIndex = null;
 
@@ -35,7 +37,23 @@ class Customer extends Model
         'notes',
     ];
 
+    protected $auditInclude = [
+        'is_occasional_customer',
+        'company_name',
+        'vat_number',
+        'tax_code',
+        'seller_id',
+        'legal_address',
+        'sdi_code',
+        'business_type',
+        'sales_email',
+        'administrative_email',
+        'certified_email',
+        'notes',
+    ];
+
     protected $casts = [
+        'is_occasional_customer' => 'boolean',
         'business_type' => CustomerJobType::class,
     ];
 
@@ -82,7 +100,9 @@ class Customer extends Model
     }
 
     public function scopeAlphabetic(Builder $query): Builder{
-        return $query->orderBy('company_name', 'asc');
+        return $query->orderByRaw(
+            "TRIM(REPLACE(REPLACE(REPLACE(company_name, '\t', ''), '\r', ''), '\n', '')) asc"
+        );
     }
 
     public function scopeClienteContinuativo(Builder $query): Builder {
@@ -170,17 +190,47 @@ class Customer extends Model
     
     public function setSalesEmailAttribute($salesEmail): void
     {
-        $this->attributes['sales_email'] = strtolower($salesEmail);
+        $this->attributes['sales_email'] = $this->normalizeLowercaseEmail($salesEmail);
     }
 
     public function setAdministrativeEmailAttribute($administrativeEmail): void
     {
-        $this->attributes['administrative_email'] = strtolower($administrativeEmail);
+        $this->attributes['administrative_email'] = $this->normalizeLowercaseEmail($administrativeEmail);
     }
 
     public function setCertifiedEmailAttribute($certifiedEmail): void
     {
-        $this->attributes['certified_email'] = strtolower($certifiedEmail);
+        $this->attributes['certified_email'] = $this->normalizeLowercaseEmail($certifiedEmail);
+    }
+
+    public function setCompanyNameAttribute($value): void
+    {
+        $this->attributes['company_name'] = $this->normalizeTrimmedString($value);
+    }
+
+    public function setVatNumberAttribute($value): void
+    {
+        $this->attributes['vat_number'] = $this->normalizeTrimmedString($value);
+    }
+
+    public function setTaxCodeAttribute($value): void
+    {
+        $this->attributes['tax_code'] = $this->normalizeTrimmedString($value);
+    }
+
+    public function setLegalAddressAttribute($value): void
+    {
+        $this->attributes['legal_address'] = $this->normalizeTrimmedString($value);
+    }
+
+    public function setSdiCodeAttribute($value): void
+    {
+        $this->attributes['sdi_code'] = $this->normalizeTrimmedString($value);
+    }
+
+    public function setNotesAttribute($value): void
+    {
+        $this->attributes['notes'] = $this->normalizeTrimmedString($value);
     }
 
     public function setEmailCommercialeAttribute($value): void
@@ -196,6 +246,24 @@ class Customer extends Model
     public function setPecAttribute($value): void
     {
         $this->setCertifiedEmailAttribute($value);
+    }
+
+    private function normalizeTrimmedString($value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = preg_replace('/^\s+|\s+$/u', '', (string) $value);
+
+        return $normalized === '' ? null : $normalized;
+    }
+
+    private function normalizeLowercaseEmail($value): ?string
+    {
+        $normalized = $this->normalizeTrimmedString($value);
+
+        return $normalized === null ? null : strtolower($normalized);
     }
 
     private static function hasCanonicalFulltextIndex(): bool

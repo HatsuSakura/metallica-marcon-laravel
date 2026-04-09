@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Enums\OrderStatus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class API_DriverOrderUpdateController extends Controller
 {
@@ -14,6 +15,8 @@ class API_DriverOrderUpdateController extends Controller
     */
     public function updateState(Order $order, Request $request)
     {
+        Gate::authorize('update', $order);
+
         $newState = OrderStatus::from($request->new_state);
 
         if (!OrderStatus::fromMixed($order->status)->canTransitionTo($newState)) {
@@ -54,6 +57,8 @@ class API_DriverOrderUpdateController extends Controller
 
 
     public function update(Request $request, Order $order) {
+        Gate::authorize('update', $order);
+
         $validated = $request->validate([
         ]);
     
@@ -69,7 +74,6 @@ class API_DriverOrderUpdateController extends Controller
         return response()->json(['message' => 'Order saved successfully.', 'order' => $order], 200);
     }
 }
-
 
 
 

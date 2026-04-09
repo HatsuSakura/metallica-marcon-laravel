@@ -6,11 +6,14 @@ use Inertia\Inertia;
 use App\Models\Recipe;
 use App\Models\CatalogItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class RecipeController extends Controller
 {
     public function index()
     {
+        Gate::authorize('viewAny', Recipe::class);
+
         $recipes = Recipe::with('nodes.catalogItem')->paginate(20);
         return Inertia::render('Admin/Recipes/Index', [
             'recipes' => $recipes,
@@ -19,11 +22,15 @@ class RecipeController extends Controller
 
     public function create()
     {
+        Gate::authorize('create', Recipe::class);
+
         return Inertia::render('Admin/Recipes/Edit');
     }
 
     public function store(Request $request)
     {
+        Gate::authorize('create', Recipe::class);
+
         $data = $request->validate([
             'name' => 'required|string',
             'version' => 'nullable|integer|min:1'
@@ -35,6 +42,8 @@ class RecipeController extends Controller
 
     public function edit(Recipe $recipe)
     {
+        Gate::authorize('view', $recipe);
+
             // carica radici + ricorsione + catalog item ovunque
             $recipe->load([
                 'rootNodes.childrenRecursive.catalogItem',
@@ -64,6 +73,8 @@ class RecipeController extends Controller
 
     public function update(Request $request, Recipe $recipe)
     {
+        Gate::authorize('update', $recipe);
+
         $data = $request->validate([
             'name' => 'required|string',
             'version' => 'nullable|integer|min:1'
@@ -79,10 +90,11 @@ class RecipeController extends Controller
 
     public function destroy(Recipe $recipe)
     {
+        Gate::authorize('delete', $recipe);
+
         $recipe->delete();
         return back()->with('success', 'Ricetta eliminata');
     }
 }
-
 
 

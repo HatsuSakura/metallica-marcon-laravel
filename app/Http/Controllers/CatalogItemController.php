@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\CatalogItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class CatalogItemController extends Controller
 {
     public function index()
     {
+        Gate::authorize('viewAny', CatalogItem::class);
+
         $items = CatalogItem::orderBy('name')->paginate(20);
         return Inertia::render('Admin/CatalogItems/Index', [
             'items' => $items,
@@ -18,11 +21,15 @@ class CatalogItemController extends Controller
 
     public function create()
     {
+        Gate::authorize('create', CatalogItem::class);
+
         return Inertia::render('Admin/CatalogItems/Form');
     }
 
     public function store(Request $request)
     {
+        Gate::authorize('create', CatalogItem::class);
+
         $data = $request->validate([
             'name' => 'required|string|unique:catalog_items',
             'type' => 'required|in:material,component',
@@ -35,6 +42,8 @@ class CatalogItemController extends Controller
 
     public function edit(CatalogItem $catalogItem)
     {
+        Gate::authorize('view', $catalogItem);
+
         return Inertia::render('Admin/CatalogItems/Form', [
             'item' => $catalogItem,
         ]);
@@ -42,6 +51,8 @@ class CatalogItemController extends Controller
 
     public function update(Request $request, CatalogItem $catalogItem)
     {
+        Gate::authorize('update', $catalogItem);
+
         $data = $request->validate([
             'name' => 'required|string|unique:catalog_items,name,' . $catalogItem->id,
             'type' => 'required|in:material,component',
@@ -54,6 +65,8 @@ class CatalogItemController extends Controller
 
     public function destroy(CatalogItem $catalogItem)
     {
+        Gate::authorize('delete', $catalogItem);
+
         $catalogItem->delete();
         return back()->with('success', 'Elemento eliminato');
     }
@@ -61,12 +74,13 @@ class CatalogItemController extends Controller
     // API per autocomplete
     public function search(Request $request)
     {
+        Gate::authorize('viewAny', CatalogItem::class);
+
         $q = $request->input('q', '');
         return CatalogItem::where('name', 'like', "%$q%")
             ->limit(10)
             ->get();
     }
 }
-
 
 

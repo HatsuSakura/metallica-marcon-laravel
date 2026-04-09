@@ -1,0 +1,681 @@
+{
+  "gates": [
+    {
+      "name": "auth",
+      "kind": "middleware",
+      "level": "authenticated",
+      "roles": "all authenticated users",
+      "notes": "Session authentication required"
+    },
+    {
+      "name": "verified",
+      "kind": "middleware",
+      "level": "verified",
+      "roles": "authenticated users with verified email",
+      "notes": "Email verification required"
+    },
+    {
+      "name": "accessBackofficeArea",
+      "kind": "gate",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Area gate for backoffice/logistic resources"
+    },
+    {
+      "name": "accessWarehouseArea",
+      "kind": "gate",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "notes": "Area gate for warehouse resources"
+    },
+    {
+      "name": "accessDriverArea",
+      "kind": "gate",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|driver|admin",
+      "notes": "Area gate for driver resources"
+    },
+    {
+      "name": "useLogisticsNlp",
+      "kind": "gate",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "NLP parsing access"
+    },
+    {
+      "name": "authorizeDriver",
+      "kind": "controller_check",
+      "level": "ownership",
+      "roles": "assigned driver only",
+      "notes": "Driver must match journey.driver_id"
+    },
+    {
+      "name": "warehouseManage",
+      "kind": "policy_ability",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "notes": "Warehouse and control operations on Order/Journey"
+    },
+    {
+      "name": "manageCredentials",
+      "kind": "policy_ability",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "User credential operations"
+    },
+    {
+      "name": "dispatchWorkspaceView",
+      "kind": "policy_ability",
+      "level": "specific_roles_or_ownership_or_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|assigned_driver|admin",
+      "notes": "View dispatch workspace"
+    },
+    {
+      "name": "dispatchWorkspaceSave",
+      "kind": "policy_ability",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Save dispatch workspace"
+    },
+    {
+      "name": "dispatchWorkspaceConfirm",
+      "kind": "policy_ability",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Confirm dispatch workspace"
+    },
+    {
+      "name": "dispatchWorkspaceClose",
+      "kind": "policy_ability",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Close dispatch workspace"
+    },
+    {
+      "name": "dispatchTransshipmentApprove",
+      "kind": "policy_ability",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Approve/cancel transshipments"
+    },
+    {
+      "name": "dispatchWorkspaceAppendWarehouseEvent",
+      "kind": "policy_ability",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "notes": "Append warehouse event"
+    },
+    {
+      "name": "dispatchWorkspaceAppendTransshipmentProposal",
+      "kind": "policy_ability",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "notes": "Append transshipment proposal"
+    },
+    {
+      "name": "dispatchWorkspaceAppendLogisticEvent",
+      "kind": "policy_ability",
+      "level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Append logistic event"
+    }
+  ],
+  "resources": [
+    {
+      "resource": "Cargo",
+      "read_roles": "developer|manager|logistic|admin",
+      "create_roles": "developer|manager|logistic|admin",
+      "update_roles": "developer|manager|logistic|admin",
+      "delete_roles": "developer|manager|logistic|admin",
+      "read_level": "specific_roles_plus_admin",
+      "write_level": "specific_roles_plus_admin",
+      "notes": "Backoffice master data"
+    },
+    {
+      "resource": "Customer",
+      "read_roles": "developer|manager|logistic|admin",
+      "create_roles": "developer|manager|logistic|admin",
+      "update_roles": "developer|manager|logistic|admin",
+      "delete_roles": "developer|manager|logistic|admin",
+      "read_level": "specific_roles_plus_admin",
+      "write_level": "specific_roles_plus_admin",
+      "notes": "authorizeResource active"
+    },
+    {
+      "resource": "Holder",
+      "read_roles": "developer|manager|logistic|admin",
+      "create_roles": "developer|manager|logistic|admin",
+      "update_roles": "developer|manager|logistic|admin",
+      "delete_roles": "developer|manager|logistic|admin",
+      "read_level": "specific_roles_plus_admin",
+      "write_level": "specific_roles_plus_admin",
+      "notes": "Backoffice master data"
+    },
+    {
+      "resource": "Site",
+      "read_roles": "developer|manager|logistic|admin",
+      "create_roles": "developer|manager|logistic|admin",
+      "update_roles": "developer|manager|logistic|admin",
+      "delete_roles": "developer|manager|logistic|admin",
+      "read_level": "specific_roles_plus_admin",
+      "write_level": "specific_roles_plus_admin",
+      "notes": "Backoffice site domain"
+    },
+    {
+      "resource": "Trailer",
+      "read_roles": "developer|manager|logistic|admin",
+      "create_roles": "developer|manager|logistic|admin",
+      "update_roles": "developer|manager|logistic|admin",
+      "delete_roles": "developer|manager|logistic|admin",
+      "read_level": "specific_roles_plus_admin",
+      "write_level": "specific_roles_plus_admin",
+      "notes": "authorizeResource active"
+    },
+    {
+      "resource": "Vehicle",
+      "read_roles": "developer|manager|logistic|admin",
+      "create_roles": "developer|manager|logistic|admin",
+      "update_roles": "developer|manager|logistic|admin",
+      "delete_roles": "developer|manager|logistic|admin",
+      "read_level": "specific_roles_plus_admin",
+      "write_level": "specific_roles_plus_admin",
+      "notes": "authorizeResource active"
+    },
+    {
+      "resource": "Withdraw",
+      "read_roles": "developer|manager|logistic|admin",
+      "create_roles": "developer|manager|logistic|admin",
+      "update_roles": "developer|manager|logistic|admin",
+      "delete_roles": "developer|manager|logistic|admin",
+      "read_level": "specific_roles_plus_admin",
+      "write_level": "specific_roles_plus_admin",
+      "notes": "Backoffice only"
+    },
+    {
+      "resource": "User",
+      "read_roles": "developer|manager|logistic|admin",
+      "create_roles": "developer|manager|logistic|admin",
+      "update_roles": "developer|manager|logistic|admin",
+      "delete_roles": "developer|manager|logistic|admin_except_self",
+      "read_level": "specific_roles_plus_admin",
+      "write_level": "specific_roles_plus_admin",
+      "notes": "manageCredentials for password/reset/verify operations"
+    },
+    {
+      "resource": "CatalogItem",
+      "read_roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "create_roles": "developer|manager|logistic|admin",
+      "update_roles": "developer|manager|logistic|admin",
+      "delete_roles": "developer|manager|logistic|admin",
+      "read_level": "specific_roles_plus_admin",
+      "write_level": "control_roles_plus_admin",
+      "notes": "Warehouse read-only, control full write"
+    },
+    {
+      "resource": "Recipe",
+      "read_roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "create_roles": "developer|manager|logistic|admin",
+      "update_roles": "developer|manager|logistic|admin",
+      "delete_roles": "developer|manager|logistic|admin",
+      "read_level": "specific_roles_plus_admin",
+      "write_level": "control_roles_plus_admin",
+      "notes": "Warehouse read-only, control full write"
+    },
+    {
+      "resource": "Order",
+      "read_roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|assigned_driver|admin",
+      "create_roles": "developer|manager|logistic|driver|admin",
+      "update_roles": "developer|manager|logistic|assigned_driver|admin",
+      "delete_roles": "developer|manager|logistic|admin",
+      "read_level": "specific_roles_or_ownership_or_admin",
+      "write_level": "mixed",
+      "notes": "warehouseManage covers warehouse operations"
+    },
+    {
+      "resource": "Journey",
+      "read_roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|assigned_driver|admin",
+      "create_roles": "developer|manager|logistic|admin",
+      "update_roles": "developer|manager|logistic|assigned_driver|admin",
+      "delete_roles": "developer|manager|logistic|admin",
+      "read_level": "specific_roles_or_ownership_or_admin",
+      "write_level": "mixed",
+      "notes": "Dispatch uses dedicated Journey policy abilities"
+    },
+    {
+      "resource": "Notification",
+      "read_roles": "owner_only",
+      "create_roles": "n/a",
+      "update_roles": "owner_only",
+      "delete_roles": "n/a",
+      "read_level": "ownership",
+      "write_level": "ownership",
+      "notes": "Notification seen/update only"
+    }
+  ],
+  "actionProtections": [
+    {
+      "action": "App\\Http\\Controllers\\API_DriverJourneyStopsController@startJourney",
+      "auth_type": "controller_check",
+      "auth_name": "authorizeDriver",
+      "auth_level": "ownership",
+      "roles": "assigned_driver_only",
+      "notes": "Journey driver must match request user"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_DriverJourneyStopsController@reorder",
+      "auth_type": "controller_check",
+      "auth_name": "authorizeDriver",
+      "auth_level": "ownership",
+      "roles": "assigned_driver_only",
+      "notes": "Journey driver must match request user"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_DriverJourneyStopsController@complete",
+      "auth_type": "controller_check",
+      "auth_name": "authorizeDriver",
+      "auth_level": "ownership",
+      "roles": "assigned_driver_only",
+      "notes": "Journey driver must match request user"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_DriverJourneyStopsController@skip",
+      "auth_type": "controller_check",
+      "auth_name": "authorizeDriver",
+      "auth_level": "ownership",
+      "roles": "assigned_driver_only",
+      "notes": "Journey driver must match request user"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_DriverJourneyStopsController@createTechnical",
+      "auth_type": "controller_check",
+      "auth_name": "authorizeDriver",
+      "auth_level": "ownership",
+      "roles": "assigned_driver_only",
+      "notes": "Journey driver must match request user"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_DriverJourneyUpdateController@updateState",
+      "auth_type": "policy",
+      "auth_name": "JourneyPolicy.update",
+      "auth_level": "specific_roles_or_ownership_or_admin",
+      "roles": "developer|manager|logistic|assigned_driver|admin",
+      "notes": "Gate::authorize('update', $journey)"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_DriverOrderUpdateController@updateState",
+      "auth_type": "policy",
+      "auth_name": "OrderPolicy.update",
+      "auth_level": "specific_roles_or_ownership_or_admin",
+      "roles": "developer|manager|logistic|assigned_driver|admin",
+      "notes": "Gate::authorize('update', $order)"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_LogisticDispatchController@updatePlan",
+      "auth_type": "policy_ability",
+      "auth_name": "JourneyPolicy.dispatchWorkspaceSave",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Control roles only"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_LogisticDispatchController@hold",
+      "auth_type": "policy_ability",
+      "auth_name": "JourneyPolicy.dispatchWorkspaceSave",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Control roles only"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_LogisticDispatchController@resume",
+      "auth_type": "policy_ability",
+      "auth_name": "JourneyPolicy.dispatchWorkspaceSave",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Control roles only"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_LogisticDispatchWorkspaceController@workspace",
+      "auth_type": "policy_ability",
+      "auth_name": "JourneyPolicy.dispatchWorkspaceView",
+      "auth_level": "specific_roles_or_ownership_or_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|assigned_driver|admin",
+      "notes": "View workspace"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_LogisticDispatchWorkspaceController@upsertCargos",
+      "auth_type": "policy_ability",
+      "auth_name": "JourneyPolicy.dispatchWorkspaceSave",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Mutating dispatch cargo data"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_LogisticDispatchWorkspaceController@saveWorkspace",
+      "auth_type": "policy_ability",
+      "auth_name": "JourneyPolicy.dispatchWorkspaceSave",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Mutating dispatch workspace"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_LogisticDispatchWorkspaceController@confirm",
+      "auth_type": "policy_ability",
+      "auth_name": "JourneyPolicy.dispatchWorkspaceConfirm",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Confirm dispatch management"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_LogisticDispatchWorkspaceController@appendEvent",
+      "auth_type": "policy_ability_dynamic",
+      "auth_name": "JourneyPolicy.dispatchWorkspaceAppend*",
+      "auth_level": "mixed",
+      "roles": "warehouse_event=control|warehouse|admin; transshipment_proposal=control|warehouse|admin; logistic_event=control|admin",
+      "notes": "Ability depends on event type"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_LogisticDispatchWorkspaceController@approveTransshipment",
+      "auth_type": "policy_ability",
+      "auth_name": "JourneyPolicy.dispatchTransshipmentApprove",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Transshipment approval"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_LogisticDispatchWorkspaceController@cancelTransshipment",
+      "auth_type": "policy_ability",
+      "auth_name": "JourneyPolicy.dispatchTransshipmentApprove",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Transshipment cancellation"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_LogisticDispatchWorkspaceController@close",
+      "auth_type": "policy_ability",
+      "auth_name": "JourneyPolicy.dispatchWorkspaceClose",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Dispatch close"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_NlpLogisticsParseController@parse",
+      "auth_type": "gate",
+      "auth_name": "useLogisticsNlp",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "NLP parsing"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_OrderDocumentsController@generate",
+      "auth_type": "policy",
+      "auth_name": "OrderPolicy.update",
+      "auth_level": "specific_roles_or_ownership_or_admin",
+      "roles": "developer|manager|logistic|assigned_driver|admin",
+      "notes": "Document generation"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_OrderDocumentsController@status",
+      "auth_type": "policy",
+      "auth_name": "OrderPolicy.view",
+      "auth_level": "specific_roles_or_ownership_or_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|assigned_driver|admin",
+      "notes": "Document status"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_OrderDocumentsController@list",
+      "auth_type": "policy",
+      "auth_name": "OrderPolicy.view",
+      "auth_level": "specific_roles_or_ownership_or_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|assigned_driver|admin",
+      "notes": "Document list"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_OrderDocumentsController@download",
+      "auth_type": "policy",
+      "auth_name": "OrderPolicy.view",
+      "auth_level": "specific_roles_or_ownership_or_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|assigned_driver|admin",
+      "notes": "Document download"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_RecipeController@defaultTree",
+      "auth_type": "policy",
+      "auth_name": "CatalogItemPolicy.viewAny",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "notes": "Recipe default tree lookup"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_RecipeController@recipeTree",
+      "auth_type": "policy",
+      "auth_name": "RecipePolicy.view",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "notes": "Recipe tree lookup"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_SiteBooleanUpdateController@update",
+      "auth_type": "policy",
+      "auth_name": "SitePolicy.update",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Site booleans update"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_SiteBooleanUpdateController@recalculateRisk",
+      "auth_type": "policy",
+      "auth_name": "SitePolicy.update",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Site risk recalculation"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_SiteTimetableController@store",
+      "auth_type": "policy",
+      "auth_name": "SitePolicy.update",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Site timetable update"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_UserResetAndResendController@resendVerification",
+      "auth_type": "policy_ability",
+      "auth_name": "UserPolicy.manageCredentials",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Resend email verification"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_UserResetAndResendController@sendPasswordResetEmail",
+      "auth_type": "policy_ability",
+      "auth_name": "UserPolicy.manageCredentials",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|admin",
+      "notes": "Send password reset"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_WarehouseJourneyCargosController@update",
+      "auth_type": "policy_ability",
+      "auth_name": "JourneyPolicy.warehouseManage",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "notes": "Warehouse journey cargo update"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_WarehouseOrderItemsController@saveItems",
+      "auth_type": "policy_ability",
+      "auth_name": "OrderPolicy.warehouseManage",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "notes": "Bulk warehouse save; validated on order and item orders"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_WarehouseOrderItemsController@update",
+      "auth_type": "policy_ability",
+      "auth_name": "OrderPolicy.warehouseManage",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "notes": "Warehouse order item update"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_WarehouseOrderItemsController@moveJourneyCargo",
+      "auth_type": "policy_ability",
+      "auth_name": "OrderPolicy.warehouseManage",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "notes": "Move item across journey cargos"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_WarehouseOrderItemsController@flagNotFound",
+      "auth_type": "policy_ability",
+      "auth_name": "OrderPolicy.warehouseManage",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "notes": "Flag not found"
+    },
+    {
+      "action": "App\\Http\\Controllers\\API_WarehouseOrdersController@update",
+      "auth_type": "policy_ability",
+      "auth_name": "OrderPolicy.warehouseManage",
+      "auth_level": "specific_roles_plus_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|admin",
+      "notes": "Warehouse order update"
+    },
+    {
+      "action": "App\\Http\\Controllers\\JourneyController@documentsStatus",
+      "auth_type": "policy",
+      "auth_name": "JourneyPolicy.view",
+      "auth_level": "specific_roles_or_ownership_or_admin",
+      "roles": "developer|manager|logistic|warehouse_chief|warehouse_manager|warehouse_worker|assigned_driver|admin",
+      "notes": "Journey document status"
+    },
+    {
+      "action": "App\\Http\\Controllers\\JourneyController@generateDocuments",
+      "auth_type": "policy",
+      "auth_name": "JourneyPolicy.update",
+      "auth_level": "specific_roles_or_ownership_or_admin",
+      "roles": "developer|manager|logistic|assigned_driver|admin",
+      "notes": "Journey document generation"
+    },
+    {
+      "action": "App\\Http\\Controllers\\NotificationController@index",
+      "auth_type": "controller_scope",
+      "auth_name": "request_user_notifications",
+      "auth_level": "ownership",
+      "roles": "authenticated_user_own_notifications",
+      "notes": "Notifications are loaded through request()->user()->notifications()"
+    },
+    {
+      "action": "App\\Http\\Controllers\\NotificationSeenController",
+      "auth_type": "policy",
+      "auth_name": "NotificationPolicy.update",
+      "auth_level": "ownership",
+      "roles": "notification_owner_only",
+      "notes": "DatabaseNotification update policy"
+    },
+    {
+      "action": "App\\Http\\Controllers\\AuthController@create",
+      "auth_type": "public_endpoint",
+      "auth_name": "login_form",
+      "auth_level": "public",
+      "roles": "guest_or_authenticated",
+      "notes": "Session login form"
+    },
+    {
+      "action": "App\\Http\\Controllers\\AuthController@store",
+      "auth_type": "public_endpoint",
+      "auth_name": "login_attempt",
+      "auth_level": "public",
+      "roles": "guest_or_authenticated",
+      "notes": "Credentials validated inside controller; blocked if can_login is false"
+    },
+    {
+      "action": "App\\Http\\Controllers\\AuthController@destroy",
+      "auth_type": "public_endpoint",
+      "auth_name": "logout_endpoint",
+      "auth_level": "public",
+      "roles": "guest_or_authenticated",
+      "notes": "Logout is callable without middleware; safe no-op for guests"
+    },
+    {
+      "action": "App\\Http\\Controllers\\UserAccountController@index",
+      "auth_type": "controller_scope",
+      "auth_name": "request_user_profile",
+      "auth_level": "ownership",
+      "roles": "authenticated_verified_user_self",
+      "notes": "Loads only request()->user() profile"
+    },
+    {
+      "action": "App\\Http\\Controllers\\UserAccountController@edit",
+      "auth_type": "controller_scope",
+      "auth_name": "request_user_profile",
+      "auth_level": "ownership",
+      "roles": "authenticated_verified_user_self",
+      "notes": "Route model is ignored; form uses request()->user()"
+    },
+    {
+      "action": "App\\Http\\Controllers\\UserAccountController@create",
+      "auth_type": "middleware_only",
+      "auth_name": "auth+verified",
+      "auth_level": "verified",
+      "roles": "authenticated_verified_users",
+      "notes": "No explicit Gate/policy in controller"
+    },
+    {
+      "action": "App\\Http\\Controllers\\UserAccountController@store",
+      "auth_type": "middleware_only",
+      "auth_name": "auth+verified",
+      "auth_level": "verified",
+      "roles": "authenticated_verified_users",
+      "notes": "No explicit Gate/policy in controller"
+    },
+    {
+      "action": "App\\Http\\Controllers\\UserAccountController@update",
+      "auth_type": "controller_check",
+      "auth_name": "self_or_admin",
+      "auth_level": "ownership_or_admin",
+      "roles": "target_user_or_admin",
+      "notes": "Controller explicitly allows profile update only for the bound user or an admin"
+    },
+    {
+      "action": "App\\Http\\Controllers\\WithdrawController@attachFile",
+      "auth_type": "stale_route",
+      "auth_name": "missing_controller_method",
+      "auth_level": "invalid",
+      "roles": "n/a",
+      "notes": "Route exists but attachFile method is not implemented in controller"
+    },
+    {
+      "action": "App\\Http\\Controllers\\OrderItemExplosionController@store",
+      "auth_type": "stale_route",
+      "auth_name": "missing_controller_method",
+      "auth_level": "invalid",
+      "roles": "n/a",
+      "notes": "Route exists but store method is not implemented in controller"
+    },
+    {
+      "action": "App\\Http\\Controllers\\OrderItemExplosionController@update",
+      "auth_type": "stale_route",
+      "auth_name": "missing_controller_method",
+      "auth_level": "invalid",
+      "roles": "n/a",
+      "notes": "Route exists but update method is not implemented in controller"
+    },
+    {
+      "action": "App\\Http\\Controllers\\OrderItemExplosionController@destroy",
+      "auth_type": "stale_route",
+      "auth_name": "missing_controller_method",
+      "auth_level": "invalid",
+      "roles": "n/a",
+      "notes": "Route exists but destroy method is not implemented in controller"
+    },
+    {
+      "action": "App\\Http\\Controllers\\OrderItemExplosionController@applyRecipe",
+      "auth_type": "stale_route",
+      "auth_name": "missing_controller_method",
+      "auth_level": "invalid",
+      "roles": "n/a",
+      "notes": "Route exists but applyRecipe method is not implemented in controller"
+    }
+  ]
+}

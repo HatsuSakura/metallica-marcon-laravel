@@ -2,10 +2,18 @@
 // app/Models/RecipeNode.php
 namespace App\Models;
 
+use App\Models\Concerns\HasDomainAudit;
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class RecipeNode extends Model
+class RecipeNode extends Model implements AuditableContract
 {
+    use HasDomainAudit;
+
+    protected $casts = [
+        'is_override' => 'boolean',
+    ];
+
     protected $fillable = [
         'recipe_id',
         'parent_node_id',
@@ -14,6 +22,15 @@ class RecipeNode extends Model
         'suggested_ratio',
         'is_override'
         //'percentage'
+    ];
+
+    protected $auditInclude = [
+        'recipe_id',
+        'parent_node_id',
+        'catalog_item_id',
+        'sort',
+        'suggested_ratio',
+        'is_override',
     ];
 
     public function recipe()

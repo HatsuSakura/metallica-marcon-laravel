@@ -181,9 +181,9 @@
                     <VueDatePicker 
                       id="expected_withdraw_at" 
                       v-model="form.expected_withdraw_at" 
-                      format="dd/MM/yyyy" 
+                      format="dd/MM/yyyy, HH:mm" 
                       auto-apply 
-                      :enableTimePicker="false"
+                      :enableTimePicker="true"
                       @update:model-value="manageExpectedDate()">
                     </VueDatePicker> 
                     <div class="input-error" v-if="form.errors.expected_withdraw_at">
@@ -336,10 +336,11 @@
     <script setup>
     import { computed, watch, ref, watchEffect , onMounted } from 'vue';
     import { createStore, useStore } from 'vuex';
-    import { Link, useForm, usePage } from '@inertiajs/vue3'
-    import dayjs from 'dayjs';
-    import VueDatePicker from '@vuepic/vue-datepicker';
-    import { getIconForSite } from '@/Composables/getIconForSite';
+	    import { Link, useForm, usePage } from '@inertiajs/vue3'
+	    import dayjs from 'dayjs';
+	    import VueDatePicker from '@vuepic/vue-datepicker';
+	    import { getIconForSite } from '@/Composables/getIconForSite';
+	    import { formatServerDateTime, parseServerDateTime } from '@/utils/serverDateTime';
     import { DataTable } from 'datatables.net-vue3';
     import ItemRow from './Components/ItemRow.vue';
     import HolderRow from './Components/HolderRow.vue';
@@ -436,19 +437,23 @@ const groupedItems = computed(() => {
       { data: 'email' },
     ];
 
-    const normalizeDateOrFallback = (value, fallback = null) => {
-      if (!value) return fallback;
+	    const normalizeDateOrFallback = (value, fallback = null) => {
+	      if (!value) return fallback;
 
-      const normalized = value instanceof Date ? value : new Date(value);
+	      const normalized = value instanceof Date ? value : parseServerDateTime(value);
 
-      return Number.isNaN(normalized.getTime()) ? new Date() : normalized;
-    };
+	      if (!normalized || Number.isNaN(normalized.getTime())) {
+	        return fallback;
+	      }
+
+	      return normalized;
+	    };
 
     const form = useForm({
       id: props.order.id,
       is_urgent: Boolean(props.order.is_urgent),
-      requested_at: props.order.created_at,
-      expected_withdraw_at: normalizeDateOrFallback(props.order.expected_withdraw_at, null),
+	      requested_at: parseServerDateTime(props.order.requested_at) ?? new Date(),
+	      expected_withdraw_at: normalizeDateOrFallback(props.order.expected_withdraw_at, null),
       logistics_user_id: props.order.logistics_user_id ? props.order.logistics_user_id : user ? user.value.id : null, // Fallback to null if user is not defined
       has_adr_consultant: currentSite.value?.has_adr_consultant ?? '',
       customer_id: currentSite.customer_id,
@@ -699,12 +704,10 @@ const groupedItems = computed(() => {
         }
       });
       // Before submitting, format the date correctly
-      form.requested_at = dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss');
-      form.expected_withdraw_at = form.expected_withdraw_at
-        ? dayjs(form.expected_withdraw_at).format('YYYY-MM-DD HH:mm:ss')
-        : null;
-      form.put(route('order.update', {order: props.order.id }));
-    }
+	      form.requested_at = formatServerDateTime(form.requested_at);
+	      form.expected_withdraw_at = formatServerDateTime(form.expected_withdraw_at);
+	      form.put(route('order.update', {order: props.order.id }));
+	    }
         
     </script>
     
@@ -732,5 +735,3 @@ const groupedItems = computed(() => {
       border-radius: 0.375rem;
     }
     </style>
-
-

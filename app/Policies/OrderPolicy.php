@@ -2,85 +2,58 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Order;
-use App\Enums\UserRole;
-use Illuminate\Auth\Access\Response;
+use App\Models\User;
+use App\Policies\Concerns\AuthorizesDomainRoles;
 
 class OrderPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+    use AuthorizesDomainRoles;
+
     public function viewAny(User $user): bool
     {
-        return true;
+        return $this->isControlRole($user) || $this->isWarehouseRole($user);
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Order $order): bool
     {
-        return true;
+        return $this->isControlRole($user)
+            || $this->isWarehouseRole($user)
+            || $this->isAssignedDriverForOrder($user, $order);
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        // Esempio: manager, logistic e responsabili di magazzino
-        return in_array($user->role, [
-            UserRole::DEVELOPER,
-            UserRole::LOGISTIC,
-            UserRole::MANAGER,            
-        ], true);
+        return $this->isControlRole($user) || $this->isDriver($user);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Order $order): bool
     {
-        return true;
+        return $this->isControlRole($user) || $this->isAssignedDriverForOrder($user, $order);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Order $order): bool
     {
-        return true;
+        return $this->isControlRole($user);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Order $order): bool
     {
-        return true;
+        return $this->isControlRole($user);
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Order $order): bool
     {
-        return true;
+        return $this->isControlRole($user);
     }
 
-    public function redirectAfterUpdate(User $user)
+    public function warehouseManage(User $user, Order $order): bool
     {
-        if ($user->role === 'logistic' || $user->is_admin) {
-            return route('order.index');
-        }
-        elseif($user->role === 'driver') {
-            return route('driver.order.index');
-        }
-        else{
-            return route('/');
-        }
+        return $this->isControlRole($user) || $this->isWarehouseRole($user);
+    }
+
+    public function redirectAfterUpdate(User $user, Order $order): bool
+    {
+        return $this->update($user, $order);
     }
 }
-

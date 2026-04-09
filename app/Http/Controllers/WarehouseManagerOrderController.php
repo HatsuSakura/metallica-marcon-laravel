@@ -13,11 +13,14 @@ use Illuminate\Http\Request;
 use App\Services\OrderItemUpdater;
 use App\Services\OrderItemImageUploader;
 use App\Services\RecipeTreeService;
+use Illuminate\Support\Facades\Gate;
 
 class WarehouseManagerOrderController extends Controller
 {
     public function index(Request $request)
     {
+        Gate::authorize('viewAny', Order::class);
+
         // Retrieve the logged in user's id
         $warehouseManagerId = $request->user()->id;
         
@@ -38,6 +41,7 @@ class WarehouseManagerOrderController extends Controller
 
     public function show(Order $order)
     {
+        Gate::authorize('warehouseManage', $order);
 
         $order->load([
             'customer',
@@ -63,6 +67,8 @@ class WarehouseManagerOrderController extends Controller
 
     public function edit(Order $order)
     {
+        Gate::authorize('warehouseManage', $order);
+
         $order->load([
             'journey',
             'journey.driver',
@@ -130,6 +136,8 @@ class WarehouseManagerOrderController extends Controller
 
     public function update(Request $request, Order $order, OrderItemUpdater $updater)
     {
+        Gate::authorize('warehouseManage', $order);
+
         $validated = $request->validate([
             'status' => 'required|in:' . implode(',', OrderStatus::getValues()),
         ]);
@@ -150,7 +158,6 @@ class WarehouseManagerOrderController extends Controller
     }
 
 }
-
 
 
 

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Gate;
 class VehicleController extends Controller
 {
 
-    public function __consruct(){
+    public function __construct(){
         $this->authorizeResource(Vehicle::class, 'vehicle');
     }
 
@@ -149,7 +149,6 @@ class VehicleController extends Controller
     }
 
 }
-
 
 
 

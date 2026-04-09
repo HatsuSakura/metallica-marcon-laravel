@@ -4,12 +4,16 @@ namespace App\Models;
 
 use App\Enums\JourneyStopKind;
 use App\Enums\JourneyStopStatus;
+use App\Models\Concerns\HasDomainAudit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class JourneyStop extends Model
+class JourneyStop extends Model implements AuditableContract
 {
+    use HasDomainAudit;
+
     protected $fillable = [
         'journey_id',
         'kind',
@@ -29,6 +33,21 @@ class JourneyStop extends Model
         'reason_text',
         'driver_notes',
         'notes',
+    ];
+
+    protected $auditInclude = [
+        'journey_id',
+        'kind',
+        'sequence',
+        'planned_sequence',
+        'customer_id',
+        'customer_visit_index',
+        'technical_action_id',
+        'location_lat',
+        'location_lng',
+        'address_text',
+        'notes',
+        'status',
     ];
 
     protected $casts = [

@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Site;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class API_SiteTimetableController extends Controller
 {
     public function store(Request $request, Site $site) {
+        Gate::authorize('update', $site);
+
         $validated = $request->validate([
             'timetable_data' => 'required|array',
         ]);
@@ -20,7 +23,6 @@ class API_SiteTimetableController extends Controller
         return response()->json(['message' => 'Timetable saved successfully.'], 200);
     }
 }
-
 
 
 

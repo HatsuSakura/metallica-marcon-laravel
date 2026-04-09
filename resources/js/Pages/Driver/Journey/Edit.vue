@@ -194,6 +194,29 @@
                         </div>
                     </div>
 
+                    <div v-if="selectedStop.kind !== 'technical' && stopPrimarySite(selectedStop)" class="rounded-box border border-base-300 p-3">
+                        <div class="font-semibold mb-2">Informazioni sede</div>
+                        <div class="text-sm">
+                            <span class="font-semibold">Macchinari:</span>
+                            {{ stopMachinerySummary(selectedStop) }}
+                        </div>
+                        <div class="mt-2 text-sm">
+                            <span class="font-semibold">Orari sede:</span>
+                            <span v-if="stopTimetableSummary(selectedStop).length === 0" class="italic opacity-70">
+                                nessun orario configurato
+                            </span>
+                            <ul v-else class="list-disc ml-5 mt-1">
+                                <li
+                                    v-for="slot in stopTimetableSummary(selectedStop)"
+                                    :key="slot.dayNumber"
+                                    :class="{ 'font-bold': slot.isToday }"
+                                >
+                                    {{ slot.label }} {{ slot.output }}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
                     <div v-if="stopOrdersCount(selectedStop) > 0" class="space-y-1">
                         <div class="font-semibold">Ordini collegati</div>
                         <div class="flex flex-col gap-2">
@@ -266,7 +289,7 @@
                                 v-model="skipForm.driver_notes"
                                 class="textarea textarea-bordered w-full"
                                 rows="3"
-                                placeholder="Note del driver (obbligatorie)"
+                                :placeholder="skipForm.reason_code === 'other' ? 'Note del driver (obbligatorie)' : 'Note del driver (facoltative)'"
                             ></textarea>
                             <button
                                 type="button"
@@ -402,6 +425,68 @@ const stopSubtitle = (stop) => {
 
 const stopStatusLabel = (status) => journeyStopStatusLabel(status)
 
+const stopPrimarySite = (stop) => stopOrders(stop)[0]?.site ?? null
+
+const stopMachinerySummary = (stop) => {
+    const site = stopPrimarySite(stop)
+    if (!site) return 'non disponibile'
+
+    const machines = []
+    if (site.has_muletto) machines.push('Muletto')
+    if (site.has_electric_pallet_truck ?? site.has_transpallet_el) machines.push('Transpallet elettrico')
+    if (site.has_manual_pallet_truck ?? site.has_transpallet_ma) machines.push('Transpallet manuale')
+    if (site.other_machines) machines.push(site.other_machines)
+
+    return machines.length > 0 ? machines.join(', ') : 'nessuna attrezzatura indicata'
+}
+
+const stopTimetableSummary = (stop) => {
+    const site = stopPrimarySite(stop)
+    const raw = site?.timetable?.hours_json
+    if (!raw) return []
+
+    try {
+        const dayLabels = {
+            1: 'Lunedì',
+            2: 'Martedì',
+            3: 'Mercoledì',
+            4: 'Giovedì',
+            5: 'Venerdì',
+            6: 'Sabato',
+            7: 'Domenica',
+        }
+        const rows = JSON.parse(raw)
+        if (!Array.isArray(rows)) return []
+        const today = new Date()
+        const todayPos = today.getDay() === 0 ? 7 : today.getDay()
+
+        return rows
+            .sort((a, b) => Number(a.position ?? 0) - Number(b.position ?? 0))
+            .map((row) => {
+                const dayNumber = Number(row.position ?? 0)
+                const day = dayLabels[dayNumber] ?? `Giorno ${dayNumber || '-'}`
+                const morning = formatTimeRange(row.orarioApM, row.orarioChM)
+                const afternoon = formatTimeRange(row.orarioApP, row.orarioChP)
+
+                return {
+                    dayNumber,
+                    label: day,
+                    output: `${morning} - ${afternoon}`,
+                    isToday: dayNumber === todayPos,
+                }
+            })
+    } catch (error) {
+        return []
+    }
+}
+
+const formatTimeRange = (from, to) => {
+    const start = (from ?? '00:00').toString().trim()
+    const end = (to ?? '00:00').toString().trim()
+    if (start === '00:00' && end === '00:00') return 'Chiuso'
+    return `${start}-${end}`
+}
+
 const orderItems = (order) => {
     if (!order || !Array.isArray(order.items)) return []
     return order.items
@@ -474,12 +559,21 @@ const completeCurrentStop = async () => {
 
 const confirmSkip = async () => {
     if (!currentStop.value) return
-    if (!skipForm.value.reason_code || !skipForm.value.driver_notes) return
+    if (!skipForm.value.reason_code) return
+    if (skipForm.value.reason_code === 'other' && !skipForm.value.driver_notes) return
+    const confirmed = window.confirm(
+        'Confermi di saltare la tappa? Gli ordini collegati torneranno disponibili per la logistica su altri viaggi.'
+    )
+    if (!confirmed) return
+
     isLoading.value = true
     try {
         const response = await axios.put(
             `/api/driver/journeys/${journey.value.id}/stops/${currentStop.value.id}/skip`,
-            skipForm.value
+            {
+                ...skipForm.value,
+                confirm_release_orders: true,
+            }
         )
         refreshFromJourney(response.data.journey)
         skipForm.value.reason_code = ''

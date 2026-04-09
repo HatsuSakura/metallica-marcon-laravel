@@ -48,7 +48,7 @@
                 <button type="button" @click="resetChiave" class="btn btn-ghost btn-circle ml-1" title="Resetta">
                     <font-awesome-icon :icon="['fas', 'arrows-rotate']" class="text-2xl"/>
                 </button>
-                <button type="submit" class="btn btn-ghost btn-circle" title="Cerca">
+                <button type="submit" class="btn btn-primary btn-circle" title="Cerca">
                     <font-awesome-icon :icon="['fas', 'magnifying-glass']" class="h-5 w-5" />
                 </button>
             </div>

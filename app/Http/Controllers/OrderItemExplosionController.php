@@ -7,6 +7,7 @@ use App\Models\OrderItemExplosion;
 use App\Models\CatalogItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 class OrderItemExplosionController extends Controller
@@ -16,6 +17,8 @@ class OrderItemExplosionController extends Controller
      */
     public function show(OrderItem $orderItem)
     {
+        Gate::authorize('warehouseManage', $orderItem->order);
+
         $roots = OrderItemExplosion::query()
             ->where('order_item_id', $orderItem->id)
             ->whereNull('parent_explosion_id')
@@ -42,6 +45,8 @@ class OrderItemExplosionController extends Controller
      */
     public function sync(OrderItem $orderItem, Request $request)
     {
+        Gate::authorize('warehouseManage', $orderItem->order);
+
         $data = $request->validate([
             'nodes'   => ['array'],
             'nodes.*' => ['array'],
@@ -147,6 +152,5 @@ class OrderItemExplosionController extends Controller
         }
     }
 }
-
 
 

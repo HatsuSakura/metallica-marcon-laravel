@@ -3,15 +3,17 @@
 namespace App\Models;
 
 use App\Enums\OrderItemStatus;
+use App\Models\Concerns\HasDomainAudit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Mpociot\Versionable\VersionableTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class OrderItem extends Model
+class OrderItem extends Model implements AuditableContract
 {
-    use HasFactory, SoftDeletes, VersionableTrait;
+    use HasFactory, SoftDeletes, VersionableTrait, HasDomainAudit;
 
     protected $keepOldVersions = true; // Keep all versions of the model
 
@@ -71,6 +73,39 @@ class OrderItem extends Model
         'status',
     ];
 
+    protected $auditInclude = [
+        'order_id',
+        'cer_code_id',
+        'order_item_group_id',
+        'holder_id',
+        'holder_quantity',
+        'is_bulk',
+        'custom_l_cm',
+        'custom_w_cm',
+        'custom_h_cm',
+        'description',
+        'weight_declared',
+        'weight_gross',
+        'weight_tare',
+        'weight_net',
+        'adr',
+        'has_adr',
+        'adr_un_code',
+        'adr_hp',
+        'adr_lot_code',
+        'adr_volume',
+        'warehouse_id',
+        'warehouse_notes',
+        'selection_duration_minutes',
+        'machinery_time_share',
+        'recognized_price',
+        'recognized_weight',
+        'is_adr_total',
+        'has_adr_total_exemption',
+        'has_adr_partial_exemption',
+        'status',
+    ];
+
     protected $appends = [
         'journey_cargo',
         'warehouse_download'
@@ -83,6 +118,10 @@ class OrderItem extends Model
         'is_bulk' => 'boolean',
         'adr' => 'boolean',
         'has_adr' => 'boolean',
+        'is_holder_dirty' => 'boolean',
+        'is_holder_broken' => 'boolean',
+        'is_warehouse_added' => 'boolean',
+        'has_non_conformity' => 'boolean',
         'adr_totale' => 'boolean',
         'is_adr_total' => 'boolean',
         'adr_esenzione_totale' => 'boolean',
@@ -97,6 +136,10 @@ class OrderItem extends Model
         'warehouse_download_at' => 'datetime',
         'warehouse_weighing_dt' => 'datetime',
         'warehouse_selection_dt' => 'datetime',
+        'holder_quantity' => 'integer',
+        'total_dirty_holders' => 'integer',
+        'total_broken_holders' => 'integer',
+        'selection_duration_minutes' => 'integer',
         'custom_l_cm'   => 'decimal:2',
         'custom_w_cm'   => 'decimal:2',
         'custom_h_cm'   => 'decimal:2',

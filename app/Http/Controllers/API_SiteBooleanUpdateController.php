@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Site;
 use App\Services\CalculateRiskService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class API_SiteBooleanUpdateController extends Controller
 {
     public function update(Request $request, Site $site) {
+        Gate::authorize('update', $site);
+
         $validated = $request->validate([
             'is_main' => 'nullable|boolean',
             'name' => 'nullable|string',
@@ -35,6 +38,8 @@ class API_SiteBooleanUpdateController extends Controller
 
     public function recalculateRisk(Site $site, CalculateRiskService $calculateRiskService)
     {
+        Gate::authorize('update', $site);
+
         $updatedSite = $calculateRiskService->recalculateSiteRisk([
             'siteId' => (int) $site->id,
         ]);
@@ -49,6 +54,5 @@ class API_SiteBooleanUpdateController extends Controller
         ], 200);
     }
 }
-
 
 

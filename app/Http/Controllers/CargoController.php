@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class CargoController extends Controller
 {
 
-    public function __consruct(){
+    public function __construct(){
         $this->authorizeResource(Cargo::class, 'cargo');
     }
 
@@ -131,7 +131,6 @@ class CargoController extends Controller
     }
 
 }
-
 
 
 

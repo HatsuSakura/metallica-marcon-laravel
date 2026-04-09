@@ -1,0 +1,42 @@
+{
+  "mcpServers": {
+    "youtrack": {
+      "type": "sse",
+      "url": "https://metallicamarcon.youtrack.cloud/mcp",
+      "headers": {
+        "Authorization": "Bearer ${YOUTRACK_PERM_TOKEN}"
+      }
+    }
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"C:/Users/Matteo/Documents/Progetti/jarvis/hooks/check-vue-runtime.py\""
+          },
+          {
+            "type": "command",
+            "command": "python \"C:/Users/Matteo/Documents/Progetti/jarvis/hooks/remind-decisions.py\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"C:/Users/Matteo/Documents/Progetti/jarvis/hooks/suggest-youtrack.py\""
+          },
+          {
+            "type": "command",
+            "command": "python \"C:/Users/Matteo/Documents/Progetti/jarvis/hooks/session-bridge.py\""
+          }
+        ]
+      }
+    ]
+  }
+}
