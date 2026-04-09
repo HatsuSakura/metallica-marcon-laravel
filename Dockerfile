@@ -76,8 +76,13 @@ COPY --from=composer-builder /app/vendor ./vendor
 COPY --from=node-builder /app/public/build ./public/build
 COPY . .
 
-# Permissions
-RUN chown -R www-data:www-data storage bootstrap/cache \
+# Permissions (mkdir -p: git non traccia directory vuote)
+RUN mkdir -p bootstrap/cache \
+        storage/framework/sessions \
+        storage/framework/views \
+        storage/framework/cache/data \
+        storage/logs \
+    && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 80
