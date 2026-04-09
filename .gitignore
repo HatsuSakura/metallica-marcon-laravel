@@ -20,9 +20,7 @@ bootstrap/cache/
 .phpunit.result.cache
 .phpunit.cache
 
-# Composer / npm lock (opzionale)
-composer.lock
-package-lock.json
+# Lock files: NON escludere — necessari per build Docker riproducibili
 
 # NODE MODULES & VITE
 node_modules/
