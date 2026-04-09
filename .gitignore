@@ -45,6 +45,9 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+
+# Deploy tracking
+.last-qa-deploy
 Homestead.*
 auth.json
 
