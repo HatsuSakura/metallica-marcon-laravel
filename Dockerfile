@@ -55,7 +55,9 @@ RUN docker-php-ext-configure gd \
         zip \
         exif \
         opcache \
-        pcntl
+        pcntl \
+    && pecl install redis \
+    && docker-php-ext-enable redis
 
 # Opcache tuning
 RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
