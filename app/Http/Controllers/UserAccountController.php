@@ -95,12 +95,11 @@ class UserAccountController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
         ]);
 
-        $avatar = $request->validate([
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-        
         $user->update($validated);
         if($request->hasFile('avatar')){
+            $request->validate([
+                'avatar' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
             $avatar = $request->input('avatar');
             //$avatar = preg_replace('/data:image\/\w+;base64,/', '', $avatar );
             //$avatar = preg_replace('/ /', '+', $avatar );
