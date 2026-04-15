@@ -86,7 +86,7 @@ class User extends Authenticatable implements MustVerifyEmail, AuditableContract
      * Devo utilizzare una sintassi diversa ripsetto al PHP 7
     */
     public function getAvatarAttribute($value){
-        return $value ? '/storage/avatars/' . $value : '/storage/avatars/fallback-avatar.png';
+        return $value ? '/storage/avatars/' . $value : '/images/fallback-avatar.png';
     }
     /*
 
