@@ -93,6 +93,7 @@ class UserAccountController extends Controller
             'name' => 'required',
             'surname' => 'required',
             'email' => 'required|email|unique:users,email,' . $user->id,
+            'user_code' => 'nullable|string|max:10',
         ]);
 
         $user->update($validated);

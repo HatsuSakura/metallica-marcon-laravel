@@ -21,7 +21,7 @@
                         Nome
                         <span class="input-error" v-if="form.errors.name">{{ form.errors.name }}</span>
                     </label>
-                    <input id="name" name="name" v-model="form.name" type="text" class="input" @change="setUserCode">
+                    <input id="name" name="name" v-model="form.name" type="text" class="input">
                 </div>
 
                 <div>
@@ -29,7 +29,7 @@
                         Cognome
                         <span class="input-error" v-if="form.errors.surname">{{ form.errors.surname }}</span>
                     </label>
-                    <input id="surname" name="surname" v-model="form.surname" type="text" class="input" @change="setUserCode">
+                    <input id="surname" name="surname" v-model="form.surname" type="text" class="input">
                 </div>
 
                 <div class="flex flex-row gap-2 justify-between items-stretch">
@@ -205,6 +205,8 @@ import Box from '@/Components/UI/Box.vue'
             form.user_code = (form.name.substring(0, 1) + form.surname.substring(0, 1) + form.role.substring(0, 1)).toUpperCase()
         }
     }
+
+    watch([() => form.name, () => form.surname], setUserCode)
 
     const canUpload = computed(() => form.avatar? true : false) // se ho immagini, length != 0
 
