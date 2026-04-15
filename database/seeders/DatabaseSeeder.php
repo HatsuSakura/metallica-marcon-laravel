@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
 
     private function runProduction(): void
     {
-        User::factory()->create([
+        User::create([
             'name' => 'Matteo Argenton',
             'email' => 'm.argenton@creactiveagency.com',
             'password' => env('SEED_ADMIN_PASSWORD'),
