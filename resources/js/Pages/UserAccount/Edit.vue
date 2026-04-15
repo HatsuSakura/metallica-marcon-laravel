@@ -102,14 +102,14 @@
             </div>
             <div class="flex flex-col gap-1 w-1/2 mx-auto">
                 <!-- If a new preview exists, show it -->
-                <img 
-                v-if="form.avatarPreview" 
-                :src="form.avatarPreview" 
-                class="rounded-full mx-auto" 
-                alt="Avatar Preview" 
+                <img
+                v-if="form.avatarPreview"
+                :src="form.avatarPreview"
+                class="rounded-full mx-auto w-32 h-32 object-cover"
+                alt="Avatar Preview"
                 />
                 <div v-else-if="props.user.avatar">
-                    <img :src="props.user.avatar" class="rounded-full mx-auto" alt="Avatar non caricato" />
+                    <img :src="props.user.avatar" class="rounded-full mx-auto w-32 h-32 object-cover" alt="Avatar non caricato" />
                 </div>
                 <EmptyState v-else>
                     <span>Nessun avatar disponibile</span>
