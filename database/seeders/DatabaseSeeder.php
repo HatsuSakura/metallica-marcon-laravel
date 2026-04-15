@@ -15,21 +15,39 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        if (app()->environment('production')) {
+            $this->runProduction();
+        } else {
+            $this->runDevelopment();
+        }
+    }
 
+    private function runProduction(): void
+    {
+        User::factory()->create([
+            'name' => 'Matteo Argenton',
+            'email' => 'm.argenton@creactiveagency.com',
+            'password' => env('SEED_ADMIN_PASSWORD'),
+            'is_admin' => true,
+            'role' => 'developer',
+            'email_verified_at' => now(),
+        ]);
+    }
+
+    private function runDevelopment(): void
+    {
         User::factory()->create([
             'name' => 'Matteo',
             'email' => 'matteo@test.com',
             'is_admin' => true,
-
         ]);
 
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
             'is_admin' => true,
-
         ]);
+
         User::factory()->create([
             'name' => 'Second User',
             'email' => 'test2@example.com',
@@ -68,6 +86,5 @@ class DatabaseSeeder extends Seeder
             'password' => '12345!',
             'is_admin' => true,
         ]);
-
     }
 }
