@@ -20,18 +20,21 @@ docker compose build metallicamarcon metallicamarcon-worker
 echo "==> [3/7] Riavvio container app (DB e Valkey restano attivi)"
 docker compose up -d --no-deps metallicamarcon metallicamarcon-worker
 
-echo "==> [4/7] Migration"
+echo "==> [4/8] Migration"
 docker exec $CONTAINER php artisan migrate --force
 
-echo "==> [5/7] Segnala ai worker di ricaricare il codice"
+echo "==> [5/8] Storage symlink (idempotente)"
+docker exec $CONTAINER php artisan storage:link
+
+echo "==> [6/8] Segnala ai worker di ricaricare il codice"
 docker exec $CONTAINER php artisan queue:restart
 
-echo "==> [6/7] Rigenera cache"
+echo "==> [7/8] Rigenera cache"
 docker exec $CONTAINER php artisan config:cache
 docker exec $CONTAINER php artisan route:cache
 docker exec $CONTAINER php artisan view:cache
 
-echo "==> [7/7] Permessi storage"
+echo "==> [8/8] Permessi storage"
 docker exec $CONTAINER chown -R www-data:www-data storage bootstrap/cache
 
 echo ""
