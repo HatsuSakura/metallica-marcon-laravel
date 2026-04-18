@@ -1,13 +1,4 @@
 {
-  "mcpServers": {
-    "youtrack": {
-      "type": "sse",
-      "url": "https://metallicamarcon.youtrack.cloud/mcp",
-      "headers": {
-        "Authorization": "Bearer ${YOUTRACK_PERM_TOKEN}"
-      }
-    }
-  },
   "hooks": {
     "PostToolUse": [
       {

@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
 
     private function runProduction(): void
     {
+        // id=1
         User::create([
             'name' => 'Matteo',
             'surname' => 'Argenton',
@@ -31,6 +32,39 @@ class DatabaseSeeder extends Seeder
             'password' => env('SEED_ADMIN_PASSWORD'),
             'is_admin' => true,
             'role' => 'developer',
+            'email_verified_at' => now(),
+        ]);
+
+        // id=2 — legacy id_seller=46, remapped by ETL
+        User::create([
+            'name' => 'Mario',
+            'surname' => 'Marcon',
+            'email' => 'mario@metallicamarcon.it',
+            'password' => '12345678!',
+            'is_admin' => true,
+            'role' => 'manager',
+            'email_verified_at' => now(),
+        ]);
+
+        // id=3 — legacy id_seller=47, remapped by ETL
+        User::create([
+            'name' => 'Paolo',
+            'surname' => 'Marcon',
+            'email' => 'paolo@metallicamarcon.it',
+            'password' => '12345678!',
+            'is_admin' => false,
+            'role' => 'manager',
+            'email_verified_at' => now(),
+        ]);
+
+        // id=4 — legacy id_seller=48, remapped by ETL
+        User::create([
+            'name' => 'Alberto',
+            'surname' => 'Marcon',
+            'email' => 'alberto@metallicamarcon.it',
+            'password' => '12345678!',
+            'is_admin' => false,
+            'role' => 'manager',
             'email_verified_at' => now(),
         ]);
     }

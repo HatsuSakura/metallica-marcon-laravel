@@ -1,0 +1,40 @@
+{
+  "profiles": [
+    {
+      "name": "docker_dev_etl_test",
+      "description": "ETL test — schema isolato, non tocca il dev DB",
+      "execution_mode": "docker",
+      "docker_container": "metallica-marcon-laravel-mysql-1",
+      "mysql_host": "127.0.0.1",
+      "mysql_port": 3306,
+      "mysql_user": "root",
+      "mysql_password": "root",
+      "old_db": "legacy_tmp",
+      "new_db": "marconinertia_etl",
+      "legacy_dump_file": "dumps/dump_legacy.sql"
+    },
+    {
+      "name": "docker_dev_marconinertia",
+      "description": "DB di sviluppo locale — non usare per ETL test",
+      "execution_mode": "docker",
+      "docker_container": "metallica-marcon-laravel-mysql-1",
+      "mysql_host": "127.0.0.1",
+      "mysql_port": 3306,
+      "mysql_user": "root",
+      "mysql_password": "root",
+      "old_db": "legacy_tmp",
+      "new_db": "marconinertia",
+      "legacy_dump_file": "dumps/dump_legacy.sql"
+    },
+    {
+      "name": "prod_vps_tunnel",
+      "description": "Produzione VPS — via SSH tunnel (Pageant)",
+      "execution_mode": "cli",
+      "mysql_host": "127.0.0.1",
+      "mysql_port": 13306,
+      "mysql_user": "root",
+      "mysql_password": "__PROD_DB_PASSWORD__",
+      "new_db": "__PROD_DB_NAME__"
+    }
+  ]
+}
