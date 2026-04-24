@@ -149,16 +149,22 @@ class Customer extends Model implements AuditableContract
                     return $query;
                 }
 
-                if (self::hasCanonicalFulltextIndex()) {
-                    $booleanTerm = collect(preg_split('/\s+/', $term))
-                        ->filter()
+                // FULLTEXT minimum token length is 3 (InnoDB default).
+                // If any token is shorter, the engine silently ignores it.
+                // Fall back to LIKE for terms with short tokens (e.g. "AC s.p.a.").
+                $tokens = collect(preg_split('/\s+/', $term))->filter()->values();
+                $fulltextViable = self::hasCanonicalFulltextIndex()
+                    && $tokens->every(fn (string $t) => mb_strlen($t) >= 3);
+
+                if ($fulltextViable) {
+                    $booleanTerm = $tokens
                         ->map(fn (string $token) => "{$token}*")
                         ->implode(' ');
 
                     return $query->whereRaw(
                         "MATCH(
                             company_name, vat_number, tax_code, legal_address, sales_email, administrative_email, certified_email
-                        ) 
+                        )
                         AGAINST(? IN BOOLEAN MODE)",
                         [$booleanTerm]
                     );

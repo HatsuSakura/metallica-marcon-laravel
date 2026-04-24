@@ -35,4 +35,9 @@ return [
         'provider' => env('NLP_PROVIDER', 'heuristic'),
     ],
 
+    'company' => [
+        'hq_lat' => env('COMPANY_HQ_LAT'),
+        'hq_lng' => env('COMPANY_HQ_LNG'),
+    ],
+
 ];

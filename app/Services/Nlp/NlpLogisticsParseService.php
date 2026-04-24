@@ -24,7 +24,15 @@ class NlpLogisticsParseService
         $provider = $this->providerFactory->make();
         $parsed = $provider->parseLogistics($query, $context);
 
-        return $this->validator->validate($parsed);
+        $confidence          = $parsed['_confidence'] ?? null;
+        $ambiguousReference  = $parsed['_ambiguous_reference'] ?? null;
+        unset($parsed['_confidence'], $parsed['_ambiguous_reference']);
+
+        $validated = $this->validator->validate($parsed);
+        $validated['confidence']           = $confidence;
+        $validated['ambiguous_reference']  = $ambiguousReference;
+
+        return $validated;
     }
 }
 

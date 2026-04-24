@@ -38,22 +38,16 @@
             </label>
             <VueDatePicker
               v-model="form.withdrawn_at"
-              model-type="yyyy-MM-dd HH:mm:ss"
+              model-type="yyyy-MM-dd"
               locale="it"
-              format="dd/MM/yyyy HH:mm"
-              placeholder="Seleziona data e ora"
-              :minutes-increment="5"
-              :minutes-grid-increment="5"
-              :time-picker-inline="true"
+              format="dd/MM/yyyy"
+              placeholder="Seleziona data"
+              :enable-time-picker="false"
               :auto-apply="true"
-              :close-on-auto-apply="true"
               :teleport="true"
               :auto-position="true"
               position="left"
               :offset="8"
-              :flow="DATE_TIME_PICKER_FLOW"
-              :config="DATE_TIME_PICKER_CONFIG"
-              :start-time="roundedDownStartTime"
             />
             <div class="input-error" v-if="form.errors.withdrawn_at">{{ form.errors.withdrawn_at }}</div>
           </div>
@@ -123,8 +117,7 @@ import { computed, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import { DATE_TIME_PICKER_CONFIG, DATE_TIME_PICKER_FLOW, getRoundedDownTimeParts, roundDownDateToMinutes } from '@/utils/datePicker';
-import { formatServerDateTime } from '@/utils/serverDateTime';
+import dayjs from 'dayjs';
 
 const props = defineProps({
   vehicles: { type: Array, default: () => [] },
@@ -133,7 +126,7 @@ const props = defineProps({
 });
 
 const form = useForm({
-  withdrawn_at: formatServerDateTime(roundDownDateToMinutes()),
+  withdrawn_at: dayjs().format('YYYY-MM-DD'),
   residue_percentage: 0,
   customer_id: props.selectedSite?.customer_id ?? null,
   site_id: props.selectedSite?.id ?? null,
@@ -148,18 +141,15 @@ const selectedSiteLabel = computed(() => {
   return `${selectedSite.value.name} - ${selectedSite.value.address ?? '-'}`;
 });
 
-const roundedDownStartTime = computed(() => getRoundedDownTimeParts());
-
 watch(selectedSite, (newSite) => {
   form.site_id = newSite?.id ?? null;
   form.customer_id = newSite?.customer_id ?? null;
 }, { immediate: true });
 
 const createWithdraw = () => {
-  const payloadDate = formatServerDateTime(form.withdrawn_at);
   form.transform((data) => ({
     ...data,
-    withdrawn_at: payloadDate,
+    withdrawn_at: data.withdrawn_at ? `${data.withdrawn_at} 12:00:00` : null,
   })).post(route('withdraw.store'));
 };
 

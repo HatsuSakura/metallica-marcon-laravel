@@ -43,6 +43,8 @@ class LogisticsQueryValidator
             'site_filters.risk_max' => 'nullable|numeric|min:0|max:1',
             'site_filters.days_to_next_pickup_min' => 'nullable|integer|min:0|max:3650',
             'site_filters.days_to_next_pickup_max' => 'nullable|integer|min:0|max:3650',
+            'site_filters.last_withdraw_days_min' => 'nullable|integer|min:1|max:3650',
+            'site_filters.has_no_active_orders' => 'nullable|boolean',
             'site_filters.customer_ids' => 'nullable|array',
             'site_filters.customer_ids.*' => 'integer',
             'site_filters.exclude_customer_ids' => 'nullable|array',
@@ -52,8 +54,11 @@ class LogisticsQueryValidator
             'order_filters.statuses' => 'nullable|array',
             'order_filters.statuses.*' => 'string|in:requested,planned,executed,closed',
             'order_filters.hazardous' => 'nullable|boolean',
-            'order_filters.material_types' => 'nullable|array',
-            'order_filters.material_types.*' => 'string',
+            'order_filters.has_bulk' => 'nullable|boolean',
+            'order_filters.cer_codes' => 'nullable|array',
+            'order_filters.cer_codes.*' => 'string|max:10',
+            'order_filters.cer_keyword' => 'nullable|string|max:100',
+            'order_filters.cer_dangerous' => 'nullable|boolean',
             'order_filters.min_weight_kg' => 'nullable|numeric|min:0',
             'order_filters.max_weight_kg' => 'nullable|numeric|min:0',
             'order_filters.requested_from' => 'nullable|date_format:Y-m-d',
@@ -121,7 +126,12 @@ class LogisticsQueryValidator
                     data_get($parsed, 'site_filters.risk_min') !== null ||
                     data_get($parsed, 'site_filters.risk_max') !== null ||
                     data_get($parsed, 'site_filters.days_to_next_pickup_min') !== null ||
-                    data_get($parsed, 'site_filters.days_to_next_pickup_max') !== null;
+                    data_get($parsed, 'site_filters.days_to_next_pickup_max') !== null ||
+                    data_get($parsed, 'site_filters.last_withdraw_days_min') !== null ||
+                    data_get($parsed, 'site_filters.has_no_active_orders') !== null ||
+                    data_get($parsed, 'geo.radius_km') !== null ||
+                    data_get($parsed, 'reference.customer.id') !== null ||
+                    data_get($parsed, 'reference.site.id') !== null;
                 if (!$hasSiteSignal) {
                     $v->errors()->add('site_filters', 'site_filters should contain at least one planning filter in planning_sites scenario.');
                 }
@@ -131,6 +141,12 @@ class LogisticsQueryValidator
                 $hasOrderSignal =
                     !empty(data_get($parsed, 'order_filters.statuses')) ||
                     data_get($parsed, 'order_filters.hazardous') !== null ||
+                    data_get($parsed, 'order_filters.has_bulk') !== null ||
+                    !empty(data_get($parsed, 'order_filters.cer_codes')) ||
+                    data_get($parsed, 'order_filters.cer_keyword') !== null ||
+                    data_get($parsed, 'order_filters.cer_dangerous') !== null ||
+                    data_get($parsed, 'site_filters.last_withdraw_days_min') !== null ||
+                    data_get($parsed, 'site_filters.has_no_active_orders') !== null ||
                     data_get($parsed, 'order_filters.min_weight_kg') !== null ||
                     data_get($parsed, 'order_filters.max_weight_kg') !== null ||
                     data_get($parsed, 'order_filters.requested_from') !== null ||
@@ -147,12 +163,12 @@ class LogisticsQueryValidator
 
         $warnings = [];
 
-        if (($parsed['scenario'] ?? null) === 'order_requests') {
-            $warnings[] = 'order_requests detected: map MVP currently applies site subset only; full order candidate execution is backend execute step.';
-        }
+        $hasGeoAnchor = data_get($parsed, 'reference.customer') !== null
+            || data_get($parsed, 'reference.site') !== null
+            || data_get($parsed, 'reference.coordinates') !== null;
 
-        if (data_get($parsed, 'reference.customer') === null && data_get($parsed, 'geo.radius_km') !== null) {
-            $warnings[] = 'radius_km provided without reference customer/site; geo filter may be ignored.';
+        if (!$hasGeoAnchor && data_get($parsed, 'geo.radius_km') !== null) {
+            $warnings[] = 'radius_km provided without a geo anchor (customer, site or coordinates); geo filter will be ignored.';
         }
 
         return [

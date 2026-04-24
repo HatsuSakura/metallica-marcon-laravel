@@ -12,21 +12,33 @@
             />
             <span class="input-error" v-if="form.errors.email">{{ form.errors.email }}</span>
 
-            <input
-            v-model="form.password"
-            type="password"
-            placeholder="Nuova Password"
-            class="input"
-            required
-            />
-            <input
-            v-model="form.password_confirmation"
-            type="password"
-            placeholder="Conferma Password"
-            class="input"
-            required
-            />
-            <button type="submit" class="btn btn-primary text-lg">Destroy, Erase, Improve!</button>
+            <div class="flex flex-col gap-1">
+              <input
+              v-model="form.password"
+              type="password"
+              placeholder="Nuova Password"
+              class="input"
+              required
+              />
+              <span class="text-xs opacity-60">Minimo 8 caratteri</span>
+              <span class="input-error" v-if="form.errors.password">{{ form.errors.password }}</span>
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <input
+              v-model="form.password_confirmation"
+              type="password"
+              placeholder="Conferma Password"
+              class="input"
+              required
+              />
+              <span class="input-error" v-if="form.errors.password_confirmation">{{ form.errors.password_confirmation }}</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary text-lg" :disabled="form.processing">
+              <span v-if="form.processing" class="loading loading-spinner loading-sm" />
+              Destroy, Erase, Improve!
+            </button>
         </div>
 
       </form>

@@ -94,6 +94,8 @@ Dettaglio completo in `.claude/rules/decisions/001-core.md`.
 
 | Argomento | File |
 |-----------|------|
+| Release notes QA / PROD (modifiche da rilasciare) | `.claude/release-notes.md` |
+| Schema DB completo (tabelle, campi, tipi, note) | `.claude/rules/db-schema.md` |
 | Architettura sistema (layer, geo, separazione) | `.claude/rules/architecture.md` |
 | Layer audit domini e processi (GLE-26) | `.claude/rules/audit.md` |
 | NLP engine (logistics + analytics) | `.claude/rules/nlp.md` |

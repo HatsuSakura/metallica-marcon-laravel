@@ -4139,6 +4139,10 @@ details.collapse summary::-webkit-details-marker{
   width: 1rem;
 }
 
+.loading-sm{
+  width: 1.25rem;
+}
+
 .loading-md{
   width: 1.5rem;
 }
@@ -5038,6 +5042,34 @@ details.collapse summary::-webkit-details-marker{
         0 0 0 2px var(--tglbg) inset;
 }
 
+.toggle-secondary:focus-visible{
+  outline-color: var(--fallback-s,oklch(var(--s)/1));
+}
+
+.toggle-secondary:checked,
+    .toggle-secondary[aria-checked="true"]{
+  border-color: var(--fallback-s,oklch(var(--s)/var(--tw-border-opacity)));
+  --tw-border-opacity: 0.1;
+  --tw-bg-opacity: 1;
+  background-color: var(--fallback-s,oklch(var(--s)/var(--tw-bg-opacity)));
+  --tw-text-opacity: 1;
+  color: var(--fallback-sc,oklch(var(--sc)/var(--tw-text-opacity)));
+}
+
+.toggle-accent:focus-visible{
+  outline-color: var(--fallback-a,oklch(var(--a)/1));
+}
+
+.toggle-accent:checked,
+    .toggle-accent[aria-checked="true"]{
+  border-color: var(--fallback-a,oklch(var(--a)/var(--tw-border-opacity)));
+  --tw-border-opacity: 0.1;
+  --tw-bg-opacity: 1;
+  background-color: var(--fallback-a,oklch(var(--a)/var(--tw-bg-opacity)));
+  --tw-text-opacity: 1;
+  color: var(--fallback-ac,oklch(var(--ac)/var(--tw-text-opacity)));
+}
+
 .toggle:disabled{
   cursor: not-allowed;
   --tw-border-opacity: 1;
@@ -5471,6 +5503,12 @@ html:has(.drawer-toggle:checked){
 .timeline-horizontal:where(.timeline-snap-icon) > li{
   --timeline-col-start: 0.5rem;
   --timeline-row-start: minmax(0, 1fr);
+}
+
+[type="checkbox"].toggle-xs{
+  --handleoffset: 0.5rem;
+  height: 1rem;
+  width: 1.5rem;
 }
 
 .tooltip{
@@ -6277,6 +6315,10 @@ html:has(.drawer-toggle:checked){
   max-height: 15rem;
 }
 
+.min-h-0{
+  min-height: 0px;
+}
+
 .min-h-64{
   min-height: 16rem;
 }
@@ -6291,10 +6333,6 @@ html:has(.drawer-toggle:checked){
 
 .min-h-screen{
   min-height: 100vh;
-}
-
-.min-h-0{
-  min-height: 0px;
 }
 
 .w-0{
@@ -6519,6 +6557,10 @@ html:has(.drawer-toggle:checked){
 
 .cursor-grab{
   cursor: grab;
+}
+
+.cursor-help{
+  cursor: help;
 }
 
 .cursor-not-allowed{
@@ -7072,14 +7114,14 @@ html:has(.drawer-toggle:checked){
   padding-bottom: 0.5rem;
 }
 
-.py-4{
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-}
-
 .py-3{
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
+}
+
+.py-4{
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .pb-16{
@@ -7232,6 +7274,11 @@ html:has(.drawer-toggle:checked){
 
 .tracking-wider{
   letter-spacing: 0.05em;
+}
+
+.text-accent{
+  --tw-text-opacity: 1;
+  color: var(--fallback-a,oklch(var(--a)/var(--tw-text-opacity, 1)));
 }
 
 .text-base-content{
@@ -7392,13 +7439,13 @@ html:has(.drawer-toggle:checked){
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
 }
 
-.ring-warning\/60{
-  --tw-ring-color: var(--fallback-wa,oklch(var(--wa)/0.6));
-}
-
 .ring-warning{
   --tw-ring-opacity: 1;
   --tw-ring-color: var(--fallback-wa,oklch(var(--wa)/var(--tw-ring-opacity, 1)));
+}
+
+.ring-warning\/60{
+  --tw-ring-color: var(--fallback-wa,oklch(var(--wa)/0.6));
 }
 
 .ring-offset-1{

@@ -47,6 +47,7 @@ use App\Http\Controllers\API_UserResetAndResendController;
 use App\Http\Controllers\API_DriverJourneyStopsController;
 use App\Http\Controllers\API_OrderDocumentsController;
 use App\Http\Controllers\WarehouseManagerOrderItemImageController;
+use App\Http\Controllers\API_NlpLogisticsExecuteController;
 use App\Http\Controllers\API_NlpLogisticsParseController;
 use App\Http\Controllers\LogisticDispatchController;
 use App\Http\Controllers\API_LogisticDispatchController;
@@ -413,6 +414,7 @@ Route::prefix('api')
         Route::post('/logistic/transshipments/{transshipment}/cancel', [API_LogisticDispatchWorkspaceController::class, 'cancelTransshipment'])->name('api.logistic-transshipments.cancel');
         Route::post('/logistic/dispatch/{journey}/close', [API_LogisticDispatchWorkspaceController::class, 'close'])->name('api.logistic-dispatch.close');
         Route::post('/nlp/logistics/parse', [API_NlpLogisticsParseController::class, 'parse']);
+        Route::post('/nlp/logistics/execute', [API_NlpLogisticsExecuteController::class, 'execute']);
         Route::put('/warehouse-orders/{order}', [API_WarehouseOrdersController::class, 'update'])->name('update');
         Route::post('/warehouse-order-items/move-journey-cargo/{orderItem}', [API_WarehouseOrderItemsController::class, 'moveJourneyCargo'])->name('warehouse-order-items.move-journey-cargo');
         Route::post('/warehouse-order-items/save-items', [API_WarehouseOrderItemsController::class, 'saveItems'])->name('warehouse-order-items.save-items-bulk');

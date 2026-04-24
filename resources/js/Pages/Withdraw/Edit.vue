@@ -27,21 +27,16 @@
             </label>
             <VueDatePicker
               v-model="form.withdrawn_at"
-              model-type="yyyy-MM-dd HH:mm:ss"
+              model-type="yyyy-MM-dd"
               locale="it"
-              format="dd/MM/yyyy HH:mm"
-              placeholder="Seleziona data e ora"
-              :minutes-increment="5"
-              :minutes-grid-increment="5"
-              :time-picker-inline="true"
+              format="dd/MM/yyyy"
+              placeholder="Seleziona data"
+              :enable-time-picker="false"
               :auto-apply="true"
-              :close-on-auto-apply="true"
               :teleport="true"
               :auto-position="true"
               position="left"
               :offset="8"
-              :flow="DATE_TIME_PICKER_FLOW"
-              :config="DATE_TIME_PICKER_CONFIG"
             />
             <div class="input-error" v-if="form.errors.withdrawn_at">{{ form.errors.withdrawn_at }}</div>
           </div>
@@ -111,8 +106,7 @@ import { computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import { DATE_TIME_PICKER_CONFIG, DATE_TIME_PICKER_FLOW } from '@/utils/datePicker';
-import { formatServerDateTime, parseServerDateTime } from '@/utils/serverDateTime';
+import dayjs from 'dayjs';
 
 const props = defineProps({
   withdraw: { type: Object, required: true },
@@ -121,7 +115,7 @@ const props = defineProps({
 });
 
 const form = useForm({
-  withdrawn_at: formatServerDateTime(parseServerDateTime(props.withdraw.withdrawn_at)),
+  withdrawn_at: props.withdraw.withdrawn_at ? dayjs(props.withdraw.withdrawn_at).format('YYYY-MM-DD') : null,
   residue_percentage: Number(props.withdraw.residue_percentage ?? 0),
   customer_id: props.withdraw.customer_id,
   site_id: props.withdraw.site_id,
@@ -142,10 +136,9 @@ const customerLabel = computed(() => {
 });
 
 const updateWithdraw = () => {
-  const payloadDate = formatServerDateTime(form.withdrawn_at);
   form.transform((data) => ({
     ...data,
-    withdrawn_at: payloadDate,
+    withdrawn_at: data.withdrawn_at ? `${data.withdrawn_at} 12:00:00` : null,
   })).put(route('withdraw.update', { withdraw: props.withdraw.id }));
 };
 
