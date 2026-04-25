@@ -12,7 +12,9 @@ set -e  # interrompe lo script al primo errore
 CONTAINER=metallicamarcon
 
 echo "==> [1/7] Pull codice aggiornato"
+git config core.fileMode false
 git pull
+cp docker-compose.prod.yml docker-compose.yml
 
 echo "==> [2/7] Build immagini (app + worker)"
 docker compose build metallicamarcon metallicamarcon-worker

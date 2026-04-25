@@ -1,4 +1,4 @@
-# =============================================================
+﻿# =============================================================
 # deploy.ps1 — Metallica Marcon | Deploy QA → Siteground
 #
 # Strategia: legge git diff rispetto all'ultimo commit deployato
@@ -62,6 +62,7 @@ $ExcludePatterns = @(
     "^tests/",              # test suite
     "^\.claude/",           # config agentic dev team
     "^CLAUDE\.md$",         # istruzioni Claude
+    "^\.ai/",               # documenti operativi interni (NLP, decisioni, migration)
     "^Dockerfile$",         # solo per PROD (VPS Docker)
     "^docker-compose",      # solo per PROD
     "^deploy\.sh$",         # deploy PROD
@@ -183,6 +184,7 @@ if ($RunNpmBuild) {
 # ============================
 
 $changedFiles = @()
+$addedFiles   = @()   # solo file nuovi (A/C) — usati per mkdir
 $deletedFiles = @()
 
 if ($null -eq $FromCommit) {
@@ -190,10 +192,17 @@ if ($null -eq $FromCommit) {
     $changedFiles = (git ls-files) |
         ForEach-Object { $_.Trim() } |
         Where-Object { $_ -ne "" -and -not (Should-Exclude $_) }
+    $addedFiles = $changedFiles   # tutto è "nuovo" al primo deploy
 } else {
     # Incrementale: file modificati/aggiunti
     $rawChanged = git diff --name-only --diff-filter=ACM $FromCommit HEAD
     $changedFiles = $rawChanged |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { $_ -ne "" -and -not (Should-Exclude $_) }
+
+    # Solo file aggiunti/copiati → potrebbero avere dir nuove
+    $rawAdded = git diff --name-only --diff-filter=AC $FromCommit HEAD
+    $addedFiles = $rawAdded |
         ForEach-Object { $_.Trim() } |
         Where-Object { $_ -ne "" -and -not (Should-Exclude $_) }
 
@@ -210,7 +219,7 @@ if ($null -eq $FromCommit) {
         if ($parts.Length -ge 3) {
             $oldName = $parts[1].Trim()
             $newName = $parts[2].Trim()
-            if (-not (Should-Exclude $newName)) { $changedFiles += $newName }
+            if (-not (Should-Exclude $newName)) { $changedFiles += $newName; $addedFiles += $newName }
             if (-not (Should-Exclude $oldName)) { $deletedFiles += $oldName }
         }
     }
@@ -251,6 +260,26 @@ $winScpLines = @(
     "open sftp://${RemoteUser}@${RemoteHost}:${RemotePort}/ -hostkey=`"ssh-ed25519 255 BsnglgFnFsOxBGTxAtn6qeQmu5DZzGfHV5/fRTSEt9A`"",
     ""
 )
+
+# Crea directory mancanti — solo per file aggiunti (i modificati hanno già la dir sul server)
+if ($addedFiles.Count -gt 0) {
+    $allDirs = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($file in $addedFiles) {
+        $parts = $file -split '/'
+        for ($i = 1; $i -lt $parts.Length; $i++) {
+            $allDirs.Add(($parts[0..($i - 1)]) -join '/') | Out-Null
+        }
+    }
+    $sortedDirs = $allDirs | Sort-Object { ($_ -split '/').Count }
+
+    $winScpLines += "# === Crea directory mancanti ==="
+    $winScpLines += "option batch continue"
+    foreach ($dir in $sortedDirs) {
+        $winScpLines += "mkdir `"$RemoteDir/$dir`""
+    }
+    $winScpLines += "option batch abort"
+    $winScpLines += ""
+}
 
 # Upload file modificati/aggiunti
 if ($changedFiles.Count -gt 0) {
