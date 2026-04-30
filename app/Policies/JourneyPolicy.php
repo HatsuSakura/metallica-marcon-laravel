@@ -74,7 +74,7 @@ class JourneyPolicy
 
     public function dispatchWorkspaceAppendTransshipmentProposal(User $user, Journey $journey): bool
     {
-        return $this->isControlRole($user) || $this->isWarehouseRole($user);
+        return $this->isControlRole($user);
     }
 
     public function dispatchWorkspaceAppendLogisticEvent(User $user, Journey $journey): bool
