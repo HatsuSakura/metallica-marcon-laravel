@@ -15,7 +15,6 @@ use App\Models\Customer;
 use App\Models\OrderItem;
 use App\Models\JourneyCargo;
 use Illuminate\Http\Request;
-use App\Enums\CustomerJobType;
 use Illuminate\Support\Carbon;
 use App\Enums\OrderStatus;
 use App\Models\InternalContact;

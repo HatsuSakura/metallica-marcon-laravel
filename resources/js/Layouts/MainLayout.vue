@@ -201,6 +201,9 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
               <li>
                 <Link @click="closeDrawer" :href="route('customer.index')">Clienti</Link>
               </li>
+              <li v-if="canManageBusinessTypes">
+                <Link @click="closeDrawer" :href="route('business-type.index')">Tipologie attività</Link>
+              </li>
               <li>
                 <details close>
                   <summary>Materiali e Ricette</summary>
@@ -330,6 +333,15 @@ onUnmounted(() => {
 const currentUser = computed(
   () => page.props.auth.user
 )
+
+const canManageBusinessTypes = computed(() => {
+  const user = currentUser.value
+  if (!user) {
+    return false
+  }
+
+  return Boolean(user.is_admin || ['developer', 'manager', 'logistic'].includes(user.role))
+})
 
 const notificationsCount = computed(
   () => Math.min(page.props.user.notificationCount, 9)

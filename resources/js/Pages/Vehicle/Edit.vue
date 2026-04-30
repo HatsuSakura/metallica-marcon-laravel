@@ -147,11 +147,12 @@
   });
 
   watch(
-    () => form.type,
-    (new_type) => {
-      if (new_type === 'sponda' || new_type === 'furgone' )
+  () => form.type,
+  (new_type) => {
+      if (new_type === 'sponda' || new_type === 'furgone' ) {
       form.has_trailer = false;
-
+      form.trailer_id = null;
+    }
     }
   );
 

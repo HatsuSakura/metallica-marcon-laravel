@@ -6,13 +6,14 @@
             <span v-else class="font-bold">Continuativo</span>
             &nbsp; <span class="text-gray-500">|</span>
         &nbsp; SDI: &nbsp;<span class="font-bold">{{ props.customer.sdi_code }}</span> <span class="text-gray-500">|</span>
-        &nbsp; Tipo: &nbsp; 
-            <span v-if="props.customer.business_type" class="font-bold">{{ props.customer.business_type }}</span>
+        &nbsp; Tipo: &nbsp;
+            <span v-if="businessTypeName" class="font-bold">{{ businessTypeName }}</span>
             <span v-else class="font-bold">undef.</span>
         &nbsp;<span class="text-gray-500">|</span>
 </template>
 
 <script setup>
+import { computed } from 'vue';
 
 const props = defineProps({
     customer: Object,
@@ -21,5 +22,11 @@ const props = defineProps({
         default: false,
     },
 })
+
+const businessTypeName = computed(() =>
+    props.customer?.business_type?.name
+    ?? props.customer?.businessType?.name
+    ?? null
+)
 
 </script>

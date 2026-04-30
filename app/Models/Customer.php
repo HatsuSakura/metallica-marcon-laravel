@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\CustomerJobType;
 use App\Models\Concerns\HasDomainAudit;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +29,7 @@ class Customer extends Model implements AuditableContract
         'seller_id',
         'legal_address',
         'sdi_code',
-        'business_type',
+        'business_type_id',
         'sales_email',
         'administrative_email',
         'certified_email',
@@ -45,7 +44,7 @@ class Customer extends Model implements AuditableContract
         'seller_id',
         'legal_address',
         'sdi_code',
-        'business_type',
+        'business_type_id',
         'sales_email',
         'administrative_email',
         'certified_email',
@@ -54,7 +53,6 @@ class Customer extends Model implements AuditableContract
 
     protected $casts = [
         'is_occasional_customer' => 'boolean',
-        'business_type' => CustomerJobType::class,
     ];
 
     protected static function booted(): void
@@ -85,6 +83,10 @@ class Customer extends Model implements AuditableContract
 
     public function seller(): BelongsTo{
         return $this->belongsTo(User::class, 'seller_id');
+    }
+
+    public function businessType(): BelongsTo{
+        return $this->belongsTo(BusinessType::class, 'business_type_id');
     }
 
     public function sites(): HasMany{

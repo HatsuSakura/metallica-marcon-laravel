@@ -93,15 +93,15 @@
       </div>
 
       <div class="col-span-2">
-        <label class="label">Tipologia attivita</label>
-        <select v-model="form.business_type" class="select select-bordered w-full max-w-xs">
-          <option :value="null" disabled>Seleziona la tipologia attivita</option>
-          <option v-for="job in props.jobTypes" :key="job.value" :value="job.value">
-            {{ job.label }}
+        <label class="label">Tipologia attività</label>
+        <select v-model="form.business_type_id" class="select select-bordered w-full max-w-xs">
+          <option :value="null">— nessuna —</option>
+          <option v-for="bt in props.businessTypes" :key="bt.id" :value="bt.id">
+            {{ bt.name }}
           </option>
         </select>
-        <div class="input-error" v-if="form.errors.business_type">
-          {{ form.errors.business_type }}
+        <div class="input-error" v-if="form.errors.business_type_id">
+          {{ form.errors.business_type_id }}
         </div>
       </div>
 
@@ -142,7 +142,7 @@
         </div>
       </div>
 
-      <div class="col-span-2">
+      <div class="col-span-6 flex justify-end">
         <button type="submit" class="btn btn-primary">Modifica cliente</button>
       </div>
     </div>
@@ -294,7 +294,7 @@ import AuditCollapse from '@/Components/AuditCollapse.vue';
 const props = defineProps({
   customer: Object,
   managers: Array,
-  jobTypes: Array,
+  businessTypes: { type: Array, default: () => [] },
   returnTo: String,
   audits: { type: Array, default: () => [] },
 });
@@ -307,7 +307,7 @@ const auditFieldLabels = {
   seller_id: 'Commerciale',
   legal_address: 'Indirizzo legale',
   sdi_code: 'Codice SDI',
-  business_type: 'Tipologia attività',
+  business_type_id: 'Tipologia attività',
   sales_email: 'Email commerciale',
   administrative_email: 'Email amministrativa',
   certified_email: 'PEC',
@@ -328,7 +328,7 @@ const form = useForm({
   longitude: props.customer.main_site?.longitude,
   seller_id: props.customer.seller_id ?? null,
   sdi_code: props.customer.sdi_code,
-  business_type: props.customer.business_type ?? null,
+  business_type_id: props.customer.business_type_id ?? null,
   sales_email: props.customer.sales_email,
   administrative_email: props.customer.administrative_email,
   certified_email: props.customer.certified_email,

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\CustomerJobType;
 use App\Enums\OrderStatus;
+use App\Models\BusinessType;
 use App\Enums\UserRole;
 use App\Models\Area;
 use App\Models\Customer;
@@ -77,6 +77,9 @@ class CustomerController extends Controller
 
         $base = Customer::query()
             ->alphabetic()
+            ->with([
+                'businessType:id,name',
+            ])
             ->withCount('sites')
             ->with(['sites' => fn ($q) => $q->select('id', 'customer_id', 'name', 'is_main')])
             ->withCount([
@@ -107,6 +110,8 @@ class CustomerController extends Controller
         ]);
 
         $customer->load(
+            'seller',
+            'businessType',
             'sites',
             'sites.customer',
             'sites.areas',
@@ -137,14 +142,10 @@ class CustomerController extends Controller
         Gate::authorize('create', Customer::class);
 
         $managers = User::where('role', UserRole::MANAGER->value)->get();
-        $jobTypes = array_map(fn ($type) => [
-            'value' => $type->value,
-            'label' => ucfirst($type->value),
-        ], CustomerJobType::cases());
 
         return inertia('Customer/Create', [
-            'managers' => $managers,
-            'jobTypes' => $jobTypes,
+            'managers'      => $managers,
+            'businessTypes' => BusinessType::orderBy('name')->get(),
         ]);
     }
 
@@ -160,7 +161,7 @@ class CustomerController extends Controller
             'longitude' => 'required|numeric',
             'seller_id' => 'required|numeric|exists:users,id',
             'sdi_code' => 'required|string',
-            'business_type' => ['required', 'string', Rule::in(array_column(CustomerJobType::cases(), 'value'))],
+            'business_type_id' => 'nullable|integer|exists:business_types,id',
             'sales_email' => 'nullable|email',
             'administrative_email' => 'nullable|email',
             'certified_email' => 'required|email',
@@ -175,7 +176,7 @@ class CustomerController extends Controller
             'seller_id' => $validatedData['seller_id'],
             'legal_address' => $validatedData['legal_address'],
             'sdi_code' => $validatedData['sdi_code'],
-            'business_type' => $validatedData['business_type'],
+            'business_type_id' => $validatedData['business_type_id'] ?? null,
             'sales_email' => $validatedData['sales_email'] ?? null,
             'administrative_email' => $validatedData['administrative_email'] ?? null,
             'certified_email' => $validatedData['certified_email'],
@@ -197,6 +198,7 @@ class CustomerController extends Controller
         Gate::authorize('update', $customer);
 
         $customer->load([
+            'businessType',
             'mainSite',
             'sites' => fn ($query) => $query
                 ->orderByDesc('is_main')
@@ -205,18 +207,14 @@ class CustomerController extends Controller
         ]);
 
         $managers = User::where('role', UserRole::MANAGER->value)->get();
-        $jobTypes = array_map(fn ($type) => [
-            'value' => $type->value,
-            'label' => ucfirst($type->value),
-        ], CustomerJobType::cases());
 
         $fallbackReturnTo = route('customer.index');
         $returnTo = $this->resolveReturnTo($request->query('return_to'), $fallbackReturnTo);
 
         return inertia('Customer/Edit', [
-            'customer' => $customer,
-            'managers' => $managers,
-            'jobTypes' => $jobTypes,
+            'customer'      => $customer,
+            'managers'      => $managers,
+            'businessTypes' => BusinessType::orderBy('name')->get(),
             'returnTo' => $returnTo,
             'audits' => auth()->user()?->is_admin ? AuditTrailPresenter::forCustomer($customer, 100) : [],
         ]);
@@ -234,7 +232,7 @@ class CustomerController extends Controller
             'longitude' => 'required|numeric',
             'seller_id' => 'required|numeric|exists:users,id',
             'sdi_code' => 'required|string',
-            'business_type' => ['required', 'string', Rule::in(array_column(CustomerJobType::cases(), 'value'))],
+            'business_type_id' => 'nullable|integer|exists:business_types,id',
             'sales_email' => 'nullable|email',
             'administrative_email' => 'nullable|email',
             'certified_email' => 'required|email',
@@ -250,7 +248,7 @@ class CustomerController extends Controller
             'seller_id' => $validatedData['seller_id'],
             'legal_address' => $validatedData['legal_address'],
             'sdi_code' => $validatedData['sdi_code'],
-            'business_type' => $validatedData['business_type'],
+            'business_type_id' => $validatedData['business_type_id'] ?? null,
             'sales_email' => $validatedData['sales_email'] ?? null,
             'administrative_email' => $validatedData['administrative_email'] ?? null,
             'certified_email' => $validatedData['certified_email'],

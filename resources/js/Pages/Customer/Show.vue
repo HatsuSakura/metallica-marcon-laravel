@@ -23,11 +23,40 @@
             <Box >
                 <template #header>Scheda cliente</template>
 
-                <div class="text-gray-500"> 
-                    <span class="text-gray-900 text-lg font-bold">{{ reactiveCustomer.company_name }}</span> 
+                <div class="text-gray-500">
+                    <span class="text-gray-900 text-lg font-bold">{{ reactiveCustomer.company_name }}</span>
                     <CustomerSpace :customer="reactiveCustomer" class="text-gray-500" />
                 </div>
                 <CustomerAddress :customer="reactiveCustomer" class="text-gray-500" />
+
+                <div class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2 text-sm">
+                    <div>
+                        <span class="text-gray-500">P.IVA</span><br>
+                        <span class="font-medium">{{ reactiveCustomer.vat_number ?? '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Codice Fiscale</span><br>
+                        <span class="font-medium">{{ reactiveCustomer.tax_code ?? '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Commerciale</span><br>
+                        <span class="font-medium">
+                            {{ reactiveCustomer.seller ? `${reactiveCustomer.seller.name} ${reactiveCustomer.seller.surname}` : '—' }}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Email commerciale</span><br>
+                        <span class="font-medium">{{ reactiveCustomer.sales_email ?? '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Email amministrativa</span><br>
+                        <span class="font-medium">{{ reactiveCustomer.administrative_email ?? '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">PEC</span><br>
+                        <span class="font-medium">{{ reactiveCustomer.certified_email ?? '—' }}</span>
+                    </div>
+                </div>
             </Box>
         </div>
 
@@ -95,7 +124,7 @@ const auditFieldLabels = {
     seller_id: 'Commerciale',
     legal_address: 'Indirizzo legale',
     sdi_code: 'Codice SDI',
-    business_type: 'Tipologia attività',
+    business_type_id: 'Tipologia attività',
     sales_email: 'Email commerciale',
     administrative_email: 'Email amministrativa',
     certified_email: 'PEC',

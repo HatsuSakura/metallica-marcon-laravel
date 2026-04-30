@@ -52,6 +52,7 @@ use App\Http\Controllers\API_NlpLogisticsParseController;
 use App\Http\Controllers\LogisticDispatchController;
 use App\Http\Controllers\API_LogisticDispatchController;
 use App\Http\Controllers\API_LogisticDispatchWorkspaceController;
+use App\Http\Controllers\BusinessTypeController;
 
 
 //Route::get('/', [IndexController::class, 'login']);
@@ -277,6 +278,9 @@ Route::middleware(['auth', 'verified', 'can:accessBackofficeArea'])->group(funct
     // USER
     Route::resource('user', UserController::class)
     ->withTrashed();
+
+    // TIPOLOGIE ATTIVITÀ
+    Route::resource('business-type', BusinessTypeController::class)->except(['show']);
 });
 
 

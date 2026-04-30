@@ -130,26 +130,7 @@
 
               <div class="mt-4">
                 <div class="font-medium">Referenti Interni:</div>
-                <DataTable
-                  :data="site.internal_contacts"
-                  :columns="columns_internal_contacts"
-                  data-paging="false"
-                  data-filter="false"
-                  data-info="false"
-                >
-                  <thead>
-                      <tr>
-                          <th>ID</th>
-                          <th>Ruolo</th>
-                          <th>Nome</th>
-                          <th>Cognome</th>
-                          <th>Telefono</th>
-                          <th>Cellulare</th>
-                          <th>E-Mail</th>
-                      </tr>
-                  </thead>
-                </DataTable>
-
+                <SiteInternalContacts :contacts="site.internal_contacts" />
               </div>
 
               <div class="mt-4">
@@ -364,7 +345,7 @@
     import dayjs from 'dayjs';
     import VueDatePicker from '@vuepic/vue-datepicker';
     import { getIconForSite } from '@/Composables/getIconForSite';
-    import { DataTable } from 'datatables.net-vue3';
+    import SiteInternalContacts from '@/Components/SiteInternalContacts.vue';
     import ItemRow from './Components/ItemRow.vue';
     import HolderRow from './Components/HolderRow.vue';
     import AccordionRow from './Components/AccordionRow.vue';
@@ -457,16 +438,6 @@ const groupedItems = computed(() => {
         orariApertura.value = 'ATTENZIONE: non ci sono orari salvati per questa sede!';
       }
     });
-
-    const columns_internal_contacts = [
-      { data: 'id', visible: false },
-      { data: 'role' },
-      { data: 'name' },
-      { data: 'surname' },
-      { data: 'phone' },
-      { data: 'mobile' },
-      { data: 'email' },
-    ];
 
 	    const form = useForm({
 	      is_urgent: false,

@@ -61,8 +61,12 @@
                 </div>
                 -->
             </div>
-            <div class="navbar-center text-xl">
-                Riepilogo sede {{ props.site.name }}
+            <div class="navbar-center text-center">
+                <div class="flex flex-col">
+                    <div class="text-xl">Riepilogo sede {{ props.site.name }}</div>
+                    <div v-if="props.site.address" class="text-sm text-base-content/60">{{ props.site.address }}</div>
+                </div>
+                
             </div>
             <div class="navbar-end space-x-2">
                 <div class="tooltip" data-tip="Crea ordine">
@@ -219,7 +223,14 @@
 
         </section>
 
-        <!-- SEZIONE 01 INDICATORI RITIRI E ORDINI -->
+
+        <!-- SEZIONE 01 REFERENTI INTERNI -->
+        <section class="py-4">
+            <div class="font-medium mb-2">Referenti Interni</div>
+            <SiteInternalContacts :contacts="props.site.internal_contacts" />
+        </section>
+
+        <!-- SEZIONE 02 INDICATORI RITIRI E ORDINI -->
         <section class="flex flex-col-reverse md:grid md:grid-cols-12 gap-4 my-4">
 
             <!-- INDICATORI -->
@@ -261,12 +272,12 @@
 
         </section>
 
-        <!-- SEZIONE 02 ORARI & MAPPA -->
+        <!-- SEZIONE 03 ORARI & MAPPA -->
         <section class="flex flex-col-reverse md:grid md:grid-cols-12 gap-4 py-4">
             <div class="col-span-6">
                 <EditableTimetable :site="props.site"/>
             </div>
-            
+
             <!-- MAPPA -->
             <div class="col-span-6">
                 <SimpleMapWithMarker :site="props.site" :withInfoWindow="false" />
@@ -291,6 +302,7 @@ import SiteBooleanParameter from './SiteBooleanParameter.vue';
 import Box from '@/Components/UI/Box.vue';
 import axios from 'axios';
 import SiteHeadParameter from './SiteHeadParameter.vue';
+import SiteInternalContacts from '@/Components/SiteInternalContacts.vue';
 
 const props = defineProps({
     site: Object,

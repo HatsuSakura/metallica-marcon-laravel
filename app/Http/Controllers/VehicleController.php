@@ -71,6 +71,11 @@ class VehicleController extends Controller
      */
     public function store(Request $request)
     {
+        $request->merge([
+            'driver_id' => $request->filled('driver_id') ? (int) $request->input('driver_id') : null,
+            'trailer_id' => $request->filled('trailer_id') ? (int) $request->input('trailer_id') : null,
+        ]);
+
         // sostistuisco "//Vehicle::create([" con questa nuova riga per generare direttamente il LISTING associato all'utente che lo crea
         Vehicle::create(
             $request->validate([
@@ -80,8 +85,8 @@ class VehicleController extends Controller
                 'type' => 'required|min:1',
                 'has_trailer' => 'required|boolean',
                 'load_capacity' => 'required|integer|min:1000|max:50000',
-                'driver_id' => 'nullable',
-                'trailer_id' => 'nullable',
+                'driver_id' => 'nullable|integer|exists:users,id',
+                'trailer_id' => 'nullable|integer|exists:trailers,id',
             ])
         );
 
@@ -115,6 +120,11 @@ class VehicleController extends Controller
      */
     public function update(Request $request, Vehicle $vehicle)
     {
+        $request->merge([
+            'driver_id' => $request->filled('driver_id') ? (int) $request->input('driver_id') : null,
+            'trailer_id' => $request->filled('trailer_id') ? (int) $request->input('trailer_id') : null,
+        ]);
+
         $validated = $request->validate([
             'name' => 'required',
             'description' => 'required',
@@ -122,8 +132,8 @@ class VehicleController extends Controller
             'type' => 'required|min:1',
             'has_trailer' => 'required|boolean',
             'load_capacity' => 'required|integer|min:1000|max:50000',
-            'driver_id' => 'nullable',
-            'trailer_id' => 'nullable',
+            'driver_id' => 'nullable|integer|exists:users,id',
+            'trailer_id' => 'nullable|integer|exists:trailers,id',
         ]);
         
         $vehicle->update($validated);
@@ -149,6 +159,5 @@ class VehicleController extends Controller
     }
 
 }
-
 
 

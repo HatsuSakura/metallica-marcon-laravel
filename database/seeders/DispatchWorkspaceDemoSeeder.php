@@ -51,7 +51,7 @@ class DispatchWorkspaceDemoSeeder extends Seeder
             'tax_code' => 'DISPATCH00001',
             'legal_address' => 'Via Demo 1',
             'sdi_code' => 'DEMO123',
-            'business_type' => 'generico',
+            'business_type_id' => DB::table('business_types')->where('name', 'Generico')->value('id'),
             'sales_email' => 'dispatch.demo.customer@test.local',
             'administrative_email' => 'dispatch.demo.customer@test.local',
             'certified_email' => 'dispatch.demo.customer@test.local',

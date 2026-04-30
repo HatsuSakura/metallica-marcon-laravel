@@ -131,8 +131,8 @@ const form = useForm({
   description: null,
   plate: null,
   type: '',
-  driver_id: '',
-  trailer_id: '',
+  driver_id: null,
+  trailer_id: null,
   has_trailer: true, // Default to true
   load_capacity: 8000, // Default value
 })
@@ -145,13 +145,13 @@ const isTrailerDisabled = computed(() => {
 watch(
   () => form.type,
   (new_type) => {
-    if (new_type === 'sponda' || new_type === 'furgone' )
-    form.has_trailer = false;
-
+    if (new_type === 'sponda' || new_type === 'furgone' ) {
+      form.has_trailer = false;
+      form.trailer_id = null;
+    }
   }
 );
 
 // Form submission
 const create = () => form.post(route('vehicle.store'))
 </script>
-

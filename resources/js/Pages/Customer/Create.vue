@@ -89,15 +89,15 @@
       </div>
 
       <div class="col-span-2">
-        <label class="label">Tipologia attivita</label>
-        <select v-model="form.business_type" class="select select-bordered w-full max-w-xs">
-          <option :value="null" disabled>Seleziona la tipologia attivita</option>
-          <option v-for="job in props.jobTypes" :key="job.value" :value="job.value">
-            {{ job.label }}
+        <label class="label">Tipologia attività</label>
+        <select v-model="form.business_type_id" class="select select-bordered w-full max-w-xs">
+          <option :value="null">— nessuna —</option>
+          <option v-for="bt in props.businessTypes" :key="bt.id" :value="bt.id">
+            {{ bt.name }}
           </option>
         </select>
-        <div class="input-error" v-if="form.errors.business_type">
-          {{ form.errors.business_type }}
+        <div class="input-error" v-if="form.errors.business_type_id">
+          {{ form.errors.business_type_id }}
         </div>
       </div>
 
@@ -138,7 +138,7 @@
         </div>
       </div>
 
-      <div class="col-span-2">
+      <div class="col-span-6 flex justify-end mb-4">
         <button type="submit" class="btn btn-primary">Crea nuovo cliente</button>
       </div>
     </div>
@@ -155,7 +155,7 @@ import { useDebouncedGeocoding } from '@/Composables/useDebouncedGeocoding';
 
 const props = defineProps({
   managers: Array,
-  jobTypes: Array,
+  businessTypes: { type: Array, default: () => [] },
 });
 
 const store = useStore();
@@ -170,7 +170,7 @@ const form = useForm({
   longitude: null,
   seller_id: null,
   sdi_code: null,
-  business_type: null,
+  business_type_id: null,
   sales_email: null,
   administrative_email: null,
   certified_email: null,
