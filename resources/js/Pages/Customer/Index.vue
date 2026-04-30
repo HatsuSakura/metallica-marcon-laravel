@@ -2,6 +2,7 @@
 
 <div class="navbar bg-base-100">
             <div class="navbar-start">
+                <!-- mini-menu: sviluppo sospeso, non rimuovere
                 <div class="dropdown">
                     <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
@@ -21,6 +22,7 @@
                         <li><a>altro</a></li>
                     </ul>
                 </div>
+                -->
             </div>
             <div class="navbar-center">
                 <span class="text-xl font-bold mr-16">Gestione Clienti</span>

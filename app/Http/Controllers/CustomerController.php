@@ -16,9 +16,25 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use Closure;
 
 class CustomerController extends Controller
 {
+    private function uniqueVatRule(?int $ignoreCustomerId = null): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) use ($ignoreCustomerId) {
+            $existing = Customer::withTrashed()
+                ->where('vat_number', $value)
+                ->when($ignoreCustomerId, fn ($q) => $q->where('id', '!=', $ignoreCustomerId))
+                ->first();
+
+            if ($existing) {
+                $status = $existing->deleted_at ? 'cancellato' : 'attivo';
+                $fail("P.IVA già in memoria per cliente {$existing->company_name} | {$status}");
+            }
+        };
+    }
+
     private function resolveReturnTo(?string $returnTo, string $fallback): string
     {
         if (!is_string($returnTo) || trim($returnTo) === '') {
@@ -137,7 +153,7 @@ class CustomerController extends Controller
         $validatedData = $request->validate([
             'is_occasional_customer' => 'nullable|boolean',
             'company_name' => 'required|string',
-            'vat_number' => 'required|string',
+            'vat_number' => ['required', 'string', $this->uniqueVatRule()],
             'tax_code' => 'required|string',
             'legal_address' => 'required|string',
             'latitude' => 'required|numeric',
@@ -152,7 +168,7 @@ class CustomerController extends Controller
         ]);
 
         $customer = Customer::create([
-            'is_occasional_customer' => $validatedData['is_occasional_customer'] ?? null,
+            'is_occasional_customer' => $validatedData['is_occasional_customer'] ?? false,
             'company_name' => $validatedData['company_name'],
             'vat_number' => $validatedData['vat_number'],
             'tax_code' => $validatedData['tax_code'],
@@ -211,7 +227,7 @@ class CustomerController extends Controller
         $validatedData = $request->validate([
             'is_occasional_customer' => 'nullable|boolean',
             'company_name' => 'required|string',
-            'vat_number' => 'required|string',
+            'vat_number' => ['required', 'string', $this->uniqueVatRule($customer->id)],
             'tax_code' => 'required|string',
             'legal_address' => 'required|string',
             'latitude' => 'required|numeric',

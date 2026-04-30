@@ -161,7 +161,7 @@ const props = defineProps({
 const store = useStore();
 
 const form = useForm({
-  is_occasional_customer: null,
+  is_occasional_customer: false,
   company_name: null,
   vat_number: null,
   tax_code: null,

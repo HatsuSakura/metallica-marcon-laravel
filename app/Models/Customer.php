@@ -130,7 +130,7 @@ class Customer extends Model implements AuditableContract
 
                 // If continuativo is true and occasionale is false, return only "continuativo" customers
                 if (!$filters['occasionale'] && $filters['continuativo']) {
-                    return $query->where('is_occasional_customer', '0');
+                    return $query->where(fn ($q) => $q->where('is_occasional_customer', false)->orWhereNull('is_occasional_customer'));
                 }
 
                 // If both occasionale and continuativo are false, return an empty set
