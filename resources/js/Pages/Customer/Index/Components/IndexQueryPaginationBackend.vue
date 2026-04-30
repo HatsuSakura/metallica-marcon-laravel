@@ -17,9 +17,8 @@
           <span class="text-lg font-bold">
             {{ customer.company_name }}
           </span>
-          <CustomerSpace :customer="customer" />
+          <CustomerSpace :customer="customer" :vat="true" />
         </div>
-
         <CustomerAddress :customer="customer" class="text-gray-500" />
       </div>
 

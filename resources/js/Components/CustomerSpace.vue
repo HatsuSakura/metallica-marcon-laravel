@@ -1,5 +1,6 @@
 <template>
         &nbsp; <span class="text-gray-500">|</span>
+        <span v-if="props.vat">&nbsp; P.IVA: &nbsp;<span class="font-bold">{{ props.customer.vat_number }}</span> <span class="text-gray-500">|</span></span>
         &nbsp; Frequenza: &nbsp; 
             <span v-if="props.customer.is_occasional_customer" class="font-bold">Occasionale</span>
             <span v-else class="font-bold">Continuativo</span>
@@ -15,6 +16,10 @@
 
 const props = defineProps({
     customer: Object,
+    vat: {
+        type: Boolean,
+        default: false,
+    },
 })
 
 </script>
