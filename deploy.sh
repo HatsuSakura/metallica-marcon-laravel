@@ -13,6 +13,7 @@ CONTAINER=metallicamarcon
 
 echo "==> [1/7] Pull codice aggiornato"
 git config core.fileMode false
+git checkout -- docker-compose.yml 2>/dev/null || true
 git pull
 cp docker-compose.prod.yml docker-compose.yml
 
