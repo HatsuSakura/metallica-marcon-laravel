@@ -32,7 +32,7 @@ $LastCommitFile = Join-Path $LocalDir ".last-qa-deploy"
 
 # $true = esegue npm run build prima del deploy e sincronizza public/build/
 # (public/build/ è gitignored, viene gestito separatamente con synchronize)
-$RunNpmBuild = $false
+$RunNpmBuild = $true
 
 # $true = sincronizza vendor/ via WinSCP synchronize
 # (vendor/ è gitignored — solo se hai aggiunto/rimosso dipendenze)
