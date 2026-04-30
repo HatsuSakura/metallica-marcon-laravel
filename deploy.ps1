@@ -165,7 +165,34 @@ foreach ($dir in $dirsToClean) {
 Write-Step "Cache locale pulita." "Green"
 
 # ============================
-# 4. BUILD FRONTEND (opzionale)
+# 4. VERIFICA CONNESSIONE WINSCP
+# ============================
+
+Write-Step "Verifica connessione WinSCP..."
+
+$testScript = [System.IO.Path]::GetTempFileName()
+Set-Content -Path $testScript -Value @"
+option batch abort
+option confirm off
+open sftp://${RemoteUser}@${RemoteHost}:${RemotePort}/ -hostkey="ssh-ed25519 255 BsnglgFnFsOxBGTxAtn6qeQmu5DZzGfHV5/fRTSEt9A"
+stat "."
+exit
+"@ -Encoding ASCII
+
+& "$WinScpExe" /log="$WinScpLog" /loglevel=0 /script="$testScript"
+$testExitCode = $LASTEXITCODE
+Remove-Item $testScript -ErrorAction SilentlyContinue
+
+if ($testExitCode -ne 0) {
+    Write-Host "!! ERRORE: connessione WinSCP fallita (Pageant attivo? Chiave caricata?)" -ForegroundColor Red
+    Pop-Location
+    exit 1
+}
+
+Write-Step "Connessione OK." "Green"
+
+# ============================
+# 5. BUILD FRONTEND (opzionale)
 # ============================
 
 if ($RunNpmBuild) {
@@ -180,7 +207,7 @@ if ($RunNpmBuild) {
 }
 
 # ============================
-# 5. LISTA FILE DA GIT
+# 6. LISTA FILE DA GIT
 # ============================
 
 $changedFiles = @()
@@ -247,7 +274,7 @@ if ($changedFiles.Count -eq 0 -and $deletedFiles.Count -eq 0 -and -not $SyncVend
 Write-Host ""
 
 # ============================
-# 6. COSTRUZIONE SCRIPT WINSCP
+# 7. COSTRUZIONE SCRIPT WINSCP
 # ============================
 
 $previewFlag = if ($WinScpPreview) { " -preview" } else { "" }
@@ -332,7 +359,7 @@ $TempScriptPath = [System.IO.Path]::GetTempFileName()
 Set-Content -Path $TempScriptPath -Value ($winScpLines -join "`n") -Encoding ASCII
 
 # ============================
-# 7. ESEGUI WINSCP
+# 8. ESEGUI WINSCP
 # ============================
 
 if ($WinScpPreview) {
@@ -361,7 +388,7 @@ if ($WinScpPreview) {
 }
 
 # ============================
-# 8. COMANDI LARAVEL SUL SERVER
+# 9. COMANDI LARAVEL SUL SERVER
 # ============================
 
 Write-Step "Eseguo comandi Laravel sul server..."
@@ -392,7 +419,7 @@ if ($plinkExitCode -ne 0) {
 }
 
 # ============================
-# 9. SALVA COMMIT DEPLOYATO
+# 10. SALVA COMMIT DEPLOYATO
 # ============================
 
 Set-Content -Path $LastCommitFile -Value $HeadCommit -Encoding ASCII
