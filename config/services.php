@@ -32,7 +32,13 @@ return [
     ],
 
     'nlp' => [
-        'provider' => env('NLP_PROVIDER', 'heuristic'),
+        'provider'                        => env('NLP_PROVIDER', 'heuristic'),
+        'llm_model'                       => env('NLP_LLM_MODEL', 'gpt-4o-mini'),
+        'auto_escalate_on_low_confidence' => env('NLP_AUTO_ESCALATE_ON_LOW_CONFIDENCE', false),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
     ],
 
     'company' => [

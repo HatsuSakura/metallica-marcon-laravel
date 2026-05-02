@@ -23,6 +23,21 @@ Separazione motivata da profili di rischio e query type diversi.
 - Ogni query NLP viene loggata (audit + debugging + future training).
 - Tempo di parsing: < 500 ms. Tempo totale NLP + esecuzione: < 1 s.
 
+## Provider strategy — heuristic-first con escalation opzionale (D12)
+
+Flusso decisionale provider in `NlpLogisticsParseService`:
+
+1. `context.ai === true` → LlmProvider direttamente (toggle esplicito utente)
+2. HeuristicProvider → se confidence = alta/media → done
+3. Se confidence = bassa:
+   - `NLP_AUTO_ESCALATE_ON_LOW_CONFIDENCE=true` → LlmProvider automatico (trasparente)
+   - `NLP_AUTO_ESCALATE_ON_LOW_CONFIDENCE=false` (default) → done, UI mostra confidence bassa
+
+**Default = false** → comportamento A garantito (utente controlla esplicitamente via toggle AI).
+Il parametro è esposto in `.env` e futuro pannello impostazioni di sistema.
+
+Config: `config/services.nlp.auto_escalate_on_low_confidence` → env `NLP_AUTO_ESCALATE_ON_LOW_CONFIDENCE`.
+
 ## Evolution roadmap
 
 - **Phase 1** (attuale): single-shot NLP queries.

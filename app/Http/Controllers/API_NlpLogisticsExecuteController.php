@@ -44,8 +44,8 @@ class API_NlpLogisticsExecuteController extends Controller
                 'operation'   => 'execute',
                 'raw_text'    => $payload['query'],
                 'parsed_json' => $parsed['parsed'],
-                'provider'    => config('services.nlp.provider', 'heuristic'),
-                'model'       => null,
+                'provider'    => $parsed['provider_used'],
+                'model'       => $parsed['model_used'],
                 'success'     => true,
                 'latency_ms'  => $latencyMs,
             ]);
