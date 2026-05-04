@@ -11,6 +11,8 @@ services:
     container_name: metallicamarcon
     restart: unless-stopped
     env_file: .env
+    environment:
+      TZ: Europe/Rome
     volumes:
       - ./storage:/var/www/html/storage    # persistenza file generati, avatar e log
     depends_on:
@@ -26,6 +28,24 @@ services:
     restart: unless-stopped
     command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
     env_file: .env
+    environment:
+      TZ: Europe/Rome
+    volumes:
+      - ./storage:/var/www/html/storage    # stesso volume dell'app
+    depends_on:
+      - metallicamarcon-db
+      - metallicamarcon-valkey
+    networks:
+      - metallicamarcon-internal
+
+  metallicamarcon-scheduler:
+    build: .
+    container_name: metallicamarcon-scheduler
+    restart: unless-stopped
+    command: php artisan schedule:work
+    env_file: .env
+    environment:
+      TZ: Europe/Rome
     volumes:
       - ./storage:/var/www/html/storage    # stesso volume dell'app
     depends_on:

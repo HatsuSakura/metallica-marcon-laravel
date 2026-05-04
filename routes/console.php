@@ -40,4 +40,6 @@ Artisan::command('risk:site {siteId}', function (CalculateRiskService $riskServi
 })->purpose('Recalculate risk factor for a single site');
 
 Schedule::command('auth:clear-resets')->everyFourHours();
-Schedule::command('risk:global')->dailyAt('00:00');
+Schedule::command('risk:global')
+    ->dailyAt('00:00')
+    ->emailOutputTo((string) env('RISK_REPORT_EMAIL', 'matteo.argenton@gmail.com'));
