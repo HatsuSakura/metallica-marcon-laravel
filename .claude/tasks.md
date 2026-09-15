@@ -37,3 +37,10 @@
 - Refactor controller ordini (sospeso su richiesta cliente — vedi nota Obsidian)
 - Dialog refinement NLP (Phase 2)
 - Migrazione PostGIS (futuro)
+- Automazione n8n monitoraggio scadenza certificati TLS su VPS condivisa (vedi `.claude/rules/decisions/008-tls-cert-monitoring-vps.md`) — tool pronti in `/opt/dide/ssl/bin/` sulla VPS, manca il wiring del workflow n8n
+
+## Fix produzione (2026-09-15)
+- [x] Certificato TLS scaduto su `gestionalelogistica.metallicamarcon.it` — causa: nginx containerizzato non veniva ricaricato dopo il rinnovo certbot (nessun deploy-hook). Reload manuale eseguito, sito verificato OK (nuovo cert valido fino 11/11/2026).
+- [x] Deploy-hook mancante installato su VPS (`/etc/letsencrypt/renewal-hooks/deploy/reload-docker-nginx.sh`) — root cause risolta per i rinnovi futuri.
+- [x] Tool general-purpose creati e testati: `check-tls-cert-endpoint.py` (monitor esterno, verifica il certificato realmente servito) e `renew-letsencrypt-cert.py` (rinnovo on-demand + reload + verifica) — sorgente in `developer-platform/Scripts/`, deployati su VPS in `/opt/dide/ssl/bin/`.
+- [ ] Wiring n8n (workflow periodico di check + eventuale auto-remediation on-demand) — vedi ADR 008

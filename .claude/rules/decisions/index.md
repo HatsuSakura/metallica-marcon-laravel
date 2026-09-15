@@ -20,6 +20,7 @@ Vedere `001-core.md`.
 | D10 | Naming: OrderDocumentsStatus / documents_status | 2026-03-17 |
 | D11 | Tutti i file sorgente in UTF-8 | 2026-03-17 |
 | D12 | NLP provider: heuristic-first, LLM toggle esplicito + auto-escalate configurabile | 2026-05-02 |
+| D13 | TLS cert monitoring VPS: deploy-hook Docker/certbot + tool check/renew general-purpose | 2026-09-15 |
 
 ## ADR dettagliate
 
@@ -31,3 +32,4 @@ Vedere `001-core.md`.
 | `005-guard-hardening.md` | Piano hardening guard layer | 2026-03-27 | Planned |
 | `006-session-context-2026-03-27.md` | Completamenti sessione security | 2026-03-27 | Completed |
 | `007-nlp-provider-escalation.md` | NLP provider strategy: heuristic-first + LLM escalation | 2026-05-02 | Accepted |
+| `008-tls-cert-monitoring-vps.md` | TLS cert incident root cause + monitoring/remediation tools | 2026-09-15 | Accepted (n8n wiring open) |

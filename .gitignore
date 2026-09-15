@@ -41,6 +41,9 @@ Thumbs.db
 # Claude Code
 .claude/CLAUDE.local.md
 
+# Local AI secrets
+.ai/secrets/
+
 # Docker
 docker-compose.override.yml
 
