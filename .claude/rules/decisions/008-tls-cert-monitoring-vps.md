@@ -64,19 +64,39 @@ because they're host-wide, general-purpose tools, not application code.
   correctly flags a known-expired public test cert as `EXPIRED`; renewer:
   clean `--dry-run` against the real certbot config).
 
+## n8n workflow design (decided 2026-09-15, session 2 — not built yet)
+
+Full detail and rationale in `developer-platform`'s
+`Runbooks/RUN-019-tls-certificate-monitoring-and-renewal.md`. Summary:
+
+- `dide_n8n` runs on the same VPS as `nginx`/`metallicamarcon` (confirmed
+  via `Inventory/creactive-vps-shared-hosting.md`), so its existing
+  read-write Docker-socket mount is enough to invoke both scripts via a
+  throwaway `docker run` — no new SSH credential needed.
+- Telegram allows only one webhook per bot. `DIDE 1.0 MAIN.json` is
+  already the single router (`Telegram Trigger` on `["message",
+  "callback_query"]` → allowlist check → `Switch` → `executeWorkflow`
+  branches), and its allowlist already contains exactly one user
+  (Matteo, id `320473275` — same chat report tooling already posts to).
+  So: human-in-the-loop approval, single approver, both already the
+  system's current state.
+- Design: (1) a new scheduled "TLS Cert Monitor" workflow runs the
+  checker and, on warning/critical/expired, posts a Telegram message with
+  a Sì/No inline keyboard (`callback_data: tls_renew_yes:<domain>` /
+  `tls_renew_no:<domain>`); (2) a new branch added to MAIN's `Switch`
+  routes that callback to (3) a new "DIDE TLS Remediation" sub-workflow,
+  which on Sì runs the renewal script and posts a **second** message with
+  the real outcome, and on No just confirms cancellation. No timeout —
+  the approval prompt stays pending indefinitely rather than auto-acting.
+- Before building: confirm the `docker` CLI is actually present inside
+  the `dide_n8n` image (socket is mounted, but the binary isn't
+  confirmed) — fall back to the Docker Engine API over the socket via an
+  HTTP Request node if not.
+
 ## Next steps (not done yet)
-- Wire `check-tls-cert-endpoint.py` into an n8n workflow on `dide_n8n`
-  (periodic check across all Creactive-hosted domains, alert on
-  warning/critical/expired) as "the other automations already running"
-  the PO referenced.
-- Decide whether `renew-letsencrypt-cert.py` is invoked by n8n directly as
-  an auto-remediation step, or only surfaced as a suggested manual action.
-- `dide_n8n`'s container has no `python3`, only `openssl`, and its
-  Docker-socket access is read-write but it has no SSH path back to this
-  same host (its mounted SSH key targets an unrelated external site) — the
-  n8n workflow will need either `docker exec`-style invocation via the
-  socket, or a new SSH credential scoped to this host, to actually call
-  these scripts. Open design question for the automation task.
+- Build the two n8n workflows + MAIN Switch patch per the design above.
+- Extend checker coverage to DIDE's and Baraldi's own domains on the same
+  nginx (not yet audited for the same reload-hook gap class).
 - Consider whether these tools should eventually move into the DIDE git
   repo (`/var/www/dide` on the VPS, source at
   `~/projects/creactive/DIDE`) now that they're VPS-wide infra rather than
