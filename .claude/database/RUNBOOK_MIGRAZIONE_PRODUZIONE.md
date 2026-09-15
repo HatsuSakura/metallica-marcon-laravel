@@ -8,11 +8,11 @@ dati dal DB legacy all'ambiente di produzione VPS.
 ## Prerequisiti da chiedere al PO
 
 1. **Dump del DB legacy aggiornato** — chiedere esplicitamente:
-   > "Hai eseguito il dump del DB legacy all'ultima versione? Caricalo in `.claude/database/dumps/dump_legacy.sql`"
+   > "Hai eseguito il dump del DB legacy all'ultima versione? Caricalo in `.claude/database/dumps/NEW_dump_legacy.sql`"
 
 2. Verificare che il dump sia presente prima di procedere:
    ```bash
-   ls -lh .claude/database/dumps/dump_legacy.sql
+   ls -lh .claude/database/dumps/NEW_dump_legacy.sql
    ```
 
 ---
@@ -24,7 +24,7 @@ dati dal DB legacy all'ambiente di produzione VPS.
 ```bash
 # Carica il dump legacy nel container MySQL locale
 docker exec -i metallica-marcon-laravel-mysql-1 \
-  mysql -uroot -proot legacy_tmp < .claude/database/dumps/dump_legacy.sql
+  mysql -uroot -proot legacy_tmp < .claude/database/dumps/NEW_dump_legacy.sql
 ```
 
 Verificare che `legacy_tmp` contenga: `customers`, `sites`, `timetables`, `withdraws`.

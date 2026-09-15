@@ -11,7 +11,7 @@
       "mysql_password": "root",
       "old_db": "legacy_tmp",
       "new_db": "marconinertia_etl",
-      "legacy_dump_file": "dumps/dump_legacy.sql"
+      "legacy_dump_file": "dumps/NEW_dump_legacy.sql"
     },
     {
       "name": "docker_dev_marconinertia",
@@ -24,7 +24,7 @@
       "mysql_password": "root",
       "old_db": "legacy_tmp",
       "new_db": "marconinertia",
-      "legacy_dump_file": "dumps/dump_legacy.sql"
+      "legacy_dump_file": "dumps/NEW_dump_legacy.sql"
     },
     {
       "name": "prod_vps_tunnel",

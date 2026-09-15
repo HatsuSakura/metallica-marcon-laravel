@@ -71,6 +71,14 @@ TRUNCATE TABLE `NEW_DB`.`legacy_customers_stage`;
 -- ============================================================
 -- STAGE LOAD
 -- ============================================================
+-- Encoding note: the legacy dump contains MIXED encoding.
+-- Some records store accented characters correctly (UTF-8),
+-- others have double-encoded mojibake (e.g. "Ã¨" instead of "è").
+-- Applying CONVERT(BINARY CONVERT(field USING latin1) USING utf8mb4) to ALL rows
+-- would fix mojibake but corrupt already-correct characters.
+-- Strategy: conditional CONVERT — apply only when the mojibake indicator 'Ã' is present.
+-- The character Ã (U+00C3) does not appear in correct Italian text natively,
+-- so INSTR(field, 'Ã') > 0 safely identifies mojibake rows.
 
 INSERT INTO `NEW_DB`.`legacy_customers_stage` (
   `id`, `is_occasional_customer`, `seller_id`,
@@ -82,10 +90,14 @@ SELECT
   c.`id`,
   c.`customerOccasionale`,
   c.`id_seller`,
-  c.`ragioneSociale`,
+  CASE WHEN INSTR(c.`ragioneSociale` COLLATE utf8mb4_bin, 'Ã' COLLATE utf8mb4_bin) > 0
+       THEN CONVERT(BINARY CONVERT(c.`ragioneSociale` USING latin1) USING utf8mb4)
+       ELSE c.`ragioneSociale` END,
   c.`partitaIva`,
   c.`codiceFiscale`,
-  c.`indirizzoLegale`,
+  CASE WHEN INSTR(c.`indirizzoLegale` COLLATE utf8mb4_bin, 'Ã' COLLATE utf8mb4_bin) > 0
+       THEN CONVERT(BINARY CONVERT(c.`indirizzoLegale` USING latin1) USING utf8mb4)
+       ELSE c.`indirizzoLegale` END,
   c.`codiceSdi`,
   CASE WHEN c.`jobType` = 0 THEN NULL ELSE CAST(c.`jobType` AS CHAR) END,
   c.`emailCommerciale`,
@@ -176,13 +188,13 @@ INSERT INTO `NEW_DB`.`customers` (
   `id`, `created_at`, `updated_at`, `deleted_at`,
   `is_occasional_customer`, `seller_id`,
   `company_name`, `vat_number`, `tax_code`, `legal_address`, `sdi_code`,
-  `business_type`, `sales_email`, `administrative_email`, `certified_email`
+  `business_type_id`, `sales_email`, `administrative_email`, `certified_email`
 )
 SELECT
   s.`id`, s.`created_at`, s.`updated_at`, s.`deleted_at`,
   s.`is_occasional_customer`, s.`seller_id`,
   s.`company_name`, s.`vat_number`, s.`tax_code`, s.`legal_address`, s.`sdi_code`,
-  s.`business_type`, s.`sales_email`, s.`administrative_email`, s.`certified_email`
+  CAST(s.`business_type` AS UNSIGNED), s.`sales_email`, s.`administrative_email`, s.`certified_email`
 FROM `NEW_DB`.`legacy_customers_stage` s
 WHERE s.`import_error` IS NULL
   AND NOT EXISTS (SELECT 1 FROM `NEW_DB`.`customers` c WHERE c.`id` = s.`id`);

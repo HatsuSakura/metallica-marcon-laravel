@@ -30,9 +30,10 @@ DELETE FROM `NEW_DB`.`etl_exception_log` WHERE `step` = 2;
 
 -- ============================================================
 -- A. IMPORT SITES FROM LEGACY
--- Encoding fix applied inline via CONVERT(BINARY CONVERT(field USING latin1) USING utf8mb4).
--- This reverses double-UTF8 encoding present in legacy dump
--- (e.g. "MansuÃ¨" -> "Mansuè").
+-- Encoding: legacy dump has MIXED encoding — some records are correct UTF-8,
+-- others have double-encoded mojibake (e.g. "MansuÃ¨" instead of "Mansuè").
+-- Conditional CONVERT: apply only when 'Ã' is detected (mojibake indicator).
+-- Applying CONVERT to already-correct UTF-8 would corrupt those rows to '?'.
 -- NULLIF(lat/lng, 0): lat=0 and lng=0 are treated as missing, not valid coordinates.
 -- ============================================================
 
@@ -46,7 +47,9 @@ INSERT INTO `NEW_DB`.`sites` (
 SELECT
   s.`id`, s.`created_at`, s.`updated_at`, s.`deleted_at`,
   s.`id_customer`,
-  CONVERT(BINARY CONVERT(s.`denominazione` USING latin1) USING utf8mb4),
+  CASE WHEN INSTR(s.`denominazione` COLLATE utf8mb4_bin, 'Ã' COLLATE utf8mb4_bin) > 0
+       THEN CONVERT(BINARY CONVERT(s.`denominazione` USING latin1) USING utf8mb4)
+       ELSE s.`denominazione` END,
   CASE
     WHEN LOWER(TRIM(IFNULL(s.`tipologia`, ''))) IN ('1', 'fully_operative', 'fully operative', 'operativa', 'operativo', 'principale') THEN 'fully_operative'
     WHEN LOWER(TRIM(IFNULL(s.`tipologia`, ''))) IN ('2', 'only_legal', 'only legal', 'legal', 'solo_legal') THEN 'only_legal'
@@ -54,7 +57,9 @@ SELECT
     ELSE NULL
   END AS `site_type`,
   1 AS `is_main`,
-  CONVERT(BINARY CONVERT(s.`indirizzo` USING latin1) USING utf8mb4),
+  CASE WHEN INSTR(s.`indirizzo` COLLATE utf8mb4_bin, 'Ã' COLLATE utf8mb4_bin) > 0
+       THEN CONVERT(BINARY CONVERT(s.`indirizzo` USING latin1) USING utf8mb4)
+       ELSE s.`indirizzo` END,
   CASE
     WHEN s.`id` = 1187 AND (s.`lat` IS NULL OR s.`lat` = 0) THEN 45.7226878
     WHEN s.`id` = 1190 AND (s.`lat` IS NULL OR s.`lat` = 0) THEN 45.78108
@@ -96,6 +101,35 @@ FROM `NEW_DB`.`customers` c
 WHERE NOT EXISTS (
   SELECT 1 FROM `NEW_DB`.`sites` s WHERE s.`customer_id` = c.`id`
 );
+
+-- ============================================================
+-- B2. FIX is_main — single main site per customer
+-- All sites were imported with is_main=1. For customers with multiple sites,
+-- only the site named 'Principale' should retain is_main=1.
+-- If multiple sites share the name 'Principale', keep the lowest id.
+-- ============================================================
+
+-- Step 1: clear is_main on non-'Principale' sites for customers with >1 site
+UPDATE `NEW_DB`.`sites` s
+JOIN (
+  SELECT `customer_id`
+  FROM `NEW_DB`.`sites`
+  GROUP BY `customer_id`
+  HAVING COUNT(*) > 1
+) multi ON multi.`customer_id` = s.`customer_id`
+SET s.`is_main` = 0
+WHERE s.`name` <> 'Principale';
+
+-- Step 2: if multiple 'Principale' sites remain for the same customer, keep lowest id
+UPDATE `NEW_DB`.`sites` s
+JOIN (
+  SELECT `customer_id`, MIN(`id`) AS keep_id
+  FROM `NEW_DB`.`sites`
+  WHERE `is_main` = 1
+  GROUP BY `customer_id`
+  HAVING COUNT(*) > 1
+) dupes ON dupes.`customer_id` = s.`customer_id` AND s.`id` <> dupes.`keep_id`
+SET s.`is_main` = 0;
 
 -- ============================================================
 -- C. GEOCODING CACHE
@@ -141,6 +175,8 @@ WHERE EXISTS (SELECT 1 FROM `NEW_DB`.`sites` s WHERE s.`id` = t.`id_site`)
 -- ============================================================
 -- E. IMPORT INTERNAL_CONTACTS
 -- Derived from legacy customer fields, linked to all sites of the customer.
+-- responsabileSmaltimenti also has mixed encoding: conditional CONVERT applied
+-- via inner subquery (smalt_clean) so name/surname parsing uses the clean value.
 -- ============================================================
 
 INSERT INTO `NEW_DB`.`internal_contacts` (
@@ -149,14 +185,14 @@ INSERT INTO `NEW_DB`.`internal_contacts` (
 SELECT DISTINCT
   NOW(), NOW(),
   CASE
-    WHEN NULLIF(TRIM(IFNULL(c.`responsabileSmaltimenti`, '')), '') IS NULL THEN 'Contatto'
-    WHEN LOCATE(' ', TRIM(c.`responsabileSmaltimenti`)) = 0      THEN TRIM(c.`responsabileSmaltimenti`)
-    ELSE SUBSTRING_INDEX(TRIM(c.`responsabileSmaltimenti`), ' ', 1)
+    WHEN c.smalt_clean IS NULL                       THEN 'Contatto'
+    WHEN LOCATE(' ', c.smalt_clean) = 0              THEN c.smalt_clean
+    ELSE SUBSTRING_INDEX(c.smalt_clean, ' ', 1)
   END,
   CASE
-    WHEN TRIM(c.`responsabileSmaltimenti`) = ''               THEN NULL
-    WHEN LOCATE(' ', TRIM(c.`responsabileSmaltimenti`)) = 0   THEN NULL
-    ELSE TRIM(SUBSTRING(TRIM(c.`responsabileSmaltimenti`), LOCATE(' ', TRIM(c.`responsabileSmaltimenti`)) + 1))
+    WHEN c.smalt_clean IS NULL                       THEN NULL
+    WHEN LOCATE(' ', c.smalt_clean) = 0              THEN NULL
+    ELSE TRIM(SUBSTRING(c.smalt_clean, LOCATE(' ', c.smalt_clean) + 1))
   END,
   CASE
     WHEN REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
@@ -175,9 +211,21 @@ SELECT DISTINCT
   NULL,
   'smaltimenti',
   s.`id`
-FROM `OLD_DB`.`customers` c
+FROM (
+  SELECT src.*,
+    NULLIF(
+      TRIM(
+        CONVERT(
+          CASE WHEN INSTR(TRIM(IFNULL(src.`responsabileSmaltimenti`, '')) COLLATE utf8mb4_bin, 'Ã' COLLATE utf8mb4_bin) > 0
+               THEN CONVERT(BINARY CONVERT(TRIM(IFNULL(src.`responsabileSmaltimenti`, '')) USING latin1) USING utf8mb4)
+               ELSE TRIM(IFNULL(src.`responsabileSmaltimenti`, ''))
+          END
+        USING utf8mb4)
+      ), '') AS smalt_clean
+  FROM `OLD_DB`.`customers` src
+) c
 JOIN `NEW_DB`.`sites` s ON s.`customer_id` = c.`id`
-WHERE NULLIF(TRIM(IFNULL(c.`responsabileSmaltimenti`, '')), '') IS NOT NULL
+WHERE c.smalt_clean IS NOT NULL
    OR NULLIF(TRIM(IFNULL(c.`telefonoPrincipale`, '')), '') IS NOT NULL;
 
 SET FOREIGN_KEY_CHECKS = 1;
@@ -253,3 +301,10 @@ FROM `NEW_DB`.`etl_exception_log`
 WHERE step = 2
 GROUP BY exception_type, status
 ORDER BY exception_type;
+
+-- is_main sanity check: must return 0 rows (each customer has exactly one is_main site)
+SELECT customer_id, COUNT(*) AS main_count
+FROM `NEW_DB`.`sites`
+WHERE is_main = 1
+GROUP BY customer_id
+HAVING COUNT(*) > 1;
