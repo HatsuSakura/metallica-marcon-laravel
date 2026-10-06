@@ -25,7 +25,7 @@ bootstrap/cache/
 # NODE MODULES & VITE
 node_modules/
 public/build/
-public/hot/
+/public/hot
 /public/storage
 
 # IDE / Tooling

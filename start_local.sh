@@ -6,12 +6,19 @@ project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly project_root
 cd "$project_root"
 
-for required_command in npm npx php; do
+for required_command in install npm npx php; do
     if ! command -v "$required_command" >/dev/null 2>&1; then
         printf 'Required command not found: %s\n' "$required_command" >&2
         exit 1
     fi
 done
+
+install -d -m 0755 \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache
 
 declare -a child_pids=()
 
