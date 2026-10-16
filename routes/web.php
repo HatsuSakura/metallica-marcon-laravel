@@ -53,6 +53,7 @@ use App\Http\Controllers\LogisticDispatchController;
 use App\Http\Controllers\API_LogisticDispatchController;
 use App\Http\Controllers\API_LogisticDispatchWorkspaceController;
 use App\Http\Controllers\BusinessTypeController;
+use App\Http\Controllers\DevApiDocsController;
 
 
 //Route::get('/', [IndexController::class, 'login']);
@@ -382,6 +383,13 @@ Route::middleware(['auth', 'verified', 'can:accessWarehouseArea'])->group(functi
 
 
 
+
+Route::prefix('dev')
+    ->middleware(['auth', 'verified', 'can:viewApiDocs'])
+    ->group(function () {
+        Route::get('/api-docs', [DevApiDocsController::class, 'index'])->name('dev.api-docs');
+        Route::get('/openapi.json', [DevApiDocsController::class, 'document'])->name('dev.api-docs.openapi');
+    });
 
 // Define API routes separately, still using `web.php` for Inertia
 Route::prefix('api')

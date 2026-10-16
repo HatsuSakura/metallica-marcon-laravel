@@ -106,3 +106,4 @@ Dettaglio completo in `.claude/rules/decisions/001-core.md`.
 | NLP engine docs completi | `.ai/nlp/` |
 | Authorization matrix (generata) | `.ai/decisions/generated/` |
 | Note operative e sessioni | Obsidian → `Metallica Marcon/` |
+| Contesto funzionale Logistica E2E | `.ai/logistics/CONTEXT.md` |

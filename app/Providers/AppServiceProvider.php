@@ -73,6 +73,10 @@ class AppServiceProvider extends ServiceProvider
             ], true);
         });
 
+        Gate::define('viewApiDocs', function (User $user): bool {
+            return $user->is_admin || $user->role === UserRole::DEVELOPER;
+        });
+
         Gate::define('accessBackofficeArea', function (User $user): bool {
             return $user->is_admin || in_array($user->role, [
                 UserRole::DEVELOPER,
