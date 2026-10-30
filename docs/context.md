@@ -45,6 +45,17 @@ le decisioni di dominio o le prove di rilascio.
 
 ## Prossima ripresa
 
+Pubblicazione del 2026-10-30: evidenze di progetto, skill Developer Platform e
+KB sanificata sono su GitHub. Commit KB pubblicato:
+`d30e7f32af97c9195770ad7a1016e672038b3f77`.
+La sincronizzazione QMD su JARVIS non è riuscita per timeout SSH; l'indice
+remoto non è stato verificato come aggiornato. Quando JARVIS torna raggiungibile:
+
+```bash
+cd /home/matteo/knowledge
+./scripts/publish.sh --sync-only d30e7f32af97c9195770ad7a1016e672038b3f77
+```
+
 Partire da questa pagina e da `development-status.md`; le note in
 `recovery/legacy-obsidian/` sono storia, non istruzioni correnti.
 La KB centrale conserva sintesi `proposed` con fonte e commit del progetto.
