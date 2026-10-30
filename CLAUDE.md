@@ -105,5 +105,6 @@ Dettaglio completo in `.claude/rules/decisions/001-core.md`.
 | Template documenti ordine | `.ai/docs_templates/` |
 | NLP engine docs completi | `.ai/nlp/` |
 | Authorization matrix (generata) | `.ai/decisions/generated/` |
-| Note operative e sessioni | Obsidian → `Metallica Marcon/` |
+| Note operative e sessioni recuperate | `docs/recovery/MIGRATION.md` (storico) |
+| Stato sviluppi riconciliato con YouTrack | `docs/development-status.md` |
 | Contesto funzionale Logistica E2E | `.ai/logistics/CONTEXT.md` |

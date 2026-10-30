@@ -1,0 +1,1045 @@
+{
+  "captured": "2026-10-30",
+  "source": "YouTrack MCP search_issues",
+  "query": "project: GLE sort by: {issue id} asc",
+  "total": 115,
+  "open": 41,
+  "closed": 74,
+  "issues": [
+    {
+      "id": "GLE-1",
+      "summary": "Inserire possibilità di ordinare le tappe di un viaggio",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-1",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-13 14:28:32"
+    },
+    {
+      "id": "GLE-2",
+      "summary": "Creare entità \"tappa\" per gestire i viaggi",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-2",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-01-22 13:12:42"
+    },
+    {
+      "id": "GLE-3",
+      "summary": "Associazione Journey - Tappa - Ordine",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-3",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-01-22 13:13:04"
+    },
+    {
+      "id": "GLE-4",
+      "summary": "Possibilità di cambiare l'ordine delle tappe",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-4",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-01-22 17:42:37"
+    },
+    {
+      "id": "GLE-5",
+      "summary": "Impedire le date antecedenti per peso/classificazione",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-5",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 10:27:06"
+    },
+    {
+      "id": "GLE-6",
+      "summary": "Codici CER per meteriali non dichiarati in ordine",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-6",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 10:27:12"
+    },
+    {
+      "id": "GLE-7",
+      "summary": "Dashboard Comerciale",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-7",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 11:00:09"
+    },
+    {
+      "id": "GLE-8",
+      "summary": "Il commerciale deve poter imputare il codice CER corretto",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-8",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 11:00:39"
+    },
+    {
+      "id": "GLE-9",
+      "summary": "il materiale aggiuntivo deve essere flaggabile come \"non conformità\"",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-9",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 11:00:39"
+    },
+    {
+      "id": "GLE-10",
+      "summary": "visualizzaizone per cliente",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-10",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 11:00:39"
+    },
+    {
+      "id": "GLE-11",
+      "summary": "visualizzazione per materiale",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-11",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 11:00:39"
+    },
+    {
+      "id": "GLE-12",
+      "summary": "Non conformità gestito come explosion",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-12",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 10:27:12"
+    },
+    {
+      "id": "GLE-13",
+      "summary": "Visualizzaizone casse da restituire anche in Dashboard Magazzino",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-13",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 10:27:13"
+    },
+    {
+      "id": "GLE-14",
+      "summary": "Creazione Dashboard per preparazione Camion",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-14",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 11:00:39"
+    },
+    {
+      "id": "GLE-15",
+      "summary": "\"SFUSO\" viene visto come tipo di contenitore e vuole \"1\"",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-15",
+      "state": "Completato",
+      "type": "Bug",
+      "resolved": true,
+      "updatedAt": "2025-11-07 09:36:17"
+    },
+    {
+      "id": "GLE-16",
+      "summary": "Inserire Description imputata in ordine e non la dscrizione del CER",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-16",
+      "state": "Completato",
+      "type": "Bug",
+      "resolved": true,
+      "updatedAt": "2025-10-02 12:06:28"
+    },
+    {
+      "id": "GLE-17",
+      "summary": "Modifica Ordine per Autisti: chiudere di default campi iniziali",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-17",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 10:27:13"
+    },
+    {
+      "id": "GLE-18",
+      "summary": "In presenza di HP/ADR generare un documento per il magazzino",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-18",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-26 12:23:53"
+    },
+    {
+      "id": "GLE-19",
+      "summary": "Definizione campi per documento PDF ADR/HP per Magazzino",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-19",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 11:00:39"
+    },
+    {
+      "id": "GLE-20",
+      "summary": "Notifica ADR/HP durante la preparazione del camion + Borsa attrezzi",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-20",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 11:00:39"
+    },
+    {
+      "id": "GLE-21",
+      "summary": "Scarico diretto (senza viaggio) da parte del cliente esterno",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-21",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 10:27:13"
+    },
+    {
+      "id": "GLE-22",
+      "summary": "Sistemazione puntamenti dashboard",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-22",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-03 14:21:48"
+    },
+    {
+      "id": "GLE-23",
+      "summary": "Dashboard Magazzino",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-23",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-02 12:09:20"
+    },
+    {
+      "id": "GLE-24",
+      "summary": "Dashboard Logistica",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-24",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-27 09:14:57"
+    },
+    {
+      "id": "GLE-25",
+      "summary": "Dashboard Autista: ripensare layout (riordino tappe)",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-25",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-13 14:28:03"
+    },
+    {
+      "id": "GLE-26",
+      "summary": "Sistema di Audit/Tracking per le modifiche",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-26",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-27 07:58:16"
+    },
+    {
+      "id": "GLE-27",
+      "summary": "Refactoring gestione Dashboard per Profilo utente",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-27",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2025-10-03 14:21:48"
+    },
+    {
+      "id": "GLE-28",
+      "summary": "Errore 500 in creazione ordine - Chiavi sporche DB di TEST",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-28",
+      "state": "Completato",
+      "type": "Bug",
+      "resolved": true,
+      "updatedAt": "2025-10-21 14:00:15"
+    },
+    {
+      "id": "GLE-29",
+      "summary": "Creazione Ordine direttamente da Lista Clienti",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-29",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2025-11-07 11:08:29"
+    },
+    {
+      "id": "GLE-30",
+      "summary": "Visualizzazione badge ordini in corso / tot",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-30",
+      "state": "Completato",
+      "type": "Estetico",
+      "resolved": true,
+      "updatedAt": "2025-11-07 11:08:19"
+    },
+    {
+      "id": "GLE-31",
+      "summary": "Nella scheda cliente non refresha la lista ordini dopo elimina",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-31",
+      "state": "Completato",
+      "type": "Bug",
+      "resolved": true,
+      "updatedAt": "2025-11-07 11:04:04"
+    },
+    {
+      "id": "GLE-32",
+      "summary": "Aggiungere \"Imballo non standard\"",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-32",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-13 22:22:17"
+    },
+    {
+      "id": "GLE-33",
+      "summary": "Modificare Cod. ONU in Cod. UN",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-33",
+      "state": "Completato",
+      "type": "Estetico",
+      "resolved": true,
+      "updatedAt": "2025-10-21 14:07:45"
+    },
+    {
+      "id": "GLE-34",
+      "summary": "Ordine: Calcolo delle quantità contenitori automatico",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-34",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2025-11-07 16:33:35"
+    },
+    {
+      "id": "GLE-35",
+      "summary": "Ristrutturazione maschera Ordine - CER Padre e righe sottese",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-35",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-02 21:17:44"
+    },
+    {
+      "id": "GLE-36",
+      "summary": "Ordine - Template/Ordine tipo per cliente",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-36",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-10-21 14:12:32"
+    },
+    {
+      "id": "GLE-37",
+      "summary": "Creazione Imballo NON standard e gestione delle misure su OrderItem",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-37",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2025-11-07 11:09:36"
+    },
+    {
+      "id": "GLE-38",
+      "summary": "Gestione delle misure in creazione Journey",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-38",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2025-11-07 11:10:28"
+    },
+    {
+      "id": "GLE-39",
+      "summary": "Trasformare /Order/Create in SSOT",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-39",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2025-11-07 16:33:21"
+    },
+    {
+      "id": "GLE-40",
+      "summary": "aggiungere anagrafica contenitori",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-40",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-01-29 08:29:57"
+    },
+    {
+      "id": "GLE-41",
+      "summary": "anagrafica automezzi: targa su tendina rimorchio",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-41",
+      "state": "Completato",
+      "type": "Bug",
+      "resolved": true,
+      "updatedAt": "2026-01-29 08:33:08"
+    },
+    {
+      "id": "GLE-42",
+      "summary": "Placeholders per ItemRow in creazione Ordine",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-42",
+      "state": "Completato",
+      "type": "Bug",
+      "resolved": true,
+      "updatedAt": "2026-01-29 08:44:41"
+    },
+    {
+      "id": "GLE-43",
+      "summary": "Creazione Ordine: step peso = 10",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-43",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-01-29 08:47:12"
+    },
+    {
+      "id": "GLE-44",
+      "summary": "Inserire un separatore leggero fra ItemRows",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-44",
+      "state": "Completato",
+      "type": "Estetico",
+      "resolved": true,
+      "updatedAt": "2026-01-29 08:54:17"
+    },
+    {
+      "id": "GLE-45",
+      "summary": "creazione viaggio: visualizzare misure imballo non standard",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-45",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-01-29 09:27:41"
+    },
+    {
+      "id": "GLE-46",
+      "summary": "creazione viaggio: migliorare leggibilità item di un ordine",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-46",
+      "state": "Completato",
+      "type": "Estetico",
+      "resolved": true,
+      "updatedAt": "2026-01-29 09:28:24"
+    },
+    {
+      "id": "GLE-47",
+      "summary": "creazione viaggio: migliorare leggibilità spazi a terra",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-47",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-01-29 11:28:46"
+    },
+    {
+      "id": "GLE-48",
+      "summary": "aggiunta creazione Sedi",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-48",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-11 18:57:13"
+    },
+    {
+      "id": "GLE-49",
+      "summary": "modifica Sede esistente",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-49",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-11 18:57:05"
+    },
+    {
+      "id": "GLE-50",
+      "summary": "lista sedi in edit Cliente",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-50",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-11 18:57:05"
+    },
+    {
+      "id": "GLE-51",
+      "summary": "Aggiunta campi note su entità core",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-51",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-12 16:40:14"
+    },
+    {
+      "id": "GLE-52",
+      "summary": "Visualizzazione note in dashboard Viaggio lato Driver",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-52",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-17 14:10:32"
+    },
+    {
+      "id": "GLE-53",
+      "summary": "Nuova dashboard gestione Viaggi per Logistica",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-53",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-26 08:04:36"
+    },
+    {
+      "id": "GLE-54",
+      "summary": "Ordini speciali con data fissa (data+ora)",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-54",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-26 09:01:07"
+    },
+    {
+      "id": "GLE-55",
+      "summary": "Inserimento manuale ritiro effettuato per retrocompatibilità",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-55",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-13 22:21:57"
+    },
+    {
+      "id": "GLE-56",
+      "summary": "Generazione File stampabile tabella item ordine",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-56",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-26 12:35:34"
+    },
+    {
+      "id": "GLE-57",
+      "summary": "Esposizione legacy_code in Order Index/Edit",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-57",
+      "state": "Completato",
+      "type": "Bug",
+      "resolved": true,
+      "updatedAt": "2026-03-11 20:10:57"
+    },
+    {
+      "id": "GLE-58",
+      "summary": "Filtri mappa con pulsante Vai (no reattivo immediato)",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-58",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-12 14:23:48"
+    },
+    {
+      "id": "GLE-59",
+      "summary": "Aggiunta note su Cliente",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-59",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-12 16:40:14"
+    },
+    {
+      "id": "GLE-60",
+      "summary": "Aggiunta note su Sede",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-60",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-12 16:40:14"
+    },
+    {
+      "id": "GLE-61",
+      "summary": "Aggiunta note su Ordine",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-61",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-12 16:40:14"
+    },
+    {
+      "id": "GLE-62",
+      "summary": "Aggiunta note su Viaggio",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-62",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-12 16:40:14"
+    },
+    {
+      "id": "GLE-63",
+      "summary": "Download XLSX tabella item da interfaccia Viaggio",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-63",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-26 12:23:56"
+    },
+    {
+      "id": "GLE-64",
+      "summary": "Filtri Customer Index con pulsante Vai (no reattivo immediato)",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-64",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-12 14:23:48"
+    },
+    {
+      "id": "GLE-65",
+      "summary": "Evoluzione NLP Logistica: schema canonico, parse/execute e integrazione Journey",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-65",
+      "state": "Da fare",
+      "type": "Epica",
+      "resolved": false,
+      "updatedAt": "2026-03-13 18:59:03"
+    },
+    {
+      "id": "GLE-66",
+      "summary": "NLP: definire schema canonico LogisticsQuery v1 e regole di versionamento",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-66",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-13 18:58:32"
+    },
+    {
+      "id": "GLE-67",
+      "summary": "NLP: validatore server-side per schema canonico",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-67",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-13 18:58:33"
+    },
+    {
+      "id": "GLE-68",
+      "summary": "NLP: interfaccia provider e factory di selezione",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-68",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-13 18:58:33"
+    },
+    {
+      "id": "GLE-69",
+      "summary": "NLP: implementazione baseline HeuristicNlpProvider",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-69",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-13 18:58:33"
+    },
+    {
+      "id": "GLE-70",
+      "summary": "NLP: endpoint API POST /api/nlp/logistics/parse",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-70",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-13 18:58:33"
+    },
+    {
+      "id": "GLE-71",
+      "summary": "NLP: collegare pannello mappa all'endpoint parse backend",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-71",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-13 18:58:33"
+    },
+    {
+      "id": "GLE-72",
+      "summary": "NLP: stabilizzazione pannello (preview, candidati, apply/reset)",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-72",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-13 18:58:33"
+    },
+    {
+      "id": "GLE-73",
+      "summary": "NLP: endpoint API POST /api/nlp/logistics/execute (skeleton + contratto)",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-73",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-05-02 20:26:34"
+    },
+    {
+      "id": "GLE-74",
+      "summary": "NLP Execute: builder deterministico per scenario planning_sites",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-74",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-13 18:59:02"
+    },
+    {
+      "id": "GLE-75",
+      "summary": "NLP Execute: builder deterministico per scenario order_requests",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-75",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-13 18:59:02"
+    },
+    {
+      "id": "GLE-76",
+      "summary": "NLP Execute: builder deterministico per scenario ibrido",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-76",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-13 18:59:02"
+    },
+    {
+      "id": "GLE-77",
+      "summary": "NLP: integrazione Journey/Create con stato NLP selezionato",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-77",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-13 18:59:02"
+    },
+    {
+      "id": "GLE-78",
+      "summary": "NLP UX: gestione errori validazione e warning di boundary MVP",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-78",
+      "state": "Da fare",
+      "type": "Problema di usabilità",
+      "resolved": false,
+      "updatedAt": "2026-03-13 18:59:03"
+    },
+    {
+      "id": "GLE-79",
+      "summary": "NLP Ops: sicurezza e guardrail operativi",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-79",
+      "state": "Da fare",
+      "type": "Attività",
+      "resolved": false,
+      "updatedAt": "2026-03-13 18:59:03"
+    },
+    {
+      "id": "GLE-80",
+      "summary": "NLP Ops: osservabilità pipeline parse/execute",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-80",
+      "state": "Da fare",
+      "type": "Attività",
+      "resolved": false,
+      "updatedAt": "2026-03-13 18:59:03"
+    },
+    {
+      "id": "GLE-81",
+      "summary": "NLP QA: test unitari/integrati/E2E su flussi happy-path ed edge-case",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-81",
+      "state": "Da fare",
+      "type": "Attività",
+      "resolved": false,
+      "updatedAt": "2026-03-13 18:59:03"
+    },
+    {
+      "id": "GLE-82",
+      "summary": "NLP Docs: documentazione tecnica, runbook e checklist di rollout",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-82",
+      "state": "Da fare",
+      "type": "Attività",
+      "resolved": false,
+      "updatedAt": "2026-03-13 18:59:03"
+    },
+    {
+      "id": "GLE-83",
+      "summary": "[P1] Allineamento nomenclatura *State in *Status",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-83",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-14 16:12:43"
+    },
+    {
+      "id": "GLE-84",
+      "summary": "[P2] Generazione documenti Ordine asincrona e separata dal salvataggio",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-84",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-26 12:23:36"
+    },
+    {
+      "id": "GLE-85",
+      "summary": "[P3] Stato READY e blocco pianificazione ordini senza documenti",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-85",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-26 12:35:34"
+    },
+    {
+      "id": "GLE-86",
+      "summary": "[P4] Invalidazione documenti alla modifica ordine READY",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-86",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-26 12:35:34"
+    },
+    {
+      "id": "GLE-87",
+      "summary": "Gestione ritiro direttamente da elenco clienti (con selezione sede)",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-87",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-14 23:19:46"
+    },
+    {
+      "id": "GLE-88",
+      "summary": "Dashboard Logistica / Chiusure Viaggi - v1 as-is",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-88",
+      "state": "Completato",
+      "type": "Attività",
+      "resolved": true,
+      "updatedAt": "2026-03-26 08:04:36"
+    },
+    {
+      "id": "GLE-89",
+      "summary": "Dashboard Logistica / Appoggi & Trasbordi - v1 as-is",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-89",
+      "state": "Completato",
+      "type": "Attività",
+      "resolved": true,
+      "updatedAt": "2026-03-26 08:04:36"
+    },
+    {
+      "id": "GLE-90",
+      "summary": "Appoggi & Trasbordi - Gestione a posteriori",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-90",
+      "state": "Da fare",
+      "type": "Attività",
+      "resolved": false,
+      "updatedAt": "2026-03-26 08:04:36"
+    },
+    {
+      "id": "GLE-91",
+      "summary": "Trasbordi - hardening dominio stato (enum end-to-end)",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-91",
+      "state": "Completato",
+      "type": "Attività",
+      "resolved": true,
+      "updatedAt": "2026-03-26 08:09:01"
+    },
+    {
+      "id": "GLE-92",
+      "summary": "Trasbordi - gestione come Journey dedicati",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-92",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-26 08:04:36"
+    },
+    {
+      "id": "GLE-93",
+      "summary": "Appoggi - conferma avvenuto scarico",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-93",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-26 08:04:36"
+    },
+    {
+      "id": "GLE-94",
+      "summary": "Dashboard logistica: widget ordini con data fissa e alert criticità",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-94",
+      "state": "Completato",
+      "type": "Attività",
+      "resolved": true,
+      "updatedAt": "2026-03-26 09:01:07"
+    },
+    {
+      "id": "GLE-95",
+      "summary": "[Audit] Infrastruttura base audit di dominio con OwenIt\\Auditing",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-95",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-27 07:58:16"
+    },
+    {
+      "id": "GLE-96",
+      "summary": "[Audit] Model core logistici e ordini",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-96",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-27 07:58:16"
+    },
+    {
+      "id": "GLE-97",
+      "summary": "[Audit] Anagrafiche e configurazioni operative",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-97",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-27 07:58:16"
+    },
+    {
+      "id": "GLE-98",
+      "summary": "[Audit] Eventi di processo su documenti ordine e lifecycle journey",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-98",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-27 07:58:16"
+    },
+    {
+      "id": "GLE-99",
+      "summary": "[Audit] UI consultazione storico modifiche",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-99",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-27 07:58:16"
+    },
+    {
+      "id": "GLE-100",
+      "summary": "[Driver Journey] Riordino tappe: la tappa \"in corso\" deve tornare pianificata se scende in lista",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-100",
+      "state": "Completato",
+      "type": "Bug",
+      "resolved": true,
+      "updatedAt": "2026-03-27 09:06:40"
+    },
+    {
+      "id": "GLE-101",
+      "summary": "[Driver Journey] Tappa saltata: ordine nuovamente utilizzabile + conferma esplicita autista",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-101",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-27 09:06:40"
+    },
+    {
+      "id": "GLE-102",
+      "summary": "[Driver Dashboard] Nelle tappe mostrare macchinari sede e orari sede",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-102",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-27 09:06:40"
+    },
+    {
+      "id": "GLE-103",
+      "summary": "[Order Create] Data presunta ritiro: passare da Date a DateTime",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-103",
+      "state": "Completato",
+      "type": "Bug",
+      "resolved": true,
+      "updatedAt": "2026-03-27 09:06:40"
+    },
+    {
+      "id": "GLE-104",
+      "summary": "[Order Create] Validazioni FE campi obbligatori (es. HP se attivato)",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-104",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-27 08:13:46"
+    },
+    {
+      "id": "GLE-105",
+      "summary": "[Journey Create] Validazioni FE campi obbligatori",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-105",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolved": false,
+      "updatedAt": "2026-03-27 08:13:47"
+    },
+    {
+      "id": "GLE-106",
+      "summary": "[UI] Tasto lente ricerca poco visibile: usare btn-primary in Map View e Customer Filter",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-106",
+      "state": "Completato",
+      "type": "Bug",
+      "resolved": true,
+      "updatedAt": "2026-03-27 09:06:40"
+    },
+    {
+      "id": "GLE-107",
+      "summary": "[Users] Elenco utenti non ordinato alfabeticamente",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-107",
+      "state": "Completato",
+      "type": "Bug",
+      "resolved": true,
+      "updatedAt": "2026-03-27 09:06:40"
+    },
+    {
+      "id": "GLE-108",
+      "summary": "[Users] Aggiungere sort system per Nome, Cognome, Ruolo",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-108",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-27 09:06:40"
+    },
+    {
+      "id": "GLE-109",
+      "summary": "[Order UX] Wizard guidato compilazione item ordine (sequenza campi con highlight)",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-109",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-03-27 10:08:40"
+    },
+    {
+      "id": "GLE-110",
+      "summary": "Tipologia Attività come select/option anagrafica",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-110",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-04-30 21:41:53"
+    },
+    {
+      "id": "GLE-111",
+      "summary": "Tipologia Attivita: Model",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-111",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-04-30 21:41:52"
+    },
+    {
+      "id": "GLE-112",
+      "summary": "Tipologia Attivita: Migration",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-112",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-04-30 21:41:52"
+    },
+    {
+      "id": "GLE-113",
+      "summary": "Tipologia Attivita: CRUD",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-113",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-04-30 21:41:52"
+    },
+    {
+      "id": "GLE-114",
+      "summary": "Tipologia Attivita: Controller",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-114",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-04-30 21:41:52"
+    },
+    {
+      "id": "GLE-115",
+      "summary": "Tipologia Attivita: UI Clienti",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-115",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolved": true,
+      "updatedAt": "2026-04-30 21:41:53"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+[mcp_servers.youtrack]
+url = "https://metallicamarcon.youtrack.cloud/mcp"
+http_headers_helper = "python3 /home/matteo/developer-platform/Scripts/mcp-token-headers.py --token-file /home/matteo/secrets/api-tokens/metallica-marcon/youtrack.txt"
+startup_timeout_sec = 30
