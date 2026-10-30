@@ -1,5 +1,6 @@
 # Documentazione Metallica Marcon
 
+- [Contesto corrente](context.md): decisioni di sessione, risultati e prossimi passi.
 - [Stato sviluppi riconciliato con YouTrack](development-status.md): fotografia
   del 2026-10-30, backlog e discrepanze tra tracker, codice e note.
 - [Recupero del vecchio vault](recovery/MIGRATION.md): 20 note storiche,
