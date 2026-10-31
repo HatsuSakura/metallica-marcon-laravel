@@ -1,6 +1,6 @@
 # Contesto corrente — Metallica Marcon
 
-Aggiornato: 2026-10-30. Sintesi di sessione; non sostituisce il tracker,
+Aggiornato: 2026-10-31. Sintesi di sessione; non sostituisce il tracker,
 le decisioni di dominio o le prove di rilascio.
 
 ## Convenzioni concordate
@@ -48,13 +48,18 @@ le decisioni di dominio o le prove di rilascio.
 Pubblicazione del 2026-10-30: evidenze di progetto, skill Developer Platform e
 KB sanificata sono su GitHub. Commit KB pubblicato:
 `d30e7f32af97c9195770ad7a1016e672038b3f77`.
-La sincronizzazione QMD su JARVIS non è riuscita per timeout SSH; l'indice
-remoto non è stato verificato come aggiornato. Quando JARVIS torna raggiungibile:
+Il primo tentativo LAN del 2026-10-30 è fallito per timeout SSH. Il 2026-10-31
+la sincronizzazione è stata completata fuori casa via `jarvis-remote`:
+34 documenti, 144 vettori; fingerprint degli embedding aggiornati e campione
+vettori verificato da QMD Doctor. Il comando di ripresa remoto utilizzato è:
 
 ```bash
 cd /home/matteo/knowledge
-./scripts/publish.sh --sync-only d30e7f32af97c9195770ad7a1016e672038b3f77
+KNOWLEDGE_PUBLISH_SSH_TARGET=jarvis-remote ./scripts/publish.sh --sync-only d30e7f32af97c9195770ad7a1016e672038b3f77
 ```
+
+Il backup cifrato offsite è rimandato esplicitamente dal proprietario:
+non avviarlo come parte di questa sincronizzazione.
 
 Partire da questa pagina e da `development-status.md`; le note in
 `recovery/legacy-obsidian/` sono storia, non istruzioni correnti.
