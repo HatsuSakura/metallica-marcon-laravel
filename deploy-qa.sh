@@ -1,25 +1,31 @@
 #!/usr/bin/env bash
 # =============================================================
-# deploy-qa.sh — Metallica Marcon | Deploy QA (SiteGround, Linux-native)
+# deploy-qa.sh — Metallica Marcon | Deploy QA (SiteGround, native PHP)
 #
-# Linux replacement for the legacy deploy.ps1 (WinSCP/PuTTY/Pageant)
-# workflow. Builds frontend assets locally, then rsyncs an explicit
-# allowlist of application directories over SSH, and runs the Laravel
-# bootstrap commands remotely.
+# QA runs on a managed SiteGround account with native PHP (no Docker, no
+# git on the host). Production is different: see deploy.sh (Docker).
 #
-# The QA host is a managed SiteGround account with no git support at the
-# current tier, so the build must happen locally and be uploaded as a
-# diff — rsync's own delta-transfer algorithm handles this natively,
-# which is why this script does not need deploy.ps1's manual git-diff
-# file-list logic.
+# What it does:
+#   1. exports the committed HEAD (git archive) into a temporary build
+#      directory: the working tree and the local .env are never shipped;
+#   2. builds the frontend there with the QA VITE_* values read from the
+#      remote .env (values are never printed);
+#   3. on the server: snapshot of code + vendor + database, maintenance
+#      mode, rsync of an allowlist, composer install (pinned Composer),
+#      migrate, caches, queue:restart, back online;
+#   4. smoke checks and a release marker.
 #
-# Safety model: SYNC_PATHS is an allowlist, not a blocklist. --delete
-# only ever prunes extraneous files inside directories that are actually
-# part of the transfer, so it can structurally never touch .env,
-# storage/, vendor/, or anything else not explicitly listed below.
+# Safety model:
+#   - SYNC_PATHS is an allowlist: .env, storage/, vendor/ and everything
+#     not listed are never touched;
+#   - --delete prunes files removed from git inside the synced paths, but
+#     old hashed assets (public/build/assets) and host files are
+#     protected; the real run lists every deletion and asks first;
+#   - on failure after maintenance ON the site stays in maintenance, and
+#     the rollback commands for the snapshot are printed.
 #
 # Usage:
-#   ./deploy-qa.sh --dry-run    # preview only, no remote changes
+#   ./deploy-qa.sh --dry-run    # build + preview the transfer, no remote change
 #   ./deploy-qa.sh              # real deploy
 # =============================================================
 
@@ -33,18 +39,25 @@ LOCAL_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REMOTE_USER="u1872-gi4pyk5u8xvn"
 REMOTE_HOST="gnldm1096.siteground.biz"
 REMOTE_PORT="18765"
-# TODO: verify this path once SSH access is confirmed working end to end —
-# inherited from deploy.ps1, not yet independently re-verified on this
-# account after the 2026-07 SiteGround reorganization.
-REMOTE_DIR="/home/u1872-gi4pyk5u8xvn/www/testgestionalelogistica.metallicamarcon.it/public_html"
+# Verified 2026-11-04 (QA deploys of 8c5bba8 and a1f2829). Relative to $HOME.
+REMOTE_DIR="www/testgestionalelogistica.metallicamarcon.it/public_html"
+QA_URL="https://testgestionalelogistica.metallicamarcon.it"
 SSH_KEY="$HOME/secrets/ssh/creactive/metallica-marcon/qa-siteground"
 LAST_DEPLOY_FILE="$LOCAL_DIR/.last-qa-deploy"
 
-SSH_OPTS=(-i "$SSH_KEY" -p "$REMOTE_PORT" -o IdentitiesOnly=yes -o ConnectTimeout=15)
+# Composer on the host is 2.4.3 (2022): use a pinned, checksum-verified
+# phar instead, downloaded once into the account.
+COMPOSER_VERSION="2.11.1"
+COMPOSER_SHA256="6f1b891e1d4927d62740276c540fb490e47689e19e102c49e8da849794882f8c"
 
-# Application code only — never vendor/, storage/, .env, tests/, or any
-# packaging/tooling files. composer.lock is included so the remote
-# `composer install` reproduces exactly what was built locally.
+BACKUP_ROOT="deploy-backups/metallica-qa"   # relative to the remote $HOME
+BACKUP_KEEP=5
+
+SSH_OPTS=(-i "$SSH_KEY" -p "$REMOTE_PORT" -o IdentitiesOnly=yes -o ConnectTimeout=15)
+REMOTE="$REMOTE_USER@$REMOTE_HOST"
+
+# Application code only. composer.lock is included so the remote
+# `composer install` reproduces exactly what was tested.
 SYNC_PATHS=(
   app
   bootstrap
@@ -58,126 +71,259 @@ SYNC_PATHS=(
   composer.lock
 )
 
+RSYNC_FILTERS=(
+  --exclude ".env*"
+  --exclude "/bootstrap/cache/"
+  --exclude "/public/storage"
+  --exclude "/public/hot"
+  # Never delete: old hashed assets (cached browsers still request them)
+  # and files created on the host.
+  --filter "P /public/build/assets/**"
+  --filter "P /public/php_errorlog"
+  --filter "P /public/note.txt"
+  --filter "P /database/*.sqlite"
+)
+
 DRY_RUN=0
-if [[ "${1:-}" == "--dry-run" ]]; then
-  DRY_RUN=1
-fi
+case "${1:-}" in
+  --dry-run) DRY_RUN=1 ;;
+  "") ;;
+  *) echo "Usage: $0 [--dry-run]" >&2; exit 1 ;;
+esac
 
 step() { echo "==> $*"; }
+die() { echo "!! $*" >&2; exit 1; }
+rssh() { ssh "${SSH_OPTS[@]}" "$REMOTE" "$@"; }
+
+for cmd in git rsync ssh npm php curl sha256sum; do
+  command -v "$cmd" >/dev/null || die "missing command: $cmd"
+done
 
 # ============================
-# 1. VERIFY CLEAN WORKING TREE
+# 1. COMMIT TO DEPLOY
 # ============================
 
 cd "$LOCAL_DIR"
-
-if [[ -n "$(git status --porcelain)" ]]; then
-  echo ""
-  echo "!! WARNING: uncommitted changes present:"
-  git status --short
-  echo ""
-  if [[ "$DRY_RUN" -eq 1 ]]; then
-    echo "Dry run: continuing without confirmation (nothing will be modified)."
-  else
-    read -r -p "Continue anyway? Only the working tree as-is will be deployed [y/N] " confirm
-    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-      echo "Deploy aborted."
-      exit 1
-    fi
-  fi
-fi
-
+git fetch -q origin
 HEAD_COMMIT="$(git rev-parse HEAD)"
+SHORT="${HEAD_COMMIT:0:7}"
+if [[ -z "$(git branch -r --contains "$HEAD_COMMIT" 2>/dev/null)" ]]; then
+  die "HEAD $SHORT is not pushed to origin: push it first, QA must be traceable."
+fi
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "Note: uncommitted changes are ignored; deploying committed $SHORT only."
+fi
+step "Deploying $SHORT ($(git log -1 --format=%s "$HEAD_COMMIT"))"
 
 # ============================
-# 2. VERIFY SSH CONNECTIVITY
+# 2. SSH + REMOTE PREREQUISITES
 # ============================
 
 step "Verifying SSH connectivity..."
-if ! ssh "${SSH_OPTS[@]}" -o BatchMode=yes "$REMOTE_USER@$REMOTE_HOST" 'echo ok' >/dev/null 2>&1; then
-  echo "!! ERROR: SSH connection failed. Check the key, host, and any account-side lockout." >&2
-  exit 1
-fi
-step "Connection OK."
+rssh -o BatchMode=yes 'echo ok' >/dev/null 2>&1 \
+  || die "SSH connection failed. Check the key, host, and any account-side lockout."
+REMOTE_PHP="$(rssh 'php -r "echo PHP_VERSION;"')"
+step "Connection OK. Remote PHP $REMOTE_PHP."
 
 # ============================
-# 3. BUILD FRONTEND ASSETS
+# 3. CLEAN BUILD FROM HEAD
 # ============================
 
-step "Running npm run build..."
-npm run build
-step "Frontend build complete."
+BUILD_DIR="$(mktemp -d "${TMPDIR:-/tmp}/mm-qa-build.XXXXXX")"
+cleanup() { rm -rf "$BUILD_DIR"; }
+trap cleanup EXIT
 
-# ============================
-# 4. CLEAN LOCAL CACHE ARTIFACTS
-# ============================
+step "Exporting $SHORT into a clean build directory..."
+git archive "$HEAD_COMMIT" | tar -x -C "$BUILD_DIR"
 
-rm -rf storage/debugbar storage/framework/cache/data storage/framework/sessions storage/framework/views 2>/dev/null || true
-find bootstrap/cache -type f -name '*.php' -delete 2>/dev/null || true
-step "Local cache cleaned."
-
-# ============================
-# 5. RSYNC — SYNC ALLOWLISTED PATHS
-# ============================
-
-RSYNC_EXCLUDES=(
-  --exclude ".env*"
-  --exclude "storage/logs/"
-  --exclude "storage/debugbar/"
-  --exclude "storage/framework/cache/"
-  --exclude "storage/framework/sessions/"
-  --exclude "storage/framework/views/"
-  --exclude "bootstrap/cache/"
-  --exclude "public/storage"
-  --exclude "public/hot"
-)
-
-RSYNC_FLAGS=(-az --delete --human-readable --info=progress2)
-if [[ "$DRY_RUN" -eq 1 ]]; then
-  RSYNC_FLAGS+=(--dry-run)
-  step "DRY RUN — nothing will actually be modified on the server."
-fi
-
-SYNC_SOURCES=()
-for p in "${SYNC_PATHS[@]}"; do
-  SYNC_SOURCES+=("$LOCAL_DIR/$p")
+# QA VITE_* values, read from the remote .env and kept in memory only.
+declare -a VITE_ENV=()
+while IFS= read -r line; do
+  [[ "$line" =~ ^VITE_[A-Z0-9_]+= ]] || continue
+  key="${line%%=*}"
+  value="${line#*=}"
+  value="${value%\"}"; value="${value#\"}"
+  VITE_ENV+=("$key=$value")
+done < <(rssh "grep -E '^VITE_[A-Z0-9_]+=' '$REMOTE_DIR/.env'" | tr -d '\r')
+for needed in $(grep -rhoE 'import\.meta\.env\.VITE_[A-Z0-9_]+' "$BUILD_DIR/resources/js" | sed 's/.*\.//' | sort -u); do
+  printf '%s\n' "${VITE_ENV[@]}" | grep -q "^${needed}=" || die "remote .env has no $needed"
 done
+step "QA frontend variables: $(printf '%s\n' "${VITE_ENV[@]}" | cut -d= -f1 | tr '\n' ' ')"
 
-step "Syncing application code..."
-rsync "${RSYNC_FLAGS[@]}" "${RSYNC_EXCLUDES[@]}" \
-  -e "ssh ${SSH_OPTS[*]}" \
-  "${SYNC_SOURCES[@]}" \
-  "$REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR/"
+# Same pinned Composer locally: versions compute the lock content-hash
+# differently (2.10 reports a 2.11 lock as outdated).
+LOCAL_PHAR="${XDG_CACHE_HOME:-$HOME/.cache}/metallica-marcon/composer-$COMPOSER_VERSION.phar"
+if [[ ! -f "$LOCAL_PHAR" ]] || ! echo "$COMPOSER_SHA256  $LOCAL_PHAR" | sha256sum -c --quiet - 2>/dev/null; then
+  mkdir -p "$(dirname "$LOCAL_PHAR")"
+  curl -fsSL -o "$LOCAL_PHAR.tmp" "https://getcomposer.org/download/$COMPOSER_VERSION/composer.phar"
+  echo "$COMPOSER_SHA256  $LOCAL_PHAR.tmp" | sha256sum -c --quiet - || die "composer checksum mismatch"
+  mv "$LOCAL_PHAR.tmp" "$LOCAL_PHAR"
+fi
 
-step "Sync complete."
+step "Installing build dependencies (vendor for the Ziggy alias, node_modules)..."
+(cd "$BUILD_DIR" && php "$LOCAL_PHAR" install --no-dev --no-scripts --no-interaction --quiet)
+(cd "$BUILD_DIR" && npm ci --no-audit --no-fund --loglevel=error)
+
+step "Building frontend assets with the QA values..."
+# No .env exists in BUILD_DIR, so only the QA values reach Vite.
+(cd "$BUILD_DIR" && env "${VITE_ENV[@]}" npm run build >/dev/null)
+[[ -f "$BUILD_DIR/public/build/manifest.json" ]] || die "build produced no manifest"
+MANIFEST_SHA="$(sha256sum "$BUILD_DIR/public/build/manifest.json" | cut -d' ' -f1)"
+step "Build complete (manifest ${MANIFEST_SHA:0:12})."
+
+# ============================
+# 4. PREVIEW THE TRANSFER
+# ============================
+
+cd "$BUILD_DIR"
+# --checksum: the export has commit mtimes, so compare content, not dates.
+RSYNC_BASE=(-az --checksum --delete "${RSYNC_FILTERS[@]}" -e "ssh ${SSH_OPTS[*]}")
+PREVIEW="$(rsync -n --itemize-changes "${RSYNC_BASE[@]}" "${SYNC_PATHS[@]}" "$REMOTE:$REMOTE_DIR/")"
+UPLOADS="$(grep -E '^[<>c]f' <<< "$PREVIEW" | cut -c13- || true)"
+DELETIONS="$(grep -E '^\*deleting' <<< "$PREVIEW" | sed 's/^\*deleting *//' || true)"
+step "Transfer preview: $(grep -c . <<< "$UPLOADS" || true) file(s) to upload or update."
+if [[ -n "$DELETIONS" ]]; then
+  echo "    Files that will be DELETED on QA (not in git):"
+  sed 's/^/      /' <<< "$DELETIONS"
+fi
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
-  step "Dry run finished — no remote commands executed."
+  if [[ -n "$UPLOADS" ]]; then
+    echo "    Files that will be uploaded:"
+    sed 's/^/      /' <<< "$UPLOADS" | head -60
+  fi
+  step "Dry run finished: no remote change."
   exit 0
 fi
 
+if [[ -n "$DELETIONS" ]]; then
+  read -r -p "Delete the files listed above on QA? [y/N] " confirm
+  [[ "$confirm" == "y" || "$confirm" == "Y" ]] || die "Deploy aborted, nothing changed."
+fi
+
 # ============================
-# 6. REMOTE LARAVEL BOOTSTRAP
+# 5. SNAPSHOT + MAINTENANCE ON
 # ============================
 
-step "Running remote Laravel commands..."
-ssh "${SSH_OPTS[@]}" "$REMOTE_USER@$REMOTE_HOST" bash -s <<EOF
-set -e
-cd "$REMOTE_DIR"
-composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+TS="$(date -u +%Y%m%dT%H%M%SZ)"
+BACKUP_DIR="$BACKUP_ROOT/${TS}-before-${SHORT}"
+
+step "Snapshot of code, vendor and database on the host..."
+rssh bash -s -- "$REMOTE_DIR" "$BACKUP_DIR" "$BACKUP_ROOT" "$BACKUP_KEEP" <<'REMOTE_SNAPSHOT'
+set -Eeuo pipefail
+app="$1"; backup="$HOME/$2"; root="$HOME/$3"; keep="$4"
+umask 077
+mkdir -p "$backup"
+cd "$HOME/$app"
+tar czf "$backup/code.tar.gz" --exclude 'storage/*' --exclude 'bootstrap/cache/*' \
+  app bootstrap config database resources routes public artisan composer.json composer.lock vendor
+# DB credentials from .env into a private option file, never on the command line.
+cnf="$backup/.my.cnf"
+php -r '
+  require "vendor/autoload.php";
+  $e = Dotenv\Dotenv::createArrayBacked(getcwd())->load();
+  $q = fn($v) => "\"" . addcslashes((string) $v, "\\\"") . "\"";
+  echo "[client]\nhost=", $q($e["DB_HOST"] ?? "localhost"), "\nport=", $q($e["DB_PORT"] ?? "3306"),
+       "\nuser=", $q($e["DB_USERNAME"]), "\npassword=", $q($e["DB_PASSWORD"] ?? ""), "\n";
+  file_put_contents("php://stderr", $e["DB_DATABASE"]);
+' > "$cnf" 2> "$backup/.dbname"
+trap 'rm -f "$cnf" "$backup/.dbname"' EXIT
+mysqldump --defaults-extra-file="$cnf" --single-transaction --quick --routines --triggers \
+  --no-tablespaces "$(cat "$backup/.dbname")" | gzip > "$backup/database.sql.gz"
+gzip -t "$backup/code.tar.gz" "$backup/database.sql.gz"
+(cd "$backup" && sha256sum code.tar.gz database.sql.gz > SHA256SUMS)
+# Keep the newest snapshots only.
+ls -1d "$root"/*-before-* 2>/dev/null | sort | head -n -"$keep" | xargs -r rm -rf
+echo "    snapshot: ~/${backup#"$HOME"/} ($(du -sh "$backup" | cut -f1))"
+REMOTE_SNAPSHOT
+
+rollback_help() {
+  cat >&2 <<EOF
+
+!! DEPLOY FAILED. QA is left in MAINTENANCE MODE on purpose.
+!! Snapshot: ~/$BACKUP_DIR (code.tar.gz, database.sql.gz, SHA256SUMS)
+!! To roll back (on the host, in ~/$REMOTE_DIR):
+!!   tar xzf ~/$BACKUP_DIR/code.tar.gz
+!!   only if a migration ran: restore ~/$BACKUP_DIR/database.sql.gz with mysql
+!!   php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache
+!!   php artisan queue:restart && php artisan up
+EOF
+}
+
+step "Maintenance mode ON..."
+rssh "cd '$REMOTE_DIR' && php artisan down --retry=60"
+trap 'rollback_help' ERR
+
+# ============================
+# 6. SYNC + LARAVEL BOOTSTRAP
+# ============================
+
+step "Syncing application code..."
+rsync "${RSYNC_BASE[@]}" "${SYNC_PATHS[@]}" "$REMOTE:$REMOTE_DIR/"
+
+step "Composer install, migrations, caches..."
+rssh bash -s -- "$REMOTE_DIR" "$COMPOSER_VERSION" "$COMPOSER_SHA256" <<'REMOTE_BOOTSTRAP'
+set -Eeuo pipefail
+app="$1"; version="$2"; sha="$3"
+phar="$HOME/.local/share/composer/composer-$version.phar"
+if [[ ! -f "$phar" ]] || ! echo "$sha  $phar" | sha256sum -c --quiet - 2>/dev/null; then
+  mkdir -p "$(dirname "$phar")"
+  curl -fsSL -o "$phar.tmp" "https://getcomposer.org/download/$version/composer.phar"
+  echo "$sha  $phar.tmp" | sha256sum -c --quiet - || { rm -f "$phar.tmp"; echo "composer checksum mismatch" >&2; exit 1; }
+  mv "$phar.tmp" "$phar"
+fi
+cd "$HOME/$app"
+php "$phar" install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
 php artisan optimize:clear
 php artisan migrate --force
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-EOF
+php artisan queue:restart
+REMOTE_BOOTSTRAP
 
 # ============================
-# 7. RECORD DEPLOYED COMMIT
+# 7. RELEASE MARKER + ONLINE
 # ============================
+
+DEPLOYED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+rssh "cd '$REMOTE_DIR' && mkdir -p storage/app/deployments && cat > storage/app/deployments/qa-release.json && php artisan up" <<EOF
+{
+    "source_commit": "$HEAD_COMMIT",
+    "deployed_at": "$DEPLOYED_AT",
+    "environment": "QA",
+    "php": "$REMOTE_PHP",
+    "manifest_sha256": "$MANIFEST_SHA",
+    "snapshot": "~/$BACKUP_DIR",
+    "deployed_with": "deploy-qa.sh",
+    "manual_acceptance": "pending"
+}
+EOF
+trap - ERR
+
+# ============================
+# 8. SMOKE CHECKS
+# ============================
+
+step "Smoke checks..."
+FAILED=0
+check() {
+  local path="$1" want="$2" got
+  got="$(curl -s -o /dev/null -w '%{http_code}' "$QA_URL$path")"
+  printf '    %-40s %s (expected %s)\n' "$path" "$got" "$want"
+  [[ "$got" == "$want" ]] || FAILED=1
+}
+check /login 200
+check /dashboard-driver 302
+while read -r asset; do
+  check "/build/$asset" 200
+done < <(php -r '$m=json_decode(file_get_contents("public/build/manifest.json"),true); foreach($m as $e) if(!empty($e["isEntry"])) echo $e["file"],"\n";' | sort -u)
+rssh "cd '$REMOTE_DIR' && php artisan about --only=environment | grep -E 'Laravel Version|PHP Version|Debug Mode|Maintenance Mode'"
 
 echo "$HEAD_COMMIT" > "$LAST_DEPLOY_FILE"
-step "Commit ${HEAD_COMMIT:0:8} recorded in .last-qa-deploy."
-
+step "Commit $SHORT recorded in .last-qa-deploy."
+if [[ "$FAILED" -ne 0 ]]; then
+  die "QA deploy done, but a smoke check failed: see the lines above. Snapshot: ~/$BACKUP_DIR"
+fi
 echo ""
-step "QA DEPLOY COMPLETE."
+step "QA DEPLOY COMPLETE ($SHORT). Manual acceptance is still pending."
