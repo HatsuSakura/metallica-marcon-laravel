@@ -154,6 +154,7 @@ class JourneyController extends Controller
 
     public function show(Journey $journey)
     {
+        if ($journey->baseline()->exists()) return redirect()->route('journey.execution', ['journey' => $journey->id]);
         Gate::authorize('view', $journey);
 
         $returnTo = request()->query('return_to');
@@ -472,6 +473,7 @@ private function applyOrdersToJourney(
      */
     public function edit(Journey $journey)
     {
+        if ($journey->baseline()->exists()) return redirect()->route('journey.execution', ['journey' => $journey->id]);
         Gate::authorize('update', $journey);
 
         $vehicles = Vehicle::all();
@@ -811,49 +813,6 @@ private function applyOrdersToJourney(
 */
 
 
-public function updateState(Journey $journey, Request $request)
-{
-    Gate::authorize('update', $journey);
-
-    $newState = JourneyStatus::from($request->new_state);
-
-    if (!JourneyStatus::fromMixed($journey->status)->canTransitionTo($newState)) {
-        abort(403, 'Invalid state transition.');
-    }
-
-    // Add lifecycle-specific logic
-    switch ($newState) {
-        case JourneyStatus::STATUS_CREATED:
-            $journey->planned_date = $request->planned_date;
-            break;
-
-        case JourneyStatus::STATUS_ACTIVE:
-            $notReadyOrders = $journey->orders()
-                ->where(function ($query) {
-                    $query->where('status', '!=', OrderStatus::STATUS_READY->value)
-                        ->orWhere('documents_status', '!=', OrderDocumentsStatus::GENERATED->value);
-                })
-                ->count();
-
-            if ($notReadyOrders > 0) {
-                abort(422, 'Impossibile avviare il viaggio: tutti gli ordini devono essere READY con documenti generati.');
-            }
-
-            $journey->executed_at = now();
-            break;
-
-        case JourneyStatus::STATUS_EXECUTED:
-            // Attachments or warehouse updates
-            $journey->downloaded_files = $request->file('attachments')->store('journeys');
-            break;
-    }
-
-    $journey->status = $newState->value;
-    $journey->save();
-
-    return redirect()->back()->with('success', "Journey state updated to {$newState->value}.");
-}
-
 private function statusAfterJourneyDetach(Order $order): string
 {
     return OrderStatus::STATUS_CREATED->value;
@@ -861,10 +820,7 @@ private function statusAfterJourneyDetach(Order $order): string
 
 private function invalidateOrderReadyState(Order $order): void
 {
-    $order->status = OrderStatus::STATUS_CREATED->value;
-    $order->documents_status = OrderDocumentsStatus::NOT_GENERATED->value;
-    $order->documents_generated_at = null;
-    $order->documents_error = null;
+    app(OrderDocumentGenerationService::class)->invalidateAfterReadyOrderEdit($order);
 }
 
 public function documentsStatus(Journey $journey): \Illuminate\Http\JsonResponse
@@ -873,31 +829,12 @@ public function documentsStatus(Journey $journey): \Illuminate\Http\JsonResponse
 
     $documentsService = app(OrderDocumentGenerationService::class);
 
-    $orders = Order::query()
-        ->where('journey_id', $journey->id)
-        ->with([
-            'customer:id,company_name',
-            'items:id,order_id,cer_code_id,has_adr,adr,adr_hp',
-            'items.cerCode:id,is_dangerous',
-        ])
-        ->orderBy('id')
-        ->get([
-            'id',
-            'journey_id',
-            'legacy_code',
-            'customer_id',
-            'cargo_location',
-            'status',
-            'documents_status',
-            'documents_generated_at',
-            'documents_error',
-            'documents_version',
-        ]);
+    $orders = $journey->baseline()->exists()
+        ? $journey->orderExecutions()->with(['items','holders'])->get()->map(fn ($e) => app(\App\Services\JourneyExecution\ExecutionProjection::class)->order($e, $journey))
+        : Order::where('journey_id', $journey->id)->orderBy('id')->get();
 
     $total = $orders->count();
-    $ready = $orders->filter(function (Order $order) {
-        return OrderStatus::fromMixed($order->status)->value === OrderStatus::STATUS_READY->value;
-    })->count();
+    $ready = $orders->filter(fn (Order $order) => $documentsService->isCurrent($order))->count();
 
     return response()->json([
         'journey_id' => $journey->id,
@@ -932,6 +869,8 @@ public function documentsStatus(Journey $journey): \Illuminate\Http\JsonResponse
             'documents_generated_at' => $order->documents_generated_at,
             'documents_error' => $order->documents_error,
             'documents_version' => (int) ($order->documents_version ?? 0),
+            'current' => $documentsService->isCurrent($order),
+            'can_generate' => !$documentsService->isCurrent($order),
             'has_model_document' => $modelDocument !== null,
             'model_document_name' => $modelDocument['name'] ?? null,
             'has_adr_hp_document' => $adrHpDocument !== null,
@@ -959,7 +898,11 @@ public function generateDocuments(
     if (!empty($orderIds)) {
         $query->whereIn('id', $orderIds);
     }
-    $orders = $query->get();
+    $orders = $journey->baseline()->exists()
+        ? $journey->orderExecutions()->where('status', '!=', 'released')
+            ->when($orderIds, fn ($q) => $q->whereIn('source_order_id', $orderIds))->get()
+            ->map(fn ($e) => app(\App\Services\JourneyExecution\ExecutionProjection::class)->order($e, $journey))
+        : $query->get();
 
     if ($orders->isEmpty()) {
         return response()->json([
@@ -984,11 +927,10 @@ public function generateDocuments(
 
         if ($documentsState === OrderDocumentsStatus::GENERATING && $service->isGeneratingStateStale($order)) {
             $service->recoverStaleGeneratingState($order);
-            $order->refresh();
         }
 
-        $service->enqueueGeneration($order);
-        $queued[] = $order->id;
+        if ($service->enqueueGeneration($order)) $queued[] = $order->id;
+        else $skipped[] = ['order_id' => $order->id, 'reason' => 'already_current'];
     }
 
     return response()->json([

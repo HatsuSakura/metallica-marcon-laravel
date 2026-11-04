@@ -15,14 +15,13 @@ class API_OrderDocumentsController extends Controller
 {
     public function generate(Request $request, Order $order, OrderDocumentGenerationService $service): JsonResponse
     {
-        Gate::authorize('update', $order);
+        $order = $this->subject($request, $order, true);
 
         $documentsState = OrderDocumentsStatus::fromMixed($order->documents_status ?? OrderDocumentsStatus::NOT_GENERATED->value);
 
         if ($documentsState === OrderDocumentsStatus::GENERATING) {
             if ($service->isGeneratingStateStale($order)) {
                 $service->recoverStaleGeneratingState($order);
-                $order->refresh();
             } else {
                 return response()->json([
                     'type' => 'warning',
@@ -32,19 +31,19 @@ class API_OrderDocumentsController extends Controller
             }
         }
 
-        $service->enqueueGeneration($order);
-        $order->refresh();
+        $queued = $service->enqueueGeneration($order);
+        $order = $this->subject($request, Order::findOrFail($order->id), true);
 
         return response()->json([
             'type' => 'success',
-            'message' => 'Generazione documenti avviata correttamente.',
+            'message' => $queued ? 'Generazione documenti avviata correttamente.' : 'Documenti già aggiornati: usa il download.',
             'data' => $service->statusPayload($order),
-        ], 202);
+        ], $queued ? 202 : 200);
     }
 
     public function status(Request $request, Order $order, OrderDocumentGenerationService $service): JsonResponse
     {
-        Gate::authorize('view', $order);
+        $order = $this->subject($request, $order, false);
 
         return response()->json([
             'type' => 'info',
@@ -54,7 +53,7 @@ class API_OrderDocumentsController extends Controller
 
     public function list(Request $request, Order $order, OrderDocumentGenerationService $service): JsonResponse
     {
-        Gate::authorize('view', $order);
+        $order = $this->subject($request, $order, false);
 
         return response()->json([
             'type' => 'info',
@@ -68,7 +67,7 @@ class API_OrderDocumentsController extends Controller
         string $document,
         OrderDocumentGenerationService $service
     ): BinaryFileResponse {
-        Gate::authorize('view', $order);
+        $order = $this->subject($request, $order, false);
 
         $decodedFileName = rawurldecode($document);
         $filePath = $service->findDocumentPathByName($order, $decodedFileName);
@@ -78,6 +77,14 @@ class API_OrderDocumentsController extends Controller
             Storage::disk('local')->path($filePath),
             basename($filePath)
         );
+    }
+    private function subject(Request $request, Order $order, bool $write): Order
+    {
+        $id = $request->integer('journey_id') ?: $order->journey_id;
+        $journey = $id ? \App\Models\Journey::findOrFail($id) : null;
+        if ($journey && $journey->baseline()->exists()) Gate::authorize($write ? 'update' : 'view', $journey);
+        else Gate::authorize($write ? 'update' : 'view', $order);
+        return app(\App\Services\JourneyExecution\DocumentRevision::class)->resolve($order, $id);
     }
 }
 

@@ -22,6 +22,11 @@ class JourneyPolicy
             || $this->isAssignedDriverForJourney($user, $journey);
     }
 
+    public function viewExecutionHistory(User $user, Journey $journey): bool
+    {
+        return $this->isControlRole($user);
+    }
+
     public function create(User $user): bool
     {
         return $this->isControlRole($user);

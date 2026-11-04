@@ -26,7 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         */
         $middleware->web(append: [
-            HandleInertiaRequests::class,       // For INERTIA setup & configuration
+            HandleInertiaRequests::class,
+            \App\Http\Middleware\PlanningWriteBoundary::class,       // For INERTIA setup & configuration
             InertiaMiddleware::class,           // For INERTIA setup & configuration
             ConvertCaseFrontEndBackEnd::class,  // To manage conversion into camel->snake TO BE and snake->camel to FE
             // Middleware di DEBUG

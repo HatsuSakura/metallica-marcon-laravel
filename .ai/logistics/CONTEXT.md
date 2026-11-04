@@ -1,10 +1,19 @@
 # Contesto persistente — Logistica E2E
 
-Ultimo aggiornamento: 2026-10-16
+Ultimo aggiornamento: 2026-11-04
 
 ## Scopo di questo handoff
 
 Questo file conserva il contesto funzionale emerso durante la ricostruzione del processo logistico Metallica Marcon e la stesura della specifica del digital twin.
+
+Checkpoint corrente della UI autisti/esecuzione: prima leggere
+`docs/context.md` e `docs/qa/2026-11-04-driver-ui.md`. Il PO ha richiesto
+il consolidamento e push sul branch corrente (`main`) per preparare il QA;
+non è un attestato di deploy o accettazione. Il checkpoint del 31 ottobre
+resta una fotografia storica precedente al commit applicativo. Le precedenti note sul 159 legacy sono superate
+dal reset richiesto e dal nuovo avvio; OP-001 sul riordino pre-partenza resta aperto.
+L'ultimo accordo UI è X/floppy circolari sulla riga in modifica, salvataggio
+abilitato solo con differenze, sfuso che svuota/disabilita tipo e numero.
 
 Alla ripresa del lavoro, leggere nell'ordine:
 
@@ -44,6 +53,29 @@ La priorità operativa rimane:
 La separazione riguarda l'ordine di sviluppo, non l'architettura target. Il modello introdotto in Fase 1 non deve rendere obbligatori ordine, viaggio, autista Metallica o mezzo aziendale per tutte le future tipologie di movimento.
 
 ## Decisioni funzionali consolidate
+
+### Prima partenza: confine pianificazione/esecuzione
+
+Decisione PO del 2026-10-31: prima della prima partenza solo Logistica
+modifica ordini e viaggi, aggiornando il pianificato. Alla partenza si
+congela il piano originale completo. Dopo, qualsiasi modifica di autista
+o Logistica interessa l'esecuzione e conserva differenze sia dall'originale
+sia dalla revisione operativa precedente. Vale per tappe, associazioni,
+sequenza, collocazione del carico, materiali e contenitori degli ordini.
+Riaperture/correzioni non sbloccano l'originale. Documenti stampati prima
+dell'avvio non sono l'evento di congelamento.
+
+Il PO dichiara che in produzione l'utilizzo si ferma alla composizione
+del journey e produzione dei documenti cartacei; nessuna operatività digitale
+post-partenza o di magazzino a valle è attualmente utilizzata. È informazione
+fornita dal PO, non verifica live dell'ambiente. Consente un ridisegno organico
+del post-partenza senza mantenere compatibilità funzionale con quei flussi;
+non autorizza eliminazioni di dati o interventi in produzione.
+
+Ricognizione AS-IS in `docs/Verifica piano viaggio e tracciatura.md`;
+proposta tecnica, non ancora implementata, in
+`docs/Proposta confine pianificazione-esecuzione.md`. La nuova regola
+chiarisce il momento di congelamento lasciato aperto nella ricognizione.
 
 ### Viaggio e movimento
 
@@ -206,3 +238,13 @@ Le seguenti questioni non devono essere considerate decise senza validazione del
 
 Al momento dell'ultimo controllo i documenti di questa analisi risultavano non tracciati in Git. Prima di considerarli patrimonio stabile del progetto, verificare lo stato del repository e includerli nel normale processo di versionamento quando approvati.
 
+
+### Implementazione locale 2026-10-31
+
+Prima partenza atomica e baseline immutabile, esecuzioni ordine/materiali/consegne
+separate, impegno unico e rilascio immediato su salto totale. Comandi con revisione
+attesa e storico, lettura condivisa, documenti dipendenti da ordine e viaggio
+senza cambi di stato causati dalla stampa. Migrazione locale applicata; nessun
+deploy o chiusura YouTrack. Riferimento corrente:
+`docs/Piano operativo esecuzione viaggi.md`. Viaggi attivi senza baseline legacy
+in sola lettura; non ricostruire retroattivamente il piano originale.

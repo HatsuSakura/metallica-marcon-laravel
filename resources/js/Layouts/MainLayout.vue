@@ -37,96 +37,14 @@
     <div class="drawer-content">
       <!-- Page content here -->
 
-      <!-- HEADER -->
-      <header class="border-b border-gray-500 w-full
-text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdrop-blur transition-shadow duration-100 [transform:translate3d(0,0,0)] 
-  shadow-sm">
-
-        <!-- NAVBAR TOP -->
-        <div class="navbar bg-base-100">
-          <div class="flex-none">
-
-            <button class="btn btn-circle btn-ghost drawer-button">
-              <label for="my-drawer" class="">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                  class="inline-block h-5 w-5 stroke-current">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
-                  </path>
-                </svg>
-              </label>
-            </button>
-
-          </div>
-          <div class="flex-1">
-            <a class="text-xl ml-4">
-              <Link :href="route('customer.index')">Metallica Marcon</Link>&nbsp;
-            </a>
-          </div>
-          <div class="flex-none">
-          </div>
-
-
-          <div class="navbar-end">
-
-            <div class="flex flex-row items-center">
-              <div v-if="currentUser" class="flex items-center gap-0">
-
-                <!-- USER -->
-                <Link :href="route('user-account.index')" class="btn btn-circle btn-ghost">
-                  <font-awesome-icon :icon="['fas', 'user']" class="h-5 w-5 stroke-current" />
-                </Link>
-                <Link :href="route('user-account.index')" class="text-sm text-gray-500">
-                  {{ currentUser.name }} {{ currentUser.surname }}
-                </Link>
-
-                <!-- BELL -->
-                <Link :href="route('notification.index')" class="relative pr-2 py-2 text-lg btn btn-circle btn-ghost">
-                <font-awesome-icon :icon="['fas', 'bell']" class="h-5 w-5 stroke-current" />
-                <div v-if="notificationsCount"
-                  class="absolute right-0 top-0 w-5 h-5 bg-red-700 dark:bg-red-400 text-white font-medium border border-white dark:border-gray-900 rounded-full text-xs text-center">
-                  {{ notificationsCount }}
-                </div>
-                </Link>
-
-
-                <!-- IMPOSTAZIONI -->
-                <button class="btn btn-circle btn-ghost">
-                  <font-awesome-icon :icon="['fas', 'cog']" class="h-5 w-5 stroke-current" />
-                </button>
-
-                <!-- LOGOUT -->
-                <Link :href="route('logout')" class="btn btn-circle btn-ghost" method="delete" as="button">
-                <font-awesome-icon :icon="['fas', 'right-to-bracket']" class="h-5 w-5 stroke-current" />
-                </Link>
-
-              </div>
-              <div v-else class="flex items-center gap-2">
-                <Link :href="route('login')" class="btn btn-primary">
-                login
-                </Link>
-                <!--<Link :href="route('user-account.create')" class="btn-primary">Register</Link>-->
-              </div>
-              <!-- TEMA -->
-              <div class="ml-4">
-              <label class="flex cursor-pointer gap-2">
-                <font-awesome-icon :icon="['fas', 'sun']" class="text-2xl"/>
-                <input 
-                  type="checkbox" 
-                  value="synthwave" 
-                  class="toggle theme-controller"
-                  :checked="isDarkTheme"
-                  @change="toggleTheme($event.target.checked)"
-                />
-                <font-awesome-icon :icon="['fas', 'moon']" class="text-2xl"/>
-              </label>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-      </header>
+      <AppHeader
+        :user="currentUser"
+        :notifications-count="notificationsCount"
+        :dark-theme="isDarkTheme"
+        :menu-open="isDrawerOpen"
+        @toggle-menu="isDrawerOpen = !isDrawerOpen"
+        @toggle-theme="toggleTheme"
+      />
 
       <!-- MAIN -->
       <main :class="{
@@ -147,7 +65,7 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
 
 
     </div>
-    <div class="drawer-side z-40 pt-12">
+    <div id="application-navigation" class="drawer-side z-40 pt-12">
       <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
       <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-2 pt-12">
         <!-- Sidebar content here -->
@@ -171,7 +89,7 @@ text-base-content fixed top-0 z-50 flex h-16 justify-center bg-opacity-90 backdr
           <Link @click="closeDrawer" :href="route('driver.order.index')">Dashboard Autista - Ordini [DEBUG]</Link>
         </li>
         <li>
-          <Link @click="closeDrawer" :href="route('driver.journey.index')">Dashboard Autista - Viaggi</Link>
+          <Link @click="closeDrawer" :href="route('driver.home')">Dashboard Autista - Viaggi</Link>
         </li>
    
         <li>
@@ -234,6 +152,7 @@ import { useStore } from 'vuex';
 import { router } from '@inertiajs/vue3'; // Import the Inertia.js router
 import { faUsersViewfinder } from '@fortawesome/free-solid-svg-icons';
 import LoadingOverlay from '@/Components/LoadingOverlay.vue';
+import AppHeader from '@/Components/UI/AppHeader.vue';
 
 
 const store = useStore();
@@ -331,7 +250,7 @@ onUnmounted(() => {
 
 */
 const currentUser = computed(
-  () => page.props.auth.user
+  () => page.props.auth?.user ?? null
 )
 
 const canManageBusinessTypes = computed(() => {
@@ -344,7 +263,7 @@ const canManageBusinessTypes = computed(() => {
 })
 
 const notificationsCount = computed(
-  () => Math.min(page.props.user.notificationCount, 9)
+  () => Math.min(Number(page.props.user?.notificationCount ?? 0), 9)
 )
 
 </script>

@@ -24,12 +24,12 @@ class OrderPolicy
 
     public function create(User $user): bool
     {
-        return $this->isControlRole($user) || $this->isDriver($user);
+        return $this->isControlRole($user);
     }
 
     public function update(User $user, Order $order): bool
     {
-        return $this->isControlRole($user) || $this->isAssignedDriverForOrder($user, $order);
+        return $this->isControlRole($user);
     }
 
     public function delete(User $user, Order $order): bool

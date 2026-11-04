@@ -254,6 +254,13 @@ La webapp dovrà gestire viaggi, ordini, materiali, mezzo, autista, motrice, rim
 
 Il software dovrà conservare la pianificazione iniziale separata dai dati effettivi rilevati durante il viaggio. Questa separazione permetterà di misurare gli scostamenti senza sovrascrivere il piano originario.
 
+Chiarimento del PO del 2026-10-31: il piano rimane modificabile dalla sola
+Logistica fino alla prima partenza. La partenza congela l'originale e segna
+l'avvio dell'esecuzione; da quel momento sia l'autista sia la Logistica
+modificano il viaggio operativo, con tracciatura delle differenze, senza
+riscrivere quanto pianificato alla partenza. Il confine interessa anche
+materiali e contenitori degli ordini e la loro collocazione nel convoglio.
+
 ### **5.3 Censimento del carico effettivo**
 
 #### **Processo aziendale**

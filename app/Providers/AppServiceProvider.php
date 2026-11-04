@@ -50,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+        \App\Services\JourneyExecution\FrozenPlanningGuard::register();
 
         Gate::policy(DatabaseNotification::class, NotificationPolicy::class);
         Gate::policy(Cargo::class, CargoPolicy::class);

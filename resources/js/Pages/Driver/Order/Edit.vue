@@ -334,6 +334,7 @@
     </template>
     
     <script setup>
+import { groupOrderItems } from '@/utils/orderItemGroups';
     import { computed, watch, ref, watchEffect , onMounted } from 'vue';
     import { createStore, useStore } from 'vuex';
 	    import { Link, useForm, usePage } from '@inertiajs/vue3'
@@ -383,36 +384,7 @@ const totalItemsWeight = computed(() => {
       return 0;
     });
 
-const groupedItems = computed(() => {
-  const cerById = new Map((props.cerList || []).map((c) => [Number(c.id), c]));
-  const groups = new Map();
-
-  form.items.forEach((item, index) => {
-    const cerId = Number(item.cer_code_id || 0);
-    const cer = cerById.get(cerId);
-    const isUnassigned = !cerId;
-    const fallbackLabel = cer ? `${cer.code}.1` : 'Gruppo 1';
-    const groupLabel = item.order_item_group_label || fallbackLabel;
-
-    const key = isUnassigned
-      ? 'unassigned'
-      : `cer:${cerId}|${item.order_item_group_id ? `id:${item.order_item_group_id}` : `label:${groupLabel}`}`;
-
-    if (!groups.has(key)) {
-      groups.set(key, {
-        key,
-        isUnassigned,
-        cerCode: cer?.code ?? '-',
-        groupLabel: isUnassigned ? 'Assegna CER agli item' : groupLabel,
-        items: [],
-      });
-    }
-
-    groups.get(key).items.push({ item, index });
-  });
-
-  return Array.from(groups.values());
-});
+const groupedItems = computed(() => groupOrderItems(form.items, props.cerList || []));
 
     // Declare the ref
     const orariApertura = ref('');

@@ -124,6 +124,8 @@ class CustomerController extends Controller
 
         return inertia('Customer/Show', [
             'customer' => $customer,
+            'siteContactRoles' => \App\Enums\InternalContactRole::options(),
+            'siteContactPermissions' => $customer->sites->mapWithKeys(fn ($site) => [$site->id => Gate::allows('update', $site)]),
             'areas' => $areas,
             'audits' => auth()->user()?->is_admin ? AuditTrailPresenter::forCustomer($customer, 100) : [],
             'orders_by_site' => fn () => Order::query()

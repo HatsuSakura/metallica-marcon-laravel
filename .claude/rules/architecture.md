@@ -27,6 +27,13 @@ Weighted scoring basato su:
 ### 5. Presentation Layer
 - Backend restituisce dataset normalizzati + suggerimento visualizzazione.
 - Frontend (Vue 3 + Inertia.js) gestisce il rendering dei chart.
+- Intestazione applicativa responsive: `Components/UI/AppHeader.vue`, montata
+  una sola volta in `Layouts/MainLayout.vue` per tutte le route; nessuna
+  variante selezionata tramite nome della pagina. Account, notifiche, tema
+  e apertura del drawer mantengono lo stesso contratto mobile/desktop.
+- Presentazione tappe autista: `Driver/Journey/Components/JourneyStopsPanel.vue`
+  con eventi verso la pagina che coordina le mutazioni API; helper di sola
+  presentazione in `driverStopPresentation.js`.
 
 ## Separation of Concerns
 
@@ -66,3 +73,35 @@ Tre layer in cascata:
 I service non gestiscono authorization: assumono che sia già risolta a monte.
 
 Dettagli completi in `.claude/rules/decisions/004-authorization-report.md`.
+
+## Confine pianificazione/esecuzione (2026-10-31)
+
+- `JourneyExecutionService`: comando unico di prima partenza e comandi
+  successivi transazionali con revisione attesa.
+- `PlanSnapshot`/`JourneyBaseline`: originale immutabile dell'aggregato;
+  `JourneyOrderExecution`, materiali e consegne dedicati contengono l'operativo.
+- `order_commitments`: unico impegno di un ordine, rilasciabile prima della
+  fine del viaggio in caso di salto totale.
+- `PlanningWriteBoundary` + `FrozenPlanningGuard`: impediscono modifiche
+  al pianificato dopo la partenza, anche attraverso vecchi controller.
+- `ExecutionProjection` e `DriverJourneyReadModel`: lettura coerente per
+  autista/Logistica/magazzino e documenti, indipendente da riuso del sorgente.
+- `DocumentRevision`: fingerprint di ordine e viaggio; ristampa senza
+  transizioni business; job ancorato agli input richiesti.
+- Ingressi nuovi: `/api/journeys/{id}/execution/*`. I consumer legacy non devono
+  usare `orders.journey_id` come fonte dello storico delle esecuzioni.
+- Dettagli e limiti: `docs/Piano operativo esecuzione viaggi.md`.
+
+- Convoglio fisso nell'esecuzione: nessun cambio di motrice/rimorchio dopo
+  la partenza, neppure tramite API o sgancio con trailer_id nullo. Cambi
+  prima della partenza restano operazioni di pianificazione Logistica.
+- Riordino da autista prima della partenza: OP-001 in `docs/open-points.md`,
+  non abilitato in attesa del chiarimento con il cliente.
+- `StopReopening`: riapertura come tappa corrente con fatti conservati e
+  protezione delle esecuzioni già ricevute/impegnate altrove.
+
+- Consultazione completa piano originale/storico riservata a Logistica e
+  ruoli di controllo tramite `JourneyPolicy::viewExecutionHistory`, applicata
+  sia all'API storico sia alle capability della UI condivisa. Non mostrare
+  il blocco analitico o i confronti generali nell'interfaccia dell'autista;
+  mantenere disponibili le correzioni/ripristini operativi puntuali.

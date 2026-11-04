@@ -227,7 +227,7 @@
         <!-- SEZIONE 01 REFERENTI INTERNI -->
         <section class="py-4">
             <div class="font-medium mb-2">Referenti Interni</div>
-            <SiteInternalContacts :contacts="props.site.internal_contacts" />
+            <SiteInternalContacts :contacts="props.site.internal_contacts || []" :site-id="props.site.id" :roles="contactRoles" :editable="canManageContacts" @saved="contactSaved" />
         </section>
 
         <!-- SEZIONE 02 INDICATORI RITIRI E ORDINI -->
@@ -306,6 +306,8 @@ import SiteInternalContacts from '@/Components/SiteInternalContacts.vue';
 
 const props = defineProps({
     site: Object,
+    contactRoles: {type:Array,default:()=>[]},
+    canManageContacts: Boolean,
     customerSitesCount: Number,
     counter: Number,
     areas: Array,
@@ -360,6 +362,13 @@ const form = useForm({
 
 
 const emit = defineEmits(['siteUpdated'])
+const contactSaved = contact => {
+    const contacts = [...(props.site.internal_contacts || [])]
+    const index = contacts.findIndex(row => row.id === contact.id)
+    if (index < 0) contacts.push(contact)
+    else contacts[index] = contact
+    emit('siteUpdated', {...props.site, internal_contacts: contacts})
+}
 function updateBooleanParametersForSite() {
     console.log('Site che sto tentando di UPPARE',props.site)
     axios.put(`/api/site/updateBooleans/${props.site.id}`, form )

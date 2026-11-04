@@ -1,5 +1,9 @@
 # Stato sviluppi — Metallica Marcon / GLE
 
+Per lo **sviluppo locale successivo** alla fotografia tracker qui sotto, vedere
+il [checkpoint del 2026-10-31](checkpoints/2026-10-31-driver-ux.md). Il codice
+descritto nel checkpoint non è un rilascio né un aggiornamento automatico delle issue.
+
 Verifica: **2026-10-30**, YouTrack MCP. Stato di questa sintesi: **proposed**;
 le discrepanze richiedono verifica di accettazione, non aggiornamenti automatici.
 

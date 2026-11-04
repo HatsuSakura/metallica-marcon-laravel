@@ -87,6 +87,7 @@ class LogisticDispatchController extends Controller
 
     public function show(Journey $journey)
     {
+        if ($journey->baseline()->exists()) return redirect()->route('journey.execution', ['journey' => $journey->id]);
         $journey->load([
             'driver:id,name,surname',
             'vehicle:id,plate,name',

@@ -60,6 +60,40 @@ Il sistema conserva separatamente:
 
 Il dato effettivo non sovrascrive il piano originario. Questa regola si applica a date, tappe, esecutori, materiali, contenitori, posizione sul mezzo, pesi, destinazioni e sequenze di scarico.
 
+#### **2.2.1 Partenza come confine tra pianificazione ed esecuzione**
+
+Decisione del PO del 2026-10-31: fino alla prima partenza, soltanto la
+Logistica modifica ordini e viaggio. Queste modifiche aggiornano il piano
+in preparazione, inclusi materiali degli ordini, contenitori, tappe,
+sequenze e collocazione sul convoglio. La generazione o stampa dei documenti
+non congela il piano: una modifica successiva prima della partenza richiede
+documenti coerenti con il piano aggiornato.
+
+La modifica di un ordine collegato oppure del viaggio abilita la rigenerazione
+dei documenti. A dati invariati si scarica/ristampa la versione esistente.
+Generazione e rigenerazione fotografano le revisioni business, non le creano:
+non riportano ordine o viaggio in pianificazione. La stessa distinzione vale
+dopo la partenza per i documenti della revisione esecutiva corrente.
+
+La prima partenza congela la versione originale completa del piano e avvia
+l'esecuzione. Da quel momento ogni modifica, sia dell'autista sia della
+Logistica, aggiorna il viaggio operativo e viene tracciata come variazione
+rispetto al piano congelato e rispetto alla revisione operativa precedente.
+L'attore non cambia la natura della modifica: la Logistica non può riscrivere
+retroattivamente l'originale di un viaggio già partito.
+
+Originale alla partenza, piano operativo corrente e fatti eseguiti sono
+distinti. Modificare una tappa futura non equivale a eseguirla; riaprire una
+tappa o correggere un orario non riporta il viaggio in pianificazione e non
+crea un nuovo originale. Le variazioni comprendono aggiunta/rimozione/modifica
+di materiali e contenitori, associazioni ordine/tappa, inserimento o esclusione
+di tappe, sequenza e zona di carico. La rimozione operativa conserva origine
+e storia dell'elemento rimosso.
+
+La soluzione tecnica coordinata è proposta in
+[Confine pianificazione ed esecuzione](Proposta%20confine%20pianificazione-esecuzione.md).
+Questa decisione funzionale non certifica l'implementazione del relativo modello.
+
 ### **2.3 Responsabilità esplicite**
 
 Ogni decisione mantiene il responsabile aziendale previsto dal processo. L'applicazione applica autorizzazioni per ruolo e non trasferisce automaticamente responsabilità tra Logistica e magazzino.

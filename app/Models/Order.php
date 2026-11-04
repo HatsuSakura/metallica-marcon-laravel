@@ -28,6 +28,7 @@ class Order extends Model implements AuditableContract
         'fixed_withdraw_at' => 'datetime',
         'actual_withdraw_at' => 'datetime',
         'documents_generated_at' => 'datetime',
+        'documents_generation_started_at' => 'datetime',
     ];
     
     protected $fillable = [

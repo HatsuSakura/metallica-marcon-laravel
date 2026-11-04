@@ -46,7 +46,7 @@ const filteredServerOrders = computed(() => {
 const selectedSummary = computed(() => {
   const total = filteredServerOrders.value.length;
   const ready = filteredServerOrders.value
-    .filter((order) => normalizeOrderStatus(order.status) === ORDER_STATUS.READY)
+    .filter((order) => order.current === true)
     .length;
   return {
     total,
@@ -229,7 +229,7 @@ onBeforeUnmount(() => {
           <button
             type="button"
             class="btn btn-primary btn-sm"
-            :disabled="generatingAll || selectedOrderIds.length === 0"
+            :disabled="generatingAll || selectedOrderIds.length === 0 || selectedSummary.allReady"
             @click="generateBulk"
           >
             <font-awesome-icon :icon="['fas', 'file-export']" />
@@ -262,7 +262,7 @@ onBeforeUnmount(() => {
                 <td>{{ order.customer_name || '-' }}</td>
                 <td><span class="badge" :class="readinessBadgeClass(order.status)">{{ order.status }}</span></td>
                 <td>
-                  <span class="badge" :class="documentsBadgeClass(order.documents_status)">{{ order.documents_status }}</span>
+                  <span class="badge" :class="order.current ? 'badge-success' : documentsBadgeClass(order.documents_status === 'generated' ? 'not_generated' : order.documents_status)">{{ !order.current && order.documents_status === 'generated' ? 'Da aggiornare' : order.documents_status }}</span>
                       <div class="text-xs opacity-70 whitespace-nowrap">
                       {{ xlsAvailabilityLabel(order) }} {{ pdfAvailabilityLabel(order) }}
                     </div>
@@ -279,7 +279,7 @@ onBeforeUnmount(() => {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <font-awesome-icon :icon="['fas', 'file-excel']" class="text-green-600 text-xl" />
+                          <font-awesome-icon :icon="['fas', 'file-excel']" class="text-success text-xl" />
                         </a>
                       </div>
                       <div v-if="order.has_adr_hp_document" class="tooltip tooltip-error" data-tip="Etichette PERICOLOSI">
@@ -291,7 +291,7 @@ onBeforeUnmount(() => {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <font-awesome-icon :icon="['fas', 'file-pdf']" class="text-red-500 text-xl" />
+                          <font-awesome-icon :icon="['fas', 'file-pdf']" class="text-error text-xl" />
                         </a>
                       </div>
                     </div>
@@ -302,10 +302,10 @@ onBeforeUnmount(() => {
                   <button
                     type="button"
                     class="btn btn-outline btn-xs"
-                    :disabled="Boolean(generatingByOrder[order.id])"
+                    :disabled="Boolean(generatingByOrder[order.id]) || order.current"
                     @click="generateSingle(order.id)"
                   >
-                    {{ generatingByOrder[order.id] ? 'Avvio...' : 'Genera' }}
+                    {{ generatingByOrder[order.id] ? 'Avvio...' : order.current ? 'Aggiornati' : 'Genera' }}
                   </button>
                 </td>
               </tr>

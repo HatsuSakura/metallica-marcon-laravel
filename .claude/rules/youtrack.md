@@ -11,6 +11,11 @@ Progetto: `GLE` — `https://metallicamarcon.youtrack.cloud`
    - `Bug`
    - `Estetico`
 4. **Priorità**: mantenere il default del progetto salvo richiesta esplicita.
+   **Titoli e raggruppamento**: mantenere titoli puliti, senza prefissi tematici
+   come `Vista autista —`. Raggruppare per argomento tramite tag (per la UI
+   autisti: `ui-autisti`). Se un tag necessario manca e il MCP non consente
+   di crearlo, segnalarlo al PO che provvede alla creazione; non sostituirlo
+   con un prefisso nel titolo.
 5. **Workflow summary**:
    - Il PO descrive il problema o la feature.
    - Claude propone il `summary`.

@@ -9,6 +9,8 @@ use App\Models\Order;
 use App\Support\OrderSpreadsheetTemplateFiller;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use App\Services\JourneyExecution\DocumentRevision;
 
 class OrderDocumentGenerationService
 {
@@ -20,20 +22,55 @@ class OrderDocumentGenerationService
     ) {
     }
 
-    public function enqueueGeneration(Order $order): void
+    public function isCurrent(Order $order): bool
     {
-        $order->forceFill([
-            'status' => OrderStatus::STATUS_CREATED->value,
-            'documents_status' => OrderDocumentsStatus::GENERATING->value,
-            'documents_error' => null,
-        ])->save();
-
-        GenerateOrderDocumentsJob::dispatch($order->id);
+        if ($order->documents_status !== OrderDocumentsStatus::GENERATED || !$order->documents_input_hash) return false;
+        if (!hash_equals($order->documents_input_hash, app(DocumentRevision::class)->hash($order))) return false;
+        $files = collect($this->listDocuments($order));
+        return $files->contains('extension', 'xlsx') && (!$this->requiresAdrHpDocument($order) || $files->contains('extension', 'pdf'));
     }
 
-    public function generate(Order $order): string
+    public function enqueueGeneration(Order $order): bool
     {
-        $snapshot = $order->load([
+        return DB::transaction(function () use ($order) {
+            if ($order->journey_id) DB::table('journeys')->where('id', $order->journey_id)->lockForUpdate()->first();
+            if ($order->execution_order_id) {
+                $execution = \App\Models\JourneyOrderExecution::query()->lockForUpdate()->findOrFail($order->execution_order_id);
+                $order = app(\App\Services\JourneyExecution\ExecutionProjection::class)->order($execution);
+            }
+            else { $order = Order::query()->lockForUpdate()->findOrFail($order->id); }
+            if ($this->isCurrent($order)) return false;
+            abort_if($order->documents_status === OrderDocumentsStatus::GENERATING && !$this->isGeneratingStateStale($order), 409, 'Generazione già in corso.');
+            $hash = app(DocumentRevision::class)->hash($order);
+            app(DocumentRevision::class)->persist($order, [
+                'documents_status' => OrderDocumentsStatus::GENERATING->value,
+                'documents_requested_hash' => $hash, 'documents_generation_started_at' => now(), 'documents_error' => null,
+            ]);
+            GenerateOrderDocumentsJob::dispatch((int) $order->id, $order->execution_order_id, $hash)->afterCommit();
+            return true;
+        });
+    }
+
+    public function generate(Order $order, ?string $expectedHash = null): string
+    {
+        return DB::transaction(function () use ($order, $expectedHash) {
+            if ($order->journey_id) DB::table('journeys')->where('id', $order->journey_id)->lockForUpdate()->first();
+            if ($order->execution_order_id) {
+                $execution = \App\Models\JourneyOrderExecution::query()->lockForUpdate()->findOrFail($order->execution_order_id);
+                $order = app(\App\Services\JourneyExecution\ExecutionProjection::class)->order($execution);
+            } else $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+            $hash = app(DocumentRevision::class)->hash($order);
+            if ($expectedHash !== null && (!hash_equals($expectedHash, $hash) || $order->documents_requested_hash !== $expectedHash)) {
+                if ($order->documents_requested_hash === $expectedHash) app(DocumentRevision::class)->persist($order, ['documents_status' => 'not_generated']);
+                return '';
+            }
+            return $this->generateCurrentRevision($order, $hash);
+        });
+    }
+
+    private function generateCurrentRevision(Order $order, string $hash): string
+    {
+        $snapshot = $order->loadMissing([
             'customer:id,company_name,legal_address',
             'customer.seller:id,name,surname,user_code',
             'site:id,name,address',
@@ -48,9 +85,16 @@ class OrderDocumentGenerationService
             'holders.holder:id,name',
         ]);
 
+        if ($snapshot->execution_order_id) {
+            foreach ($snapshot->items as $item) {
+                if ($item->actual_containers !== null) $item->holder_quantity = $item->actual_containers;
+                if ($item->actual_weight_kg !== null) $item->weight_declared = $item->actual_weight_kg;
+            }
+            foreach ($snapshot->holders as $holder) if ($holder->actual_delivered !== null) $holder->total_holders_count = $holder->actual_delivered;
+        }
         $version = $this->resolveNextDocumentVersion($snapshot);
         $documentBaseName = $this->documentBaseName($snapshot);
-        $basePath = "orders/documents/order-{$snapshot->id}";
+        $basePath = $this->generationBasePath($snapshot);
         $filePath = "{$basePath}/manifest-v{$version}.json";
         $xlsxPath = "{$basePath}/{$documentBaseName}-v{$version}.xlsx";
 
@@ -59,8 +103,10 @@ class OrderDocumentGenerationService
             'legacy_code' => $snapshot->legacy_code,
             'customer' => $snapshot->customer?->only(['id', 'company_name', 'legal_address']),
             'site' => $snapshot->site?->only(['id', 'name', 'address']),
-            'status' => OrderStatus::fromMixed($snapshot->status)->value,
+            'status' => OrderStatus::fromMixed($snapshot->status ?? OrderStatus::STATUS_CREATED)->value,
             'documents_version' => $version,
+            'input_hash' => $hash,
+            'execution_order_id' => $order->execution_order_id,
             'generated_at' => now()->toIso8601String(),
             'items' => $snapshot->items->map(fn ($item) => [
                 'id' => $item->id,
@@ -76,67 +122,51 @@ class OrderDocumentGenerationService
         $this->writeTemplateXlsx($xlsxPath, $snapshot);
         $this->writeAdrHpPdfIfNeeded($basePath, $documentBaseName, $snapshot, $version);
 
-        $currentStatus = OrderStatus::fromMixed($snapshot->status ?? OrderStatus::STATUS_CREATED->value);
-
-        $nextStatus = in_array($currentStatus, [OrderStatus::STATUS_CREATED, OrderStatus::STATUS_READY, OrderStatus::STATUS_PLANNED], true)
-            ? OrderStatus::STATUS_READY->value
-            : $currentStatus->value;
-
-        $snapshot->forceFill([
+        app(DocumentRevision::class)->persist($snapshot, [
             'documents_status' => OrderDocumentsStatus::GENERATED->value,
-            'documents_generated_at' => now(),
-            'documents_error' => null,
-            'documents_version' => $version,
-            'status' => $nextStatus,
-        ])->save();
+            'documents_generated_at' => now(), 'documents_error' => null,
+            'documents_version' => $version, 'documents_input_hash' => $hash,
+            'documents_requested_hash' => null, 'documents_base_path' => $basePath,
+        ]);
 
         return $filePath;
     }
 
-    public function markFailed(Order $order, string $error): void
+    public function markFailed(Order $order, string $error, ?string $expectedHash = null): void
     {
-        $order->forceFill([
-            'documents_status' => OrderDocumentsStatus::FAILED->value,
-            'documents_error' => mb_substr($error, 0, 2000),
-        ])->save();
+        DB::transaction(function () use ($order, $error, $expectedHash) {
+            $fresh = $order->execution_order_id
+                ? app(\App\Services\JourneyExecution\ExecutionProjection::class)->order(\App\Models\JourneyOrderExecution::query()->lockForUpdate()->findOrFail($order->execution_order_id))
+                : Order::query()->lockForUpdate()->findOrFail($order->id);
+            if ($expectedHash !== null && $fresh->documents_requested_hash !== $expectedHash) return;
+            app(DocumentRevision::class)->persist($fresh, ['documents_status' => OrderDocumentsStatus::FAILED->value, 'documents_error' => mb_substr($error, 0, 2000)]);
+        });
     }
 
     public function invalidateAfterReadyOrderEdit(Order $order): void
     {
-        $currentStatus = OrderStatus::fromMixed($order->status ?? OrderStatus::STATUS_CREATED->value);
-
-        $documentsState = OrderDocumentsStatus::fromMixed($order->documents_status ?? OrderDocumentsStatus::NOT_GENERATED->value);
-
-        $shouldInvalidate = in_array($currentStatus, [OrderStatus::STATUS_READY, OrderStatus::STATUS_PLANNED], true)
-            || $documentsState === OrderDocumentsStatus::GENERATED;
-
-        if (!$shouldInvalidate) {
-            return;
-        }
-
-        $order->forceFill([
-            'status' => OrderStatus::STATUS_CREATED->value,
-            'documents_status' => OrderDocumentsStatus::NOT_GENERATED->value,
-            'documents_generated_at' => null,
-            'documents_error' => null,
-        ])->save();
+        if ($this->isCurrent($order)) return;
+        // Content changes invalidate documents, never the order/journey business state.
+        if ($order->documents_status !== OrderDocumentsStatus::GENERATING) app(DocumentRevision::class)->persist($order, ['documents_status' => 'not_generated', 'documents_error' => null]);
     }
 
     public function statusPayload(Order $order): array
     {
         return [
             'order_id' => $order->id,
-            'order_status' => OrderStatus::fromMixed($order->status)->value,
+            'order_status' => OrderStatus::fromMixed($order->status ?? OrderStatus::STATUS_CREATED)->value,
             'documents_status' => OrderDocumentsStatus::fromMixed($order->documents_status)->value,
             'documents_generated_at' => $order->documents_generated_at,
             'documents_error' => $order->documents_error,
             'documents_version' => (int) ($order->documents_version ?? 0),
+            'current' => $this->isCurrent($order),
+            'can_generate' => !$this->isCurrent($order) && ($order->documents_status !== OrderDocumentsStatus::GENERATING || $this->isGeneratingStateStale($order)),
         ];
     }
 
     public function isGeneratingStateStale(Order $order): bool
     {
-        $updatedAt = $order->updated_at;
+        $updatedAt = $order->documents_generation_started_at;
         if (!$updatedAt instanceof \Illuminate\Support\Carbon) {
             return false;
         }
@@ -146,10 +176,7 @@ class OrderDocumentGenerationService
 
     public function recoverStaleGeneratingState(Order $order): void
     {
-        $order->forceFill([
-            'documents_status' => OrderDocumentsStatus::NOT_GENERATED->value,
-            'documents_error' => null,
-        ])->save();
+        app(DocumentRevision::class)->persist($order, ['documents_status' => OrderDocumentsStatus::NOT_GENERATED->value, 'documents_error' => null]);
     }
 
     public function listDocuments(Order $order): array
@@ -176,6 +203,7 @@ class OrderDocumentGenerationService
             if (!preg_match('/^' . preg_quote($baseName, '/') . '(?:-adr-hp)?-v\d+\.(xlsx|pdf)$/i', $name)) {
                 continue;
             }
+            if (!preg_match('/-v'.(int) $order->documents_version.'\\.(?:xlsx|pdf)$/i', $name)) continue;
             $templateKey = preg_replace('/-v\d+(?=\.[^.]+$)/i', '', $name) ?? $name;
 
             $document = [
@@ -208,7 +236,14 @@ class OrderDocumentGenerationService
 
     private function documentsBasePath(Order $order): string
     {
-        return "orders/documents/order-{$order->id}";
+        return $order->documents_base_path ?: $this->generationBasePath($order);
+    }
+
+    private function generationBasePath(Order $order): string
+    {
+        return $order->execution_order_id
+            ? "journeys/documents/journey-{$order->journey_id}/execution-order-{$order->execution_order_id}"
+            : "orders/documents/order-{$order->id}";
     }
 
     private function resolveNextDocumentVersion(Order $order): int
@@ -255,7 +290,7 @@ class OrderDocumentGenerationService
 
         $disk->put($xlsxPath, $contents);
 
-        $absolutePath = storage_path('app/' . ltrim($xlsxPath, '/'));
+        $absolutePath = $disk->path($xlsxPath);
         $this->templateFiller->fill($absolutePath, $order);
     }
 

@@ -79,6 +79,8 @@
             <TabSite 
                 v-for="(site, index) in reactiveCustomer.sites" 
                 :site="site"
+                :contact-roles="siteContactRoles"
+                :can-manage-contacts="!!siteContactPermissions[site.id]"
                 :customer-sites-count="reactiveCustomer.sites.length"
                 :areas="props.areas"
                 :orders="(orders_by_site[site.id] ?? [])"
@@ -113,6 +115,8 @@ const props = defineProps({
     customer:Object,
     areas: Array,
     orders_by_site: { type: Object, default: () => ({}) },
+    siteContactRoles: {type:Array,default:()=>[]},
+    siteContactPermissions: {type:Object,default:()=>({})},
     audits: { type: Array, default: () => [] },
 })
 

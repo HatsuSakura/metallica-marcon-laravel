@@ -22,6 +22,8 @@ class Journey extends Model implements AuditableContract
         'status' => JourneyStatus::class,
         'dispatch_status' => DispatchStatus::class,
         'plan_version' => 'integer',
+        'execution_revision' => 'integer',
+        'execution_data' => 'array',
 
         // datetime
         'planned_start_at'         => 'datetime',
@@ -90,6 +92,9 @@ class Journey extends Model implements AuditableContract
     {
         return $this->hasMany(Order::class);
     }
+
+    public function baseline() { return $this->hasOne(JourneyBaseline::class); }
+    public function orderExecutions() { return $this->hasMany(JourneyOrderExecution::class); }
 
     public function vehicle()
     {
