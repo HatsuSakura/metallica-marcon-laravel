@@ -13,7 +13,7 @@ Aggiornare ad ogni sessione di sviluppo. Svuotare la sezione dopo ogni rilascio 
 
 ---
 
-## [QA] — In attesa di rilascio
+## [QA] — Pubblicato 2026-11-04, in attesa di collaudo
 
 ### Pacchetto UI autisti / esecuzione — 2026-11-04
 
@@ -25,11 +25,17 @@ collocazione per item, split e checklist Caricato persistente.
 Migrazioni aggiunte: `2026_10_31_200000_create_journey_execution_context`
 e `2026_11_02_180000_add_execution_load_allocations`.
 Preparazione e scenari: `docs/qa/2026-11-04-driver-ui.md`.
-Commit/push richiesti dal PO; QA e produzione non ancora rilasciati da questa
-sessione. PHP/Docker esclusi. Restano aperti OP-001, note sede da autista e
+Rilasciato in QA il 2026-11-04 dal commit `8c5bba8`; migrazioni applicate e
+smoke test riusciti. Collaudo funzionale dei tester pendente; produzione non
+rilasciata da questa sessione. Esito: `docs/qa/2026-11-04-deploy-result.md`.
+PHP/Docker esclusi. Restano aperti OP-001, note sede da autista e
 riconciliazione del backend documentale con la stampa del solo pianificato.
 
-Le sezioni successive conservano il precedente backlog di rilascio NLP.
+
+
+---
+
+## [QA] — In attesa di rilascio
 
 ### .env — variabili da aggiungere
 

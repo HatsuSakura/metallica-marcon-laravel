@@ -1,0 +1,79 @@
+{
+  "date": "2026-11-04",
+  "environment": "QA",
+  "url": "https://testgestionalelogistica.metallicamarcon.it",
+  "source_commit": "8c5bba8b0cf9cd9daf3792341b4d664fc097fcfe",
+  "runtime": {
+    "hosting": "SiteGround, native PHP",
+    "php": "8.2.35",
+    "laravel": "11.21.0",
+    "queue": "database",
+    "cache": "database"
+  },
+  "migrations": [
+    "2026_10_31_200000_create_journey_execution_context",
+    "2026_11_02_180000_add_execution_load_allocations"
+  ],
+  "backup": {
+    "location": "QA account, outside web root",
+    "reference": "deploy-backups/metallica-qa/20261104T172315Z-before-8c5bba8",
+    "artifacts": [
+      "code.tar.gz",
+      "database.sql.gz",
+      "SHA256SUMS"
+    ],
+    "gzip_integrity": "passed",
+    "scope": "Same-host pre-deploy snapshot; not an offsite backup or restore test"
+  },
+  "checks": {
+    "http": [
+      {
+        "path": "/login",
+        "status": 200
+      },
+      {
+        "path": "/dashboard-driver",
+        "status": 302
+      },
+      {
+        "path": "/driver/journey",
+        "status": 302
+      },
+      {
+        "path": "/api/journeys/1/execution",
+        "status": 302
+      },
+      {
+        "asset": "assets/app-CWUK4iOn.js",
+        "status": 200,
+        "sha256": "b3c7f002de2cee2b270a48debe844822e70ad0894db1dacc931a9c44c8ab9ac3"
+      },
+      {
+        "asset": "assets/app-DTZL2jaD.css",
+        "status": 200,
+        "sha256": "130d3cc99d89500bc194ceba18bdfff4d945d4aec79d2412affa3dd46fd5d0c2"
+      },
+      {
+        "asset": "assets/tailwind-C5IwVrgC.css",
+        "status": 200,
+        "sha256": "97cc0c93213fb915e341e592112771a514eb430a8efbebe6742e76b2ecda246c"
+      },
+      {
+        "asset": "assets/theme-overrides-Ci1LHUKh.css",
+        "status": 200,
+        "sha256": "b5eaeff29493e461d418a93367465db2484890c73929793b99c4c441e0cdb736"
+      }
+    ],
+    "journey_read_model_records_serialized": 3,
+    "maintenance_mode": "OFF",
+    "manifest_sha256": "f40229307d90fd248fa70a414322241945833b6d6894bd52c86166f0a3f2d054",
+    "source_checksums_match": true,
+    "release_marker": "storage/app/deployments/qa-release.json"
+  },
+  "manual_acceptance": "pending",
+  "qa_data": {
+    "baselines_after_migration": 0,
+    "execution_allocations_after_migration": 0,
+    "fixtures_created": false
+  }
+}

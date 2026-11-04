@@ -1,5 +1,7 @@
 # Documentazione Metallica Marcon
 
+- **[Deploy QA del 2026-11-04](qa/2026-11-04-deploy-result.md)**: codice pubblicato, controlli, backup preventivi e collaudo ancora da eseguire.
+
 - **[Pacchetto QA UI autisti — 2026-11-04](qa/2026-11-04-driver-ui.md)**: perimetro del commit, migrazioni e scenari di collaudo; sviluppi ancora aperti.
 
 - **[Checkpoint di ripresa 2026-10-31](checkpoints/2026-10-31-driver-ux.md)**: stato locale UI autisti/esecuzioni, ultime decisioni, verifiche e prossima sessione.

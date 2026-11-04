@@ -3,6 +3,22 @@
 Aggiornato: 2026-11-04. Sintesi di sessione; non sostituisce il tracker,
 le decisioni di dominio o le prove di rilascio.
 
+## Deploy QA completato — 2026-11-04
+
+Su richiesta PO, rilasciato `8c5bba8b0cf9cd9daf3792341b4d664fc097fcfe` su
+SiteGround/PHP residente 8.2.35, senza Docker o modifiche PHP. Snapshot privati
+codice/database sul server prima del trasferimento; entrambe le nuove migrazioni
+applicate, cache ricostruite e queue:restart inviato. App riaperta.
+
+Login/redirect di autenticazione, checksum dei quattro asset e lettura di tre
+viaggi esistenti verificati. QA ha zero baseline: collaudare split/checklist
+su un viaggio nuovo pianificato e poi avviato. Nessuna fixture o reset dati.
+
+Dettagli: [esito deploy](qa/2026-11-04-deploy-result.md), con evidenza JSON
+sanificata. `.last-qa-deploy` locale e marker privato remoto registrano il
+commit applicativo. L'accettazione manuale dei tester e lo stato delle issue
+rimangono distinti dal deploy. Produzione non modificata.
+
 ## Preparazione commit/push per QA — 2026-11-04
 
 Richiesta PO: versionare e pubblicare gli sviluppi autista/esecuzione attuali,
