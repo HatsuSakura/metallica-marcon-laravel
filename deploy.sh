@@ -18,7 +18,7 @@ git pull
 cp docker-compose.prod.yml docker-compose.yml
 
 echo "==> [2/7] Build immagini (app + worker + scheduler)"
-docker compose build metallicamarcon metallicamarcon-worker metallicamarcon-scheduler
+docker compose build --pull metallicamarcon metallicamarcon-worker metallicamarcon-scheduler
 
 echo "==> [3/7] Riavvio container app (DB e Valkey restano attivi)"
 docker compose up -d --no-deps metallicamarcon metallicamarcon-worker metallicamarcon-scheduler

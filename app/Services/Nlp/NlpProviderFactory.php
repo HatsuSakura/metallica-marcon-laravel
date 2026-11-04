@@ -8,7 +8,7 @@ use App\Services\Nlp\Providers\NlpProvider;
 
 class NlpProviderFactory
 {
-    public function make(string $override = null): NlpProvider
+    public function make(?string $override = null): NlpProvider
     {
         $provider = $override ?? strtolower((string) config('services.nlp.provider', 'heuristic'));
 

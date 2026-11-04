@@ -1,6 +1,6 @@
 # =============================================================
 # Dockerfile — Metallica Marcon
-# Multi-stage: composer → node → PHP 8.2 Apache
+# Multi-stage: composer → node → PHP 8.4 Apache
 # =============================================================
 
 # ── Stage 1: Composer (must run before Node for Ziggy) ──────
@@ -29,8 +29,11 @@ COPY . .
 COPY --from=composer-builder /app/vendor ./vendor
 RUN npm run build
 
-# ── Stage 3: PHP 8.2 Apache — runtime image ─────────────────
-FROM php:8.2-apache
+# ── Stage 3: PHP 8.4 Apache — runtime image ─────────────────
+# Exact patch pinned on purpose: a floating tag plus a cached base image let
+# production drift below security fixes (PHP2Shell, 2026-11). Bump it for each
+# PHP security release; Laravel 11 supports PHP up to 8.4.
+FROM php:8.4.27-apache
 
 # System deps
 RUN apt-get update && apt-get install -y \
@@ -64,6 +67,9 @@ RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
     && echo "opcache.memory_consumption=128" >> /usr/local/etc/php/conf.d/opcache.ini \
     && echo "opcache.max_accelerated_files=10000" >> /usr/local/etc/php/conf.d/opcache.ini \
     && echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/opcache.ini
+
+# Do not advertise the exact PHP version (X-Powered-By)
+RUN echo "expose_php=Off" > /usr/local/etc/php/conf.d/zz-hardening.ini
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
