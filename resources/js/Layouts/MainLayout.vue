@@ -2,36 +2,6 @@
 <LoadingOverlay />
   
 
-<div id="messageQueue"  class="notification-container">
-
-<div class="mt-8 space-y-4 container w-full mx-auto">
-
-  <div v-for="(message, index) in messageQueue" 
-    :key="index" role="alert" 
-    :class="{
-      'alert-success': message.type === 'success',
-      'alert-error': message.type === 'error',
-      'alert-warning': message.type === 'warning',
-      'alert-info': message.type === 'info'
-    }" 
-    class="alert"
-  >
-  <font-awesome-icon v-if="message.type === 'success'"      :icon="['fas', 'circle-check']" />
-  <font-awesome-icon v-else-if="message.type === 'error'"   :icon="['fas', 'circle-xmark']" />
-  <font-awesome-icon v-else-if="message.type === 'warning'" :icon="['fas', 'triangle-exclamation']" />
-  <font-awesome-icon v-else                                 :icon="['fas', 'circle-info']" />
-
-    <div>{{ message.text }}</div>
-    <button @click="removeMessage(index)" class="btn btn-sm btn-circle btn-ghost">
-      <font-awesome-icon :icon="['fas', 'xmark']" />
-    </button>
-
-  </div>
-
-</div>
-
-</div>
-
   <div class="drawer">
     <input id="my-drawer" type="checkbox" class="drawer-toggle" v-model="isDrawerOpen" />
     <div class="drawer-content">
@@ -145,7 +115,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, useAttrs, onMounted, onUnmounted } from 'vue'
+import { computed, ref } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3';
 import { route } from 'ziggy';
 import { useStore } from 'vuex';
@@ -166,9 +136,6 @@ const toggleTheme = (isDarkMode) => {
   const theme = isDarkMode ? 'darktheme' : 'lighttheme';
   document.documentElement.setAttribute('data-theme', theme); // Apply theme to the DOM
 };
-
-// Access the messages in the queue
-const messageQueue = computed(() => store.state.flash.messageQueue);
 
 // Reactive state to manage whether the drawer is open or closed
 const isDrawerOpen = ref(false);
@@ -206,49 +173,6 @@ const isMapPage = computed(() => {
   return normalized === 'map/site' || normalized.startsWith('map/site/');
 });
 
-const removeMessage = (index) => {
-  store.dispatch('flash/removeMessageByIndex', index);
-};
-
-const attrs = useAttrs()
-const flash = computed( () => attrs.flash )
-
-// Watch for changes in `flash` and dispatch messages to Vuex
-watch(flash, (newFlash) => {
-  if (newFlash.success) {
-    store.dispatch('flash/queueMessage', { type: 'success', text: newFlash.success });
-  }
-  if (newFlash.error) {
-    store.dispatch('flash/queueMessage', { type: 'error', text: newFlash.error });
-  }
-  if (newFlash.warning) {
-    store.dispatch('flash/queueMessage', { type: 'warning', text: newFlash.warning });
-  }
-  if (newFlash.info) {
-    store.dispatch('flash/queueMessage', { type: 'info', text: newFlash.info });
-  }
-
-}, { immediate: true }); // Add `immediate: true` to run on initial load if flash has data
-
-
-/*
-// Clear the flash message on Inertia.js navigation
-const clearFlashOnNavigation = () => {
-  if (flash && flash.success) {
-    flash.success = null;  // Clear the flash message
-  }
-};
-
-// Register Inertia.js router events
-onMounted(() => {
-  router.on('navigate', clearFlashOnNavigation);
-});
-
-onUnmounted(() => {
-  router.off('navigate', clearFlashOnNavigation);
-});
-
-*/
 const currentUser = computed(
   () => page.props.auth?.user ?? null
 )
@@ -276,16 +200,5 @@ const notificationsCount = computed(
   margin: 0;
 }
 
-
-.notification-container {
-  position: fixed;
-  width: 100%;
-  z-index: 9999; /* Ensure highest priority */
-  pointer-events: none; /* Prevent interference */
-}
-
-.notification-container .alert {
-  pointer-events: auto; /* Allow interaction with alerts */
-}
 
 </style>

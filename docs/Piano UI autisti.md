@@ -221,8 +221,9 @@ Riapertura completata e verificata nel workspace condiviso: corrente unica,
 fatti conservati, avanzamento ricalcolato e blocchi motivati. Dettagli e reset
 locale del 159 in [GLE-118](GLE-118%20Riapertura%20tappa.md).
 Il convoglio è fisso dopo la partenza: nessun cambio motrice/rimorchio nell'UI
-esecutiva o nelle API. Il riordino da autista prima della partenza è invece
-un punto aperto da chiarire in call: [OP-001](open-points.md).
+esecutiva o nelle API. Dal 2026-11-09 [OP-001](open-points.md) è risolto:
+«Avvia e riordina» registra la partenza effettiva prima del riordino operativo;
+il pianificato resta riservato alla Logistica.
 
 ### Accesso diretto a inserimento CER e modifica item
 

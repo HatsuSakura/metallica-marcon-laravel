@@ -1,5 +1,9 @@
 # Stato sviluppi — Metallica Marcon / GLE
 
+Aggiornamento locale 2026-11-09: [note sede e avvio per riordino](qa/2026-11-09-driver-notes-reorder.md) implementati e verificati, non ancora pubblicati in QA. OP-001 risolto.
+
+**Aggiornamento mirato 2026-11-09:** [riconciliazione delle GLE autisti](reviews/2026-11-09-driver-gle.md), con snapshot MCP corrente e residui tecnici. Le undici issue ui-autisti risultano aperte (5 In corso, 6 Da fare), pur con funzionalità già pubblicate in QA. La fotografia generale sotto rimane quella del 30 ottobre.
+
 Per lo **sviluppo locale successivo** alla fotografia tracker qui sotto, vedere
 il [checkpoint del 2026-10-31](checkpoints/2026-10-31-driver-ux.md). Il codice
 descritto nel checkpoint non è un rilascio né un aggiornamento automatico delle issue.

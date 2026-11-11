@@ -194,8 +194,9 @@ campi nelle API e nel comando di dominio, incluso rimorchio nullo; dashboard,
 read model e documenti non applicano override del convoglio esecutivo.
 Il controllo dei viaggi locali gestiti non ha rilevato override già salvati.
 
-**Riordino pre-partenza dell'autista:** punto aperto [OP-001](open-points.md),
-da chiarire in call. Fino alla decisione rimangono autorizzazioni correnti.
+**Riordino pre-partenza dell'autista:** [OP-001](open-points.md) risolto il
+2026-11-09: nessuna modifica del pianificato; «Avvia e riordina» registra
+la partenza reale e apre il riordino operativo solo se l’avvio riesce.
 
 **159:** le indicazioni precedenti di sola lettura descrivono lo stato prima
 del reset esplicitamente richiesto dal PO. È stato preparato per un nuovo

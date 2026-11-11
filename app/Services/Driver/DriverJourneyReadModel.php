@@ -2,9 +2,15 @@
 
 namespace App\Services\Driver;
 
+use App\Models\InternalContact;
 use App\Models\Journey;
 use App\Models\JourneyStopOrder;
+use App\Models\Site;
+use App\Services\JourneyExecution\ContainerBalance;
 use App\Services\JourneyExecution\ExecutionProjection;
+use App\Services\JourneyExecution\ExecutionRestoration;
+use App\Services\JourneyExecution\JourneySiteNotes;
+use App\Services\JourneyExecution\StopReopening;
 use Illuminate\Database\Eloquent\Collection;
 
 class DriverJourneyReadModel
@@ -31,10 +37,11 @@ class DriverJourneyReadModel
         }
         // Operational phonebook stays current; frozen execution/document data is untouched.
         $siteIds = $executions->map(fn ($execution) => $execution->data['site']['id'] ?? $execution->data['site_id'] ?? null)->filter()->unique();
-        $contacts = \App\Models\InternalContact::whereIn('site_id', $siteIds)->get(['id', 'site_id', 'name', 'surname', 'mobile', 'phone', 'role'])->groupBy('site_id');
-        $journey->setAttribute('container_balance', app(\App\Services\JourneyExecution\ContainerBalance::class)->calculate($journey->baseline->data['orders'], $executions));
-        $previews = app(\App\Services\JourneyExecution\ExecutionRestoration::class)->previews($journey, $executions->where('status', 'pending')->flatMap->items);
-        $reopening = app(\App\Services\JourneyExecution\StopReopening::class)->previews($journey, $executions);
+        $liveSites = Site::withTrashed()->whereIn('id', $siteIds)->get(['id', 'notes', 'deleted_at'])->keyBy('id');
+        $contacts = InternalContact::whereIn('site_id', $siteIds)->get(['id', 'site_id', 'name', 'surname', 'mobile', 'phone', 'role'])->groupBy('site_id');
+        $journey->setAttribute('container_balance', app(ContainerBalance::class)->calculate($journey->baseline->data['orders'], $executions));
+        $previews = app(ExecutionRestoration::class)->previews($journey, $executions->where('status', 'pending')->flatMap->items);
+        $reopening = app(StopReopening::class)->previews($journey, $executions);
         $orders = new Collection;
         foreach ($journey->stops as $stop) {
             $stop->setAttribute('reopen_available', $reopening[$stop->id]['available']);
@@ -45,6 +52,12 @@ class DriverJourneyReadModel
                 $siteId = $order->site?->id ?? $order->site_id;
                 if ($siteId) {
                     $order->site->setRelation('internalContacts', $contacts->get($siteId, new Collection));
+                    $liveSite = $liveSites->get($siteId);
+                    $order->site->setAttribute('notes_editable', $liveSite && ! $liveSite->trashed());
+                    $order->site->setAttribute('notes_version', $liveSite ? JourneySiteNotes::version($liveSite->notes) : null);
+                    if ($liveSite) {
+                        $order->site->setAttribute('notes', $liveSite->notes);
+                    }
                 }
                 foreach ($order->items as $item) {
                     $item->setAttribute('restore_options', $previews[$item->id] ?? []);

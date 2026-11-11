@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\JourneyStatus;
 use App\Models\Journey;
 use App\Models\User;
 use App\Policies\Concerns\AuthorizesDomainRoles;
@@ -35,6 +36,13 @@ class JourneyPolicy
     public function update(User $user, Journey $journey): bool
     {
         return $this->isControlRole($user) || $this->isAssignedDriverForJourney($user, $journey);
+    }
+
+    public function updateSiteNotes(User $user, Journey $journey): bool
+    {
+        return $this->update($user, $journey)
+            && $journey->status === JourneyStatus::STATUS_ACTIVE
+            && $journey->baseline()->exists();
     }
 
     public function delete(User $user, Journey $journey): bool

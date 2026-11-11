@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Journey;
+use App\Models\User;
+use App\Services\Driver\DriverExecutionLookups;
 use App\Services\Driver\DriverJourneyReadModel;
 use App\Services\JourneyExecution\JourneyExecutionService;
 use Illuminate\Http\Request;
@@ -22,8 +24,8 @@ class API_JourneyExecutionController extends Controller
     {
         Gate::authorize('viewExecutionHistory', $journey);
         $baseline = $journey->baseline()->firstOrFail();
-        $events = $journey->events()->orderByDesc('id')->get()->filter(fn ($e) => in_array($e->payload['event'] ?? '', ['execution_started', 'execution_changed']))->values();
-        $actors = \App\Models\User::without('warehouses')->whereIn('id', $events->pluck('created_by_user_id'))->get()->keyBy('id');
+        $events = $journey->events()->orderByDesc('id')->get()->filter(fn ($e) => in_array($e->payload['event'] ?? '', ['execution_started', 'execution_changed', 'site_notes_updated']))->values();
+        $actors = User::without('warehouses')->whereIn('id', $events->pluck('created_by_user_id'))->get()->keyBy('id');
 
         return response()->json(['baseline' => $baseline, 'events' => $events->map(fn ($e) => [
             'id' => $e->id, 'created_at' => $e->created_at, 'payload' => $e->payload,
@@ -36,7 +38,7 @@ class API_JourneyExecutionController extends Controller
         Gate::authorize('update', $journey);
         $j = $service->start($journey, $request->user()->id);
 
-        return response()->json(['journey' => app(DriverJourneyReadModel::class)->load($j)]);
+        return response()->json(['journey' => app(DriverJourneyReadModel::class)->load($j), 'executionLookups' => app(DriverExecutionLookups::class)->load($j)]);
     }
 
     public function command(Request $request, Journey $journey, JourneyExecutionService $service)

@@ -1,0 +1,258 @@
+{
+  "checked_on": "2026-11-09",
+  "transport": "configured native YouTrack MCP",
+  "source_commit": "91bb597e0a8ebc5f1ed056f9e7daee70bff60b42",
+  "functional_driver_commit": "8c5bba8b0cf9cd9daf3792341b4d664fc097fcfe",
+  "queries": [
+    {
+      "query": "project: GLE tag: ui-autisti sort by: {issue id} asc",
+      "pageSize": 20,
+      "pages": 1,
+      "complete": true
+    },
+    {
+      "query": "project: GLE sort by: {issue id} asc",
+      "pageSize": 20,
+      "pages": 7,
+      "complete": true
+    }
+  ],
+  "project_totals": {
+    "issues": 126,
+    "resolved": 74,
+    "unresolved": 52
+  },
+  "driver_totals": {
+    "issues": 11,
+    "resolved": 0,
+    "states": {
+      "Da fare": 6,
+      "In corso": 5
+    }
+  },
+  "driver_issues": [
+    {
+      "id": "GLE-116",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-116",
+      "summary": "UX/UI responsive mobile-first dalla dashboard alle operazioni",
+      "state": "Da fare",
+      "type": "Epica",
+      "resolvedAt": null,
+      "updatedAt": "2026-10-31 11:46:20",
+      "criteria": "Issue madre (osservazione 11 del backlog concordato, aggiunta come requisito trasversale). Obiettivo: tutte le attività autista fruibili da smartphone portrait e tablet, con adattamento landscape e desktop.\n\nPerimetro: dashboard oggi/storico/futuri; panoramica viaggio con prossima tappa, contatti e completate recuperabili; dettagli e modifiche di materiali, contenitori e tappe; confronto originale/operativo/effettivo; ripristini touch senza conferme ripetitive.\n\nAccettazione:\n- Tutte le operazioni completabili in portrait senza rotazione obbligatoria né scorrimento orizzontale nelle attività principali.\n- Testi leggibili, comandi comodi al tocco, nomi accessibili; nessuna informazione essenziale dipende dal mouseover.\n- Tablet e landscape sfruttano spazio aggiuntivo con comportamento coerente.\n- Moduli utilizzabili con tastiera virtuale; stati caricamento, errore, salvataggio e dati assenti comprensibili.\n- Verifica su dimensioni rappresentative smartphone/tablet e almeno un dispositivo touch reale prima dell’accettazione finale.\n- Definire sub-issue implementative durante la pianificazione; non crearle automaticamente ora e non duplicare le dieci osservazioni funzionali.\n\nSequenza proposta: ricognizione e contratti/audit → disegno flussi → dashboard → panoramica e contatti → dettaglio e modifiche → lifecycle/ripristini/casse → collaudo integrato. Nessun codice o deployment incluso nella creazione del backlog.",
+      "commentsCount": 2
+    },
+    {
+      "id": "GLE-117",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-117",
+      "summary": "Contenitori previsti ed effettivi nell’ordine",
+      "state": "In corso",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2026-10-31 11:51:59",
+      "criteria": "Mostrare numero e tipologia dei contenitori (es. 3 casse ferro · 2 big bag), con dettaglio per materiale.\n\nAccettazione:\n- Tappa da completare: riepilogo dei contenitori previsti, distinguendo eventuali aggiornamenti operativi.\n- Tappa completata: riepilogo degli effettivamente movimentati.\n- Se diversi, confronto consultabile con il piano originale, senza sovrascriverlo.\n- Distinguere dati assenti da quantità zero; resa mobile portrait leggibile.\n\nCoordinamento responsive: GLE-116. Riferimento all’osservazione originale: 1.",
+      "commentsCount": 2
+    },
+    {
+      "id": "GLE-118",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-118",
+      "summary": "Riapertura tracciata di una tappa completata",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2026-10-31 10:07:43",
+      "criteria": "Consentire di correggere un completamento accidentale tramite “Riapri tappa”.\n\nAccettazione:\n- Tappa riaperta persistita e coerente dopo uscita e rientro.\n- Dati già registrati conservati; riapertura auditata con autore, istante e transizione.\n- Analizzare e gestire gli effetti su movimenti, avanzamento, carico e processi successivi, evitando duplicazioni.\n- UI touch comprensibile e feedback dell’esito; nessuna cancellazione silenziosa di eventi.\n\nCoordinamento responsive: GLE-116. Riferimento all’osservazione originale: 2.",
+      "commentsCount": 0
+    },
+    {
+      "id": "GLE-119",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-119",
+      "summary": "Referente e telefono della sede nel dettaglio tappa",
+      "state": "In corso",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2026-10-31 11:00:56",
+      "criteria": "Esporre il referente operativo della sede e il suo numero, con azione “Chiama”.\n\nAccettazione:\n- Verificare persistenza DB e caricamento delle relazioni: non assumere che basti il rendering.\n- Dati della sede corretta della tappa, distinguendoli da contatti generici del cliente.\n- Collegamento telefonico utilizzabile da mobile; assenza del dato esplicita senza pulsante inutilizzabile.\n- Nessun numero o nominativo reale nei dati di test.\n\nLa panoramica dei contatti è trattata separatamente (osservazione 8).\n\nCoordinamento responsive: GLE-116. Riferimento all’osservazione originale: 3.",
+      "commentsCount": 1
+    },
+    {
+      "id": "GLE-120",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-120",
+      "summary": "Riordino delle tappe del viaggio operativo",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2026-10-31 10:07:44",
+      "criteria": "L’autista cambia direttamente la sequenza del viaggio operativo, senza modificare il piano originale della Logistica.\n\nAccettazione:\n- Comandi touch “Sposta prima/dopo”; trascinamento eventuale aggiuntivo.\n- Sequenza persistita e coerente rientrando nel viaggio; prossima tappa aggiornata.\n- Piano originale conservato e variazioni auditabili.\n- Verificare e adeguare il riordino già presente: presenza del codice non equivale ad accettazione.\n- Le tappe completate restano consultabili e non vengono implicitamente riaperte dal riordino.\n\nCoordinamento responsive: GLE-116. Riferimento all’osservazione originale: 5.",
+      "commentsCount": 0
+    },
+    {
+      "id": "GLE-121",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-121",
+      "summary": "Tappe completate consultabili dopo il rientro nel viaggio",
+      "state": "Da fare",
+      "type": "Bug",
+      "resolvedAt": null,
+      "updatedAt": "2026-10-31 10:07:44",
+      "criteria": "Segnalazione utente: completata una tappa, uscendo e rientrando nel viaggio la tappa non è più visibile. Possibile bug di UI o filtraggio, causa da verificare.\n\nAccettazione:\n- Riprodurre il percorso completamento → uscita → rientro, verificando payload e filtri.\n- Le tappe completate restano recuperabili in una sezione compatta, con stato e dati effettivi.\n- Prossima tappa evidente e successive consultabili; nessuna perdita di tappe al reload.\n- Verifica di regressione sul flusso e sul caso di viaggio interamente completato.\n\nCoordinamento responsive: GLE-116. Riferimento all’osservazione originale: 6.",
+      "commentsCount": 0
+    },
+    {
+      "id": "GLE-122",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-122",
+      "summary": "Modifica del piano corrente e ripristino dei valori tracciato",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2026-10-31 10:07:44",
+      "criteria": "L’autista può adattare il viaggio in corso alla realtà: materiali/CER non previsti, colli e quantità, aggiunta/rimozione operativa delle tappe e altre variazioni del piano corrente. Non introdurre un passaggio obbligatorio di approvazione logistica non richiesto.\n\nAccettazione:\n- Conservare piano originale, piano operativo aggiornato ed effettivo, senza considerarli equivalenti.\n- Ogni modifica registra autore, istante, contesto e valori prima/dopo; rimozione operativa non cancella la storia.\n- Implementare “Ripristina originale viaggio” e “Annulla ultima modifica”, entrambi come nuove operazioni auditate.\n- Definire annullamenti successivi coerenti, senza oscillazione fra due valori; originale assente per elementi aggiunti gestito esplicitamente.\n- Su mobile: menu “Ripristina” con valore precedente e originale visibili prima della scelta, applicazione senza conferma Sì/No ripetitiva, feedback con possibilità di annullamento. Se valori coincidono evitare duplicazione.\n- Tooltip solo integrativo desktop; azioni comprensibili al tocco e con nomi accessibili.\n- Autonomia sul viaggio assegnato con autorizzazioni di dominio, non privilegi amministrativi; gestire aggiornamenti concorrenti senza perdita silenziosa.\n\nRiordino, riapertura e casse vuote hanno issue specifiche: coordinare le implementazioni.\n\nCoordinamento responsive: GLE-116. Riferimento all’osservazione originale: 7.",
+      "commentsCount": 0
+    },
+    {
+      "id": "GLE-123",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-123",
+      "summary": "Contatti chiamabili per tutte le tappe e focus sulla prossima",
+      "state": "In corso",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2026-10-31 11:33:11",
+      "criteria": "La panoramica deve consentire di chiamare anche i referenti delle tappe future per annunciarsi o verificare la preparazione del carico. Si tratta dei contatti delle sedi, non di un referente interno Metallica.\n\nAccettazione:\n- Ogni tappa espone referente, numero e azione “Chiama”, senza dover aprire l’ordine.\n- Prossima tappa in alto ed evidenziata, successive visibili/chiamabili, completate compatte ma recuperabili.\n- Gerarchia verticale stabile su smartphone portrait; evitare duplicazione inutile del contatto della prossima tappa.\n- Il focus segue la sequenza operativa aggiornata e l’avanzamento.\n- Contatti mancanti gestiti esplicitamente.\n\nCoordinamento responsive: GLE-116. Riferimento all’osservazione originale: 8.",
+      "commentsCount": 1
+    },
+    {
+      "id": "GLE-124",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-124",
+      "summary": "Dashboard giornaliera dei viaggi con mezzo e avanzamento",
+      "state": "In corso",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2026-10-31 10:23:00",
+      "criteria": "La dashboard si apre sul giorno corrente (TODAY), con possibilità di esplorare storico e giorni successivi.\n\nAccettazione:\n- Lista dei viaggi del giorno: tipicamente 1–5, possibili 6–7, comunque meno di 10.\n- Ogni viaggio mostra partenza, stato, avanzamento, motrice ed eventuale rimorchio, identificativo stabile e progressivo giornaliero se più viaggi.\n- Distinguere orari previsti ed effettivi ove disponibili.\n- Navigazione di data semplice, ritorno a oggi ed esplicito stato senza viaggi.\n- Mobile portrait senza tabella larga; tablet adattato allo spazio disponibile.\n- Verificare trattamento dei viaggi in corso oltre mezzanotte per non renderli irreperibili (decisione di dettaglio da consolidare).\n\nCoordinamento responsive: GLE-116. Riferimento all’osservazione originale: 9.",
+      "commentsCount": 1
+    },
+    {
+      "id": "GLE-125",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-125",
+      "summary": "Riepilogo numero e tipologie imballi prima di aprire l’ordine",
+      "state": "In corso",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2026-10-31 11:46:20",
+      "criteria": "Integrare il riepilogo degli imballi nella panoramica e nell’intestazione “Dettaglio elementi”, prima dell’apertura dell’ordine/dettaglio.\n\nAccettazione:\n- Numero e tipologia immediatamente leggibili, con dettaglio espandibile per materiale.\n- Stesse regole previsto/effettivo dell’osservazione 1; dati e calcoli condivisi per evitare discrepanze.\n- Riepilogo leggibile in portrait senza scorrimento orizzontale.\n\nQuesta issue copre l’esposizione sintetica; l’osservazione 1 copre il dettaglio e la selezione del dato.\n\nCoordinamento responsive: GLE-116. Riferimento all’osservazione originale: 10.",
+      "commentsCount": 1
+    },
+    {
+      "id": "GLE-126",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-126",
+      "summary": "Casse ritirate e casse vuote lasciate come quantità indipendenti",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2026-10-31 10:07:46",
+      "criteria": "La richiesta di ritiro di 6 casse implica normalmente 6 casse vuote in sostituzione, salvo indicazioni diverse. Sul posto il cliente può chiederne 4 oppure 8. Le casse ritirate e le casse vuote lasciate sono quantità indipendenti, non attribuite artificialmente a un CER.\n\nAccettazione:\n- Distinguere previsione e registrazione effettiva per entrambe le quantità.\n- Rappresentare la sostituzione prevista 1:1 in assenza di indicazioni, senza vincolare l’effettivo.\n- Consentire all’autista di aggiornare la distribuzione delle casse vuote tra le tappe usando scorte o ridestinando casse previste altrove.\n- Rendere leggibili disponibilità residua e previsioni successive, evitando di registrare disponibilità inventate; definire origine e qualità del dato iniziale.\n- Nessuna scelta automatica del cliente cui ridurre la dotazione: decide l’autista.\n- Conservare originale e audit delle variazioni; esempio di collaudo: ritirate 6, lasciate 4 e, separatamente, ritirate 6, lasciate 8.\n\nCoordinamento responsive: GLE-116. Riferimento all’osservazione originale: 11.",
+      "commentsCount": 0
+    }
+  ],
+  "related_issues": [
+    {
+      "id": "GLE-6",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-6",
+      "summary": "Codici CER per meteriali non dichiarati in ordine",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2025-10-02 10:27:12",
+      "criteria": "Inserire codici CER fittizi per i materiali trovati a magazzino e non dichiarati nell'ordine. Verranno gestiti con la dashboard commerciale",
+      "commentsCount": 0
+    },
+    {
+      "id": "GLE-9",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-9",
+      "summary": "il materiale aggiuntivo deve essere flaggabile come \"non conformità\"",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2025-10-02 11:00:39",
+      "criteria": "Il materiale aggiuntivo deve essere flaggabile come \"non conformità\" per conteggio pesi totali",
+      "commentsCount": 0
+    },
+    {
+      "id": "GLE-17",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-17",
+      "summary": "Modifica Ordine per Autisti: chiudere di default campi iniziali",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2025-10-02 10:27:13",
+      "criteria": "edit ordine di Autistta: di default le prime 3 tenidine chiuse. Aperto da \"descrizione Materiali\" in poi",
+      "commentsCount": 0
+    },
+    {
+      "id": "GLE-26",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-26",
+      "summary": "Sistema di Audit/Tracking per le modifiche",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2026-03-27 07:58:16",
+      "criteria": "Bisogna rendere treacciabile e disponibile la hisotry delle modifiche: \"quale utente ha modificato quale campo\" per poter sempre ricostruire eventuali situaizoni dubbie",
+      "commentsCount": 0
+    },
+    {
+      "id": "GLE-98",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-98",
+      "summary": "[Audit] Eventi di processo su documenti ordine e lifecycle journey",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2026-03-27 07:58:16",
+      "criteria": "## Obiettivo\nImplementare il layer di audit di processo sopra al domain audit, per tracciare eventi business non rappresentati bene da un semplice diff di modello.\n\n## Scope minimo\nEventi iniziali da coprire:\n- `order.documents_generation_started`\n- `order.documents_generated`\n- `order.documents_generation_failed`\n- `order.documents_invalidated`\n- `order.attached_to_journey`\n- `order.detached_from_journey`\n- `order.state_changed`\n- `journey.started`\n- `journey.start_blocked`\n- `journey.executed`\n- `journey.closed`\n- `journey.orders_attached`\n- `journey.orders_detached`\n- `journey_stop.reordered`\n- `journey_stop.completed`\n- `journey_stop.skipped`\n\n## Note\n- Questo layer è custom applicativo e non sostituisce `OwenIt\\\\Auditing`.\n- Il tema `guard` resta fuori scope in questa fase.\n- Il tema worker/warehouse end-to-end resta posticipato.\n\n## Criteri di accettazione\n- Gli eventi di processo chiave sono ricostruibili in modo leggibile.\n- Il layer di processo integra e completa il diff dei model.\n\nParent: GLE-26",
+      "commentsCount": 0
+    },
+    {
+      "id": "GLE-99",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-99",
+      "summary": "[Audit] UI consultazione storico modifiche",
+      "state": "Da fare",
+      "type": "Funzionalità",
+      "resolvedAt": null,
+      "updatedAt": "2026-03-27 07:58:16",
+      "criteria": "## Obiettivo\nRendere consultabile in UI lo storico modifiche prodotto dal layer audit di dominio e, successivamente, dagli eventi di processo.\n\n## Scope minimo\n- Definire una prima vista/timeline leggibile per almeno `Order` e `Journey`.\n- Presentare label umane dei campi e formatter dei valori.\n- Supportare campi tecnici con rendering comprensibile dove utile.\n\n## Note\n- Questa issue viene dopo l'implementazione del layer base audit.\n- Può partire con una UI minimale purché leggibile e utile operativamente.\n\n## Criteri di accettazione\n- Uno storico modifiche è visibile almeno per `Order` e `Journey`.\n- L'utente legge chi ha fatto cosa e quando senza dover interpretare diff raw.\n\nParent: GLE-26",
+      "commentsCount": 0
+    },
+    {
+      "id": "GLE-100",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-100",
+      "summary": "[Driver Journey] Riordino tappe: la tappa \"in corso\" deve tornare pianificata se scende in lista",
+      "state": "Completato",
+      "type": "Bug",
+      "resolvedAt": "2026-03-27 09:06:40",
+      "updatedAt": "2026-03-27 09:06:40",
+      "criteria": "Bug\n\nContesto:\nNella dashboard viaggi autista, se durante un viaggio in corso viene riordinata la lista tappe e la tappa attualmente \"in corso\" scende di posizione, oggi resta erroneamente in stato \"in corso\".\n\nComportamento atteso:\n- La tappa che perde la priorità deve tornare in stato \"planned/pianificata\".\n- Deve diventare \"in corso\" la prima tappa utile in testa alla sequenza.\n- Coerenza garantita tra ordine tappe e stato operativo.",
+      "commentsCount": 0
+    },
+    {
+      "id": "GLE-101",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-101",
+      "summary": "[Driver Journey] Tappa saltata: ordine nuovamente utilizzabile + conferma esplicita autista",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolvedAt": "2026-03-27 09:06:40",
+      "updatedAt": "2026-03-27 09:06:40",
+      "criteria": "Feature\n\nObiettivo:\nQuando una tappa viene saltata, gli ordini associati devono tornare disponibili per essere inseriti in un altro viaggio.\n\nRichiesta UX:\nPrima di confermare lo skip, mostrare un avviso di conferma all'autista che espliciti:\n- la tappa viene realmente saltata,\n- l'ordine non è stato caricato,\n- l'ordine tornerà riutilizzabile dalla logistica in altri viaggi.\n\nAcceptance:\n- Conferma obbligatoria prima dello skip.\n- A skip confermato, ordini associati nuovamente selezionabili in pianificazione viaggio.",
+      "commentsCount": 0
+    },
+    {
+      "id": "GLE-102",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-102",
+      "summary": "[Driver Dashboard] Nelle tappe mostrare macchinari sede e orari sede",
+      "state": "Completato",
+      "type": "Funzionalità",
+      "resolvedAt": "2026-03-27 09:06:40",
+      "updatedAt": "2026-03-27 09:06:40",
+      "criteria": "Feature\n\nNella vista tappe della dashboard autista aggiungere per ogni sede:\n- macchinari presenti (es. muletto, transpallet, altro),\n- orari della sede.\n\nObiettivo:\nFornire al driver informazioni operative complete prima dell'arrivo in sede.",
+      "commentsCount": 0
+    }
+  ],
+  "scope": "Read-only reconciliation. No tracker writes, no tester acceptance inferred."
+}

@@ -7,7 +7,7 @@ import {describeContainers,describeDeliveryContainers} from '../../resources/js/
 import {materialCommandMessage} from '../../resources/js/utils/journeyCommandFeedback.js'
 const Tiles = await loadVueComponent(new URL('../../resources/js/Components/Journey/JourneyContainerQuantities.vue',import.meta.url))
 const Movements = await loadVueComponent(new URL('../../resources/js/Components/Journey/JourneyContainerMovements.vue',import.meta.url))
-const Feedback = await loadVueComponent(new URL('../../resources/js/Components/Journey/JourneyExecutionFeedback.vue',import.meta.url))
+const Feedback = await loadVueComponent(new URL('../../resources/js/Components/UI/AppNotificationStack.vue',import.meta.url))
 const box = (id,count)=>({id,holder_id:1,holder:{name:'Cassa'},holder_quantity:count})
 
 test('pickup and delivery groups use the same totals preserving actual zero and unknown quantities',()=>{
@@ -47,10 +47,8 @@ test('material notifications identify the actual CER with its leading zero',()=>
     assert.equal(materialCommandMessage('update_item',{item_id:2},current,previous),'Materiale CER 020107 modificato correttamente.')
     assert.equal(materialCommandMessage('add_item',{execution_order_id:7},{stops:[]},previous),'Materiale aggiunto correttamente all’ordine.')
 })
-test('notification is fixed at top with an outlined circular dismiss button',async()=>{
-    const html=await renderToString(createSSRApp(Feedback,{message:'Materiale modificato correttamente.'}))
-    assert.match(html,/position|fixed/)
-    assert.match(html,/top:/)
+test('notification preserves the previous global alert and circular dismiss button',async()=>{
+    const html=await renderToString(createSSRApp(Feedback,{messages:[{id:1,type:'success',text:'Materiale modificato correttamente.'}]}))
     assert.doesNotMatch(html,/bottom:/)
     assert.match(html,/btn-circle btn-outline/)
     assert.match(html,/Chiudi messaggio/)

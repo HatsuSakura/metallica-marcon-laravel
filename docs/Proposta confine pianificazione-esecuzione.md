@@ -262,3 +262,7 @@ le tappe prima di partire e se occorra conservare anche l'assegnazione iniziale
 della Logistica. Vedi [OP-001](open-points.md). In attesa della call restano
 regole e autorizzazioni correnti: nessuna nuova modifica del pianificato
 abilitata all'autista.
+
+Aggiornamento 2026-11-09: OP-001 risolto dal PO. Nessuna modifica del
+pianificato da autista; il comando «Avvia e riordina» avvia effettivamente il
+viaggio prima di consentire il riordino operativo. Vedi il registro corrente.

@@ -5,22 +5,11 @@ Registro corrente delle domande al cliente. Le note recuperate in
 
 ## OP-001 — Riordino tappe da autista prima della partenza
 
-- **Stato:** aperto; richiesto dal PO il 2026-10-31, da chiarire nella prossima call.
-- **Riferimenti:** GLE-120 (riordino), GLE-122 (operativo e tracciatura), confine
-  pianificazione/esecuzione alla prima partenza.
-- **Domanda:** l'autista può modificare l'ordine delle tappe prima di partire?
-- **Conseguenza del modello corrente:** una modifica prima della prima
-  partenza modifica il pianificato che sarà congelato come baseline. Una
-  modifica dopo la partenza modifica l'esecuzione rispetto a quella baseline.
-- **Da decidere nella call:** autorizzazione dell'autista al riordino pre-partenza;
-  eventuale distinzione tra riordino e altre modifiche; esigenza di mostrare
-  anche la sequenza inizialmente assegnata dalla Logistica, oltre alla sequenza
-  finale congelata alla partenza; visibilità della modifica alla Logistica.
-- **Regola applicata in attesa della decisione:** prima della partenza modifica
-  la Logistica; l'autista riordina dopo l'avvio, sul contesto esecutivo. Nessuna
-  abilitazione anticipata o spostamento del momento di congelamento è incluso
-  nell'apertura di questo punto.
+- **Stato:** risolto dal PO il 2026-11-09; implementato localmente, non ancora pubblicato in QA.
+- **Riferimenti:** GLE-120, GLE-122, confine pianificazione/esecuzione alla prima partenza.
+- **Decisione:** il pianificato rimane modificabile dalla Logistica. L'autista non può riordinare prima dell'avvio effettivo.
+- **UX:** «Riordina» è disponibile anche prima della partenza. Propone «Annulla» oppure «Avvia e riordina», spiegando che viene registrato l'inizio effettivo e che le correzioni al piano vanno richieste alla Logistica.
+- **Effetto:** solo dopo un avvio riuscito si apre l'editor della sequenza operativa. Il piano originale è congelato dal comando di partenza esistente. Un avvio bloccato non cambia sequenza né crea baseline.
+- **Nessun nuovo processo di approvazione:** non è prevista una proposta dell'autista da approvare prima della partenza.
 
-Registrare qui esito e data della call, poi aggiornare requisiti, permessi e
-relativi test. La call non è stata fissata né è stato contattato il cliente
-attraverso strumenti da questa sessione.
+Verifiche e scenari aggiuntivi: [note sede e avvio per riordino](qa/2026-11-09-driver-notes-reorder.md).

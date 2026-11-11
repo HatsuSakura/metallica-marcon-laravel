@@ -26,7 +26,7 @@ abstract class JourneyExecutionTestCase extends TestCase
             'users' => ['name', 'surname', 'user_code', 'email', 'role'],
             'warehouses' => ['name'], 'vehicles' => ['name', 'plate'], 'trailers' => ['name', 'plate'],
             'customers' => ['company_name', 'legal_address', 'seller_id:i'],
-            'sites' => ['customer_id:i', 'name', 'address'], 'timetables' => ['site_id:i', 'hours_json'],
+            'sites' => ['customer_id:i', 'name', 'address', 'notes'], 'timetables' => ['site_id:i', 'hours_json'],
             'internal_contacts' => ['site_id:i', 'name', 'surname', 'mobile', 'phone', 'email', 'role'],
             'cer_codes' => ['code', 'description', 'is_dangerous:i'], 'holders' => ['name', 'is_custom:i'],
             'order_item_groups' => ['order_id:i', 'cer_code_id:i', 'label'],

@@ -20,25 +20,25 @@
                     <h5 class="font-medium">Note per il viaggio</h5>
                     <p class="whitespace-pre-line break-words">{{ journey.notes?.trim() || 'nessuna nota' }}</p>
                 </section>
-                <button v-if="canStart" type="button" class="btn btn-success mt-3 min-h-12 w-full sm:w-auto" :disabled="isLoading || !stops.length" @click="startJourney">Inizia viaggio</button>
+                <button v-if="canStart" type="button" class="btn btn-success mt-3 min-h-12 w-full sm:w-auto" :disabled="isLoading || !stops.length" @click="startJourney()">Inizia viaggio</button>
             </DisclosureCard>
         </header>
         <p v-if="isJourneyCreated(journey.status) && !stops.length" class="alert alert-warning text-sm">Il piano non contiene tappe strutturate. La Logistica deve completarlo e aggiornare i documenti prima della partenza.</p>
         <p v-if="journey.legacy_execution" class="alert alert-warning text-sm">{{ canViewExecutionHistory ? 'Viaggio avviato prima del nuovo processo: consultazione disponibile, piano originale non ricostruibile automaticamente.' : 'Viaggio disponibile in sola consultazione.' }}</p>
         <JourneyExecutionTools v-if="journey.has_baseline" :journey="journey" :read-only="!canManage" :can-view-history="canViewExecutionHistory" :busy="isLoading" @command="executeCommand" />
-        <JourneyExecutionFeedback :message="actionError || actionMessage" :tone="actionError ? 'error' : 'success'" :undo-available="!actionError && !!undoAction" :busy="isLoading" @undo="undoRestore" @dismiss="dismissFeedback" />
         <p v-if="isLoading" role="status" class="text-sm">Salvataggio in corso…</p>
 
         <div class="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
             <JourneyStopsPanel
                 :stops="stops"
-                :lookups="executionLookups"
+                :lookups="executionCatalogs"
                 @command="executeCommand"
                 :selected-stop-id="selectedStopId"
                 :current-stop-id="currentStop?.id ?? null"
                 :reorder-enabled="reorderEnabled"
                 :is-loading="isLoading"
                 :read-only="!canManage || journey.status !== 'attivo'"
+                :can-start="canStart"
                 :census="journey.load_census_items ?? []"
                 v-model:reorder-draft="reorderDraft"
                 v-model:show-finished="showFinished"
@@ -46,7 +46,9 @@
                 @save-reorder="saveReorder"
                 @move-stop="moveStop"
                 @select-stop="selectStop"
-            />
+            >
+                <template #before-stops><JourneyStartReorderPrompt v-if="startReorderPrompt" :busy="isLoading" :error="startReorderError" @cancel="startReorderPrompt = false" @confirm="startJourney(true)" /></template>
+            </JourneyStopsPanel>
 
             <section ref="detailPanel" class="min-w-0 scroll-mt-20 space-y-4 lg:border-l lg:border-base-300 lg:pl-4" aria-labelledby="stop-detail-heading" tabindex="-1">
                 <hr class="border-base-300 lg:hidden" />
@@ -59,6 +61,7 @@
                         <div v-if="!isCurrentSelected || selectedStop.kind === 'technical'" class="flex flex-wrap gap-2"><JourneyStatusBadge v-if="!isCurrentSelected" :status="selectedStop.status" kind="stop" /><span v-if="selectedStop.kind === 'technical'" class="badge badge-neutral">Sosta tecnica</span></div>
                     </div>
                     <JourneyStopContacts :stop="selectedStop" />
+                    <JourneyStopSiteNotes :stop="selectedStop" :editable="canManage && journey.status === 'attivo'" :busy="isLoading" @command="executeCommand" />
                     <div v-if="canManage && ['done','skipped','cancelled'].includes(selectedStop.status)" class="space-y-2">
                         <button type="button" class="btn btn-outline min-h-12" :disabled="isLoading || !selectedStop.reopen_available" @click="reopenStop(selectedStop.id)">Riapri tappa</button>
                         <p class="text-sm" :class="selectedStop.reopen_available ? 'opacity-70' : 'text-warning'">{{ selectedStop.reopen_available ? 'La tappa torna corrente. Quantità, pesi e consegne già registrati vengono conservati.' : selectedStop.reopen_unavailable_reason }}</p>
@@ -91,9 +94,8 @@
                         <article v-for="order in stopOrders(selectedStop)" :key="order.id" class="min-w-0 rounded-xl border border-base-300 p-3 space-y-3 text-sm">
                             <h4 class="font-semibold break-words">Ordine {{ order.legacy_code || `#${order.id}` }}</h4>
                             <p v-if="orderCustomerNotes(order)" class="whitespace-pre-line break-words"><span class="font-semibold">Note cliente: </span>{{ orderCustomerNotes(order) }}</p>
-                            <p v-if="orderSiteNotes(order)" class="whitespace-pre-line break-words"><span class="font-semibold">Note sede: </span>{{ orderSiteNotes(order) }}</p>
                             <p v-if="order.notes" class="whitespace-pre-line break-words"><span class="font-semibold">Note ordine: </span>{{ order.notes }}</p>
-                            <JourneyExecutionOrderEditor v-if="canManage && journey.status === 'attivo' && order.execution_status === 'pending'" :order="order" :has-trailer="!!journey.trailer_id" :show-original-plan="canViewExecutionHistory" :lookups="executionLookups" :census="journey.load_census_items ?? []" :busy="isLoading" @command="executeCommand" />
+                            <JourneyExecutionOrderEditor v-if="canManage && journey.status === 'attivo' && order.execution_status === 'pending'" :order="order" :has-trailer="!!journey.trailer_id" :show-original-plan="canViewExecutionHistory" :lookups="executionCatalogs" :census="journey.load_census_items ?? []" :busy="isLoading" @command="executeCommand" />
                             <JourneyOrderMaterials v-else :show-original-plan="canViewExecutionHistory" :order="order" :census="journey.load_census_items ?? []" :completed="isSelectedCompleted" />
                             <p v-if="order.execution_status === 'released'" class="text-warning">Ordine rilasciato alla Logistica: nessuna movimentazione eseguita.</p>
                         </article>
@@ -101,17 +103,17 @@
                 </template>
             </section>
         </div>
-        <JourneyWarehouseExecution v-if="warehouseAccess && journey.has_baseline" :journey="journey" :orders="journeyOrders" :warehouses="executionLookups.warehouses || []" :busy="isLoading" @command="executeCommand" />
+        <JourneyWarehouseExecution v-if="warehouseAccess && journey.has_baseline" :journey="journey" :orders="journeyOrders" :warehouses="executionCatalogs.warehouses || []" :busy="isLoading" @command="executeCommand" />
         <aside class="rounded-2xl border border-base-300 p-4 space-y-2"><h2 class="font-semibold">Scarico a magazzino</h2><p class="text-sm opacity-70">Terminate le tappe, chiama la Logistica per concordare le modalità di scarico.</p></aside>
     </section>
 </template>
 
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue'
+import {useStore} from 'vuex'
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { materialCommandMessage } from '@/utils/journeyCommandFeedback'
 import { Head, Link, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
-import JourneyExecutionFeedback from '@/Components/Journey/JourneyExecutionFeedback.vue'
 import DisclosureCard from '@/Components/UI/DisclosureCard.vue'
 import JourneyWarehouseExecution from '@/Components/Journey/JourneyWarehouseExecution.vue'
 import JourneyExecutionOrderEditor from '@/Components/Journey/JourneyExecutionOrderEditor.vue'
@@ -119,6 +121,8 @@ import JourneyExecutionTools from '@/Components/Journey/JourneyExecutionTools.vu
 import JourneyStopsPanel from './Components/JourneyStopsPanel.vue'
 import JourneyVehicleSummary from '@/Components/Journey/JourneyVehicleSummary.vue'
 import JourneyStopContacts from './Components/JourneyStopContacts.vue'
+import JourneyStopSiteNotes from './Components/JourneyStopSiteNotes.vue'
+import JourneyStartReorderPrompt from './Components/JourneyStartReorderPrompt.vue'
 import JourneyStatusBadge from '@/Components/UI/JourneyStatusBadge.vue'
 import JourneyOrderMaterials from '@/Components/Journey/JourneyOrderMaterials.vue'
 import JourneyContainerMovements from '@/Components/Journey/JourneyContainerMovements.vue'
@@ -136,6 +140,9 @@ const props = defineProps({
 })
 
 const journey = ref(props.journey)
+const executionCatalogs = ref(props.executionLookups)
+watch(() => props.executionLookups, value => { executionCatalogs.value = value })
+const startReorderPrompt = ref(false), startReorderError = ref('')
 const canManage = computed(() => !props.readOnly && journey.value.has_baseline && ['attivo', 'eseguito'].includes(journey.value.status))
 const canStart = computed(() => !props.readOnly && !journey.value.has_baseline && isJourneyCreated(journey.value.status))
 const page = usePage()
@@ -155,16 +162,26 @@ const isLoading = ref(false)
 const skipPanelOpen = ref(false)
 const showFinished = ref(false)
 const detailPanel = ref(null)
-const actionError = ref('')
-const actionMessage = ref('')
+const notificationStore = useStore()
+const notificationIds = new Set()
+onUnmounted(() => { for (const id of notificationIds) notificationStore.dispatch('flash/removeMessage',id) })
+const notify = async (type,text,action = null) => {
+    const id = await notificationStore.dispatch('flash/queueMessage',{type,text,action})
+    if (action) notificationIds.add(id)
+}
+const notifySuccess = text => {
+    const undo = undoAction.value
+    notify('success',text,undo ? {
+        label:'Annulla ripristino',
+        disabled:()=>isLoading.value || undoAction.value?.event_id !== undo.event_id || undo.revision !== journey.value.execution_revision,
+        run:undoRestore,
+    }:null)
+}
 const undoAction = ref(null)
 const journeyDateLabel = computed(() => journey.value.planned_start_at
     ? new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' }).format(new Date(journey.value.planned_start_at))
     : 'Partenza non pianificata')
 
-watch(isLoading, (loading) => {
-    if (loading) { actionError.value = ''; actionMessage.value = '' }
-})
 watch(selectedStopId, () => { skipPanelOpen.value = false })
 
 const selectStop = async (id) => {
@@ -306,10 +323,11 @@ const formatTimeRange = (from, to) => {
 
 const orderCustomerNotes = (order) => order?.customer?.notes ?? null
 
-const orderSiteNotes = (order) => order?.site?.notes ?? null
 
 const toggleReorder = () => {
-    if (!canManage.value) return
+    if (isLoading.value) return
+    if (canStart.value) { startReorderError.value = ''; startReorderPrompt.value = true; return }
+    if (!canManage.value || journey.value.status !== 'attivo') return
     reorderEnabled.value = !reorderEnabled.value
     if (reorderEnabled.value) {
         reorderDraft.value = reorderableStops.value.map((stop) => stop)
@@ -322,22 +340,23 @@ const executeCommand = async (operation, input = {}, onSaved = null) => {
     undoAction.value = null
     isLoading.value = true
     try {
-        const response = await axios.post(`/api/journeys/${journey.value.id}/execution/commands`, {
-            revision: journey.value.execution_revision, operation, input,
-        })
+        const response = operation === 'update_site_notes'
+            ? await axios.put(`/api/journeys/${journey.value.id}/sites/${input.site_id}/notes`, {notes:input.notes,notes_version:input.notes_version})
+            : await axios.post(`/api/journeys/${journey.value.id}/execution/commands`, {revision:journey.value.execution_revision,operation,input})
         refreshFromJourney(response.data.journey)
         if (typeof onSaved === 'function') onSaved()
         undoAction.value = response.data.undo ?? null
-        actionMessage.value = operation === 'set_item_allocations' ? 'Suddivisione salvata correttamente.'
+        notifySuccess(operation === 'update_site_notes' ? 'Note della sede aggiornate correttamente.'
+            : operation === 'set_item_allocations' ? 'Suddivisione salvata correttamente.'
             : operation === 'set_item_loaded' ? (input.is_loaded ? 'Carico aggiornato.' : 'Materiale da ritirare.')
             : operation === 'undo_restore' ? 'Ripristino annullato.'
             : ['add_item','update_item'].includes(operation) ? materialCommandMessage(operation,input,response.data.journey,previousJourney)
             : operation === 'reopen' ? 'Tappa riaperta correttamente.'
-            : undoAction.value ? 'Valore ripristinato correttamente.' : 'Modifica salvata correttamente.'
+            : undoAction.value ? 'Valore ripristinato correttamente.' : 'Modifica salvata correttamente.')
         return true
     } catch (error) {
-        actionError.value = error?.response?.data?.message || 'Operazione non riuscita. Riprova.'
-        if (error?.response?.status === 409) actionError.value += ' Ricarica la pagina per vedere i dati aggiornati.'
+        notify('error',(error?.response?.data?.message || 'Operazione non riuscita. Riprova.') + (error?.response?.status === 409 ? ' Ricarica la pagina per vedere i dati aggiornati.' : ''))
+
         return false
     } finally { isLoading.value = false }
 }
@@ -345,10 +364,10 @@ const executeCommand = async (operation, input = {}, onSaved = null) => {
 const reopenStop = async id => {
     if (await executeCommand('reopen', { stop_id: id })) { selectedStopId.value = id; skipPanelOpen.value = false }
 }
-const dismissFeedback = () => { actionMessage.value = ''; actionError.value = ''; undoAction.value = null }
+
 const undoRestore = async () => {
     if (!undoAction.value || undoAction.value.revision !== journey.value.execution_revision) return
-    await executeCommand('undo_restore', { event_id: undoAction.value.event_id })
+    return executeCommand('undo_restore', { event_id: undoAction.value.event_id })
 }
 
 const saveReorder = async () => {
@@ -357,15 +376,25 @@ const saveReorder = async () => {
         reorderDraft.value = []
     }
 }
-const startJourney = async () => {
+const startJourney = async (reorderAfterStart = false) => {
     if (!canStart.value || isLoading.value) return
     isLoading.value = true
+    startReorderError.value = ''
     try {
-        await axios.post(`/api/driver/journeys/${journey.value.id}/start`)
-        // Reload catalogs and capabilities supplied by the shared workspace controller.
-        window.location.reload()
+        const response = await axios.post(`/api/driver/journeys/${journey.value.id}/start`)
+        executionCatalogs.value = response.data.executionLookups ?? {}
+        refreshFromJourney(response.data.journey)
+        startReorderPrompt.value = false
+        selectedStopId.value = currentStop.value?.id ?? selectedStopId.value
+        if (reorderAfterStart) {
+            reorderDraft.value = reorderableStops.value.map(stop => stop)
+            reorderEnabled.value = true
+        }
+        notify('success','Viaggio iniziato correttamente.')
     } catch (error) {
-        actionError.value = error?.response?.data?.message || 'Avvio non riuscito.'
+        const message = error?.response?.data?.message || 'Avvio non riuscito.'
+        if (reorderAfterStart) startReorderError.value = message
+        else notify('error',message)
     } finally { isLoading.value = false }
 }
 const afterStopOutcome = () => {

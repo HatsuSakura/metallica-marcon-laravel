@@ -1,5 +1,11 @@
 # Documentazione Metallica Marcon
 
+- [Notifiche globali — 2026-11-09](qa/2026-11-09-global-notifications.md): coda condivisa, grafica conservata e verifiche di non regressione.
+
+Aggiornamento locale 2026-11-09: [note sede e avvio per riordino](qa/2026-11-09-driver-notes-reorder.md) implementati e verificati, non ancora pubblicati in QA. OP-001 risolto.
+
+- **[Avanzamento GLE autisti — 2026-11-09](reviews/2026-11-09-driver-gle.md)**: confronto aggiornato tra YouTrack, implementazione, collaudo e sviluppi residui.
+
 - **[Deploy QA del 2026-11-04](qa/2026-11-04-deploy-result.md)**: codice pubblicato, controlli, backup preventivi e collaudo ancora da eseguire.
 
 - **[Pacchetto QA UI autisti — 2026-11-04](qa/2026-11-04-driver-ui.md)**: perimetro del commit, migrazioni e scenari di collaudo; sviluppi ancora aperti.

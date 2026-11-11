@@ -1,6 +1,7 @@
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
 import MainLayout from '@/Layouts/MainLayout.vue'
+import AppNotifications from '@/Components/UI/AppNotifications.vue'
 import LoginLayout from './Layouts/LoginLayout.vue';
 import { ZiggyVue } from 'ziggy'
 import { GoogleMap } from 'vue3-google-map';
@@ -30,7 +31,7 @@ createInertiaApp({
     return page
   },
   setup({ el, App, props, plugin }) {
-    const app = createApp({ render: () => h(App, props) });
+    const app = createApp({ render: () => [h(App, props), h(AppNotifications)] });
       app.use(plugin);
       app.use(ZiggyVue);
       app.use(GoogleMap, {

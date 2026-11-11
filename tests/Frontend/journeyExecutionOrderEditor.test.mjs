@@ -4,7 +4,7 @@ import {createSSRApp} from 'vue'
 import {renderToString} from '@vue/server-renderer'
 import {loadVueComponent} from './support/loadVueComponent.mjs'
 const Editor = await loadVueComponent(new URL('../../resources/js/Components/Journey/JourneyExecutionOrderEditor.vue',import.meta.url))
-const Feedback = await loadVueComponent(new URL('../../resources/js/Components/Journey/JourneyExecutionFeedback.vue',import.meta.url))
+const Feedback = await loadVueComponent(new URL('../../resources/js/Components/UI/AppNotificationStack.vue',import.meta.url))
 const CargoSelector = await loadVueComponent(new URL('../../resources/js/Components/Journey/JourneyItemCargoSelector.vue',import.meta.url))
 const Fields = await loadVueComponent(new URL('../../resources/js/Components/Journey/JourneyExecutionMaterialFields.vue',import.meta.url))
 const lookups={cers:[{id:1,code:'020107',description:'Materiale A'},{id:2,code:'090106',description:'Materiale B'}],holders:[{id:1,name:'Fusto'},{id:2,name:'Cassa'}]}
@@ -29,10 +29,9 @@ test('shared material fields expose CER, packaging, quantities, weight and descr
 })
 
 test('failed material updates stay visible in the shared mobile feedback',async()=>{
-    const html=await renderToString(createSSRApp(Feedback,{message:'Il viaggio è stato aggiornato. Ricarica.',tone:'error'}))
+    const html=await renderToString(createSSRApp(Feedback,{messages:[{id:1,type:'error',text:'Il viaggio è stato aggiornato. Ricarica.'}]}))
     assert.match(html,/role="alert"/)
-    assert.match(html,/border-error/)
-    assert.match(html,/fixed/)
+    assert.match(html,/alert-error/)
     assert.match(html,/Il viaggio è stato aggiornato/)
 })
 

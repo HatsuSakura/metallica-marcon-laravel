@@ -678,12 +678,8 @@ watch(
 /**
  * DATE SCARICO, PESATURA, SELEZIONE
  */
-let lastToast = ''
 function dateInfo(type, text){
-  if (text === lastToast) return          // evita duplicati identici ravvicinati
-  lastToast = text
   store.dispatch('flash/queueMessage', { type, text })
-  setTimeout(() => { lastToast = '' }, 400)
 }
 
 

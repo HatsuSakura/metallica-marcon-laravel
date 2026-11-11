@@ -2,11 +2,12 @@
             <aside class="min-w-0 space-y-3" aria-labelledby="journey-stops-heading">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <h2 id="journey-stops-heading" class="text-lg font-semibold">Tappe</h2>
-                    <div v-if="!readOnly" class="flex items-center gap-2">
-                        <button type="button" class="btn btn-outline min-h-12 px-3" :disabled="isLoading" :aria-expanded="addStopOpen" aria-controls="journey-add-stop-form" @click="addStopOpen = !addStopOpen">{{ addStopOpen ? 'Chiudi' : '+ Aggiungi' }}</button>
+                    <div v-if="!readOnly || canStart" class="flex items-center gap-2">
+                        <button v-if="!readOnly" type="button" class="btn btn-outline min-h-12 px-3" :disabled="isLoading" :aria-expanded="addStopOpen" aria-controls="journey-add-stop-form" @click="addStopOpen = !addStopOpen">{{ addStopOpen ? 'Chiudi' : '+ Aggiungi' }}</button>
                         <button v-if="!reorderEnabled && reorderableStops.length > 1" type="button" class="btn btn-outline min-h-12 px-3" :disabled="isLoading" @click="$emit('toggle-reorder')">Riordina</button>
                     </div>
                 </div>
+                <slot name="before-stops" />
                 <JourneyAddStopForm v-if="!readOnly && addStopOpen" id="journey-add-stop-form" :lookups="lookups" :busy="isLoading" @command="(operation, input, onSaved) => $emit('command', operation, input, onSaved)" @saved="addStopOpen = false" />
                 <div v-if="reorderEnabled" class="space-y-3">
                     <p class="text-sm opacity-70">Sposta le tappe con le frecce oppure trascina la maniglia.</p>
@@ -63,6 +64,7 @@ const props = defineProps({
     reorderEnabled: Boolean,
     isLoading: Boolean,
     readOnly: Boolean,
+    canStart: Boolean,
     lookups: { type: Object, default: () => ({}) },
     census: { type: Array, default: () => [] },
 })

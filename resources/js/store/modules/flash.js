@@ -1,68 +1,39 @@
-const state = {
-    messageQueue: [], // Queue of messages to display
-    isDisplaying: false, // Track if we are currently displaying a message
-};
-
-const mutations = {
-    ADD_MESSAGE_TO_QUEUE(state, message) {
-        state.messageQueue.push(message);
-    },
-    REMOVE_MESSAGE_FROM_QUEUE(state) {
-        state.messageQueue.shift(); // Remove the first message in the queue (automatic removal)
-    },
-    REMOVE_MESSAGE_BY_INDEX(state, index) {
-        state.messageQueue.splice(index, 1); // Remove the specific message by index (manual removal)
-    },
-    SET_DISPLAYING_STATE(state, isDisplaying) {
-        state.isDisplaying = isDisplaying; // Set whether messages are being displayed
-    },
-};
-
-const actions = {
-    async addMessageToQueue({ commit, state, dispatch }, message) {
-        commit('ADD_MESSAGE_TO_QUEUE', message);
-
-        // Start the display process if it's not already running
-        if (!state.isDisplaying) {
-            commit('SET_DISPLAYING_STATE', true);
-            await dispatch('displayMessages'); // Dispatch the displayMessages action
-        }
-    },
-
-    async displayMessages({ commit, state }) {
-        // Iterate through the message queue one by one
-        while (state.messageQueue.length > 0) {
-            // Display the first message in the queue for 5 seconds
-            await new Promise((resolve) => {
-                setTimeout(() => {
-                    commit('REMOVE_MESSAGE_FROM_QUEUE'); // Automatically remove the message after the timeout
-                    resolve();
-                }, 5000); // Display each message for 5 seconds
-            });
-
-            // Add a delay of 500ms between displaying messages
-            if (state.messageQueue.length > 0) {
-                await new Promise((resolve) => setTimeout(resolve, 500));
-            }
-        }
-
-        // Reset displaying state once all messages are shown
-        commit('SET_DISPLAYING_STATE', false);
-    },
-
-    removeMessageByIndex({ commit }, index) {
-        commit('REMOVE_MESSAGE_BY_INDEX', index); // Manually remove the message by index
-    },
-
-    queueMessage({ dispatch }, { type, text }) {
-        const message = { type, text }; // Message structure: {type: 'success' | 'error' | 'info' | 'warning', text: 'Message content'}
-        dispatch('addMessageToQueue', message);
-    },
-};
-
-export default {
-    namespaced: true,
-    state,
-    mutations,
-    actions,
-};
+// Keep the existing dispatch contract for all application pages.
+export const createFlashModule = ({schedule = setTimeout, cancel = clearTimeout} = {}) => {
+    let sequence = 0
+    const timers = new Map()
+    const forget = id => { if (timers.has(id)) cancel(timers.get(id)); timers.delete(id) }
+    return {
+        namespaced: true,
+        state: () => ({messageQueue: []}),
+        mutations: {
+            ADD_MESSAGE_TO_QUEUE(state, message) { state.messageQueue.push(message) },
+            REMOVE_MESSAGE_BY_ID(state, id) { state.messageQueue = state.messageQueue.filter(message => message.id !== id) },
+        },
+        actions: {
+            queueMessage({commit, dispatch}, input) {
+                if (!input?.text) return null
+                const type = ['success','error','warning','info'].includes(input.type) ? input.type : 'info'
+                const message = {...input, type, id: ++sequence}
+                commit('ADD_MESSAGE_TO_QUEUE', message)
+                const duration = input.duration ?? (type === 'error' || input.action ? 0 : 3000)
+                if (duration > 0) timers.set(message.id, schedule(() => dispatch('removeMessage', message.id), duration))
+                return message.id
+            },
+            addMessageToQueue({dispatch}, message) { return dispatch('queueMessage', message) },
+            removeMessage({commit}, id) { forget(id); commit('REMOVE_MESSAGE_BY_ID', id) },
+            removeMessageByIndex({state, dispatch}, index) {
+                const message = state.messageQueue[index]
+                if (message) return dispatch('removeMessage', message.id)
+            },
+            async runAction({state, dispatch}, id) {
+                const message = state.messageQueue.find(message => message.id === id)
+                if (!message?.action || message.action.disabled?.()) return
+                const result = await message.action.run()
+                if (result === false) return
+                return dispatch('removeMessage', id)
+            },
+        },
+    }
+}
+export default createFlashModule()
