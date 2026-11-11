@@ -1,0 +1,86 @@
+{
+  "date": "2026-11-11",
+  "source": "native YouTrack MCP",
+  "query": "project: GLE tag: ui-autisti",
+  "count": 11,
+  "hasNextPage": false,
+  "issues": [
+    {
+      "id": "GLE-126",
+      "summary": "Casse ritirate e casse vuote lasciate come quantità indipendenti",
+      "state": "In corso",
+      "resolvedAt": null,
+      "updatedAt": "2026-11-11 17:43:25"
+    },
+    {
+      "id": "GLE-125",
+      "summary": "Riepilogo numero e tipologie imballi prima di aprire l’ordine",
+      "state": "In corso",
+      "resolvedAt": null,
+      "updatedAt": "2026-11-11 17:43:25"
+    },
+    {
+      "id": "GLE-124",
+      "summary": "Dashboard giornaliera dei viaggi con mezzo e avanzamento",
+      "state": "In corso",
+      "resolvedAt": null,
+      "updatedAt": "2026-11-11 17:43:24"
+    },
+    {
+      "id": "GLE-123",
+      "summary": "Contatti chiamabili per tutte le tappe e focus sulla prossima",
+      "state": "In corso",
+      "resolvedAt": null,
+      "updatedAt": "2026-11-11 17:43:24"
+    },
+    {
+      "id": "GLE-122",
+      "summary": "Modifica del piano corrente e ripristino dei valori tracciato",
+      "state": "In corso",
+      "resolvedAt": null,
+      "updatedAt": "2026-11-11 17:43:24"
+    },
+    {
+      "id": "GLE-121",
+      "summary": "Tappe completate consultabili dopo il rientro nel viaggio",
+      "state": "In corso",
+      "resolvedAt": null,
+      "updatedAt": "2026-11-11 17:43:24"
+    },
+    {
+      "id": "GLE-120",
+      "summary": "Riordino delle tappe del viaggio operativo",
+      "state": "In corso",
+      "resolvedAt": null,
+      "updatedAt": "2026-11-11 17:43:24"
+    },
+    {
+      "id": "GLE-119",
+      "summary": "Referente e telefono della sede nel dettaglio tappa",
+      "state": "In corso",
+      "resolvedAt": null,
+      "updatedAt": "2026-11-11 17:43:24"
+    },
+    {
+      "id": "GLE-118",
+      "summary": "Riapertura tracciata di una tappa completata",
+      "state": "In corso",
+      "resolvedAt": null,
+      "updatedAt": "2026-11-11 17:43:23"
+    },
+    {
+      "id": "GLE-117",
+      "summary": "Contenitori previsti ed effettivi nell’ordine",
+      "state": "In corso",
+      "resolvedAt": null,
+      "updatedAt": "2026-11-11 17:43:23"
+    },
+    {
+      "id": "GLE-116",
+      "summary": "UX/UI responsive mobile-first dalla dashboard alle operazioni",
+      "state": "In corso",
+      "resolvedAt": null,
+      "updatedAt": "2026-11-11 17:43:23"
+    }
+  ]
+}

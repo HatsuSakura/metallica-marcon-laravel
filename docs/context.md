@@ -1,7 +1,18 @@
 # Contesto corrente — Metallica Marcon
 
-Aggiornato: 2026-11-04. Sintesi di sessione; non sostituisce il tracker,
+Aggiornato: 2026-11-11. Sintesi di sessione; non sostituisce il tracker,
 le decisioni di dominio o le prove di rilascio.
+
+## Stato corrente — 2026-11-11
+
+[Checkpoint completo per la ripresa](checkpoints/2026-11-11-driver-uat.md).
+Commit 89b2b22 pubblicato e rilasciato in QA l'11 novembre. Dashboard/workspace,
+note sede, avvio per riordino e notifiche globali disponibili. OP-001 risolto.
+GLE-116–126 aggiornate via MCP: tutte In corso, commenti con evidenze e attesa
+UAT; workflow senza stato di collaudo. Non chiuse prima dell'accettazione.
+GLE-122 mantiene residui nei ripristini estesi, esplicitati nel checkpoint.
+Snapshot tracker: docs/evidence/youtrack-driver-2026-11-11.json.
+Le sezioni successive sono cronologia datata, non sostituiscono questo stato.
 
 ## Deploy QA completato — 2026-11-04
 
