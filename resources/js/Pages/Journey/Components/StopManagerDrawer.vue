@@ -1,4 +1,6 @@
 <script setup>
+import AppAction from '@/Components/UI/AppAction.vue'
+
 import { computed, ref, watchEffect } from 'vue'
 import draggable from 'vuedraggable'
 import { GoogleMap, AdvancedMarker } from 'vue3-google-map'
@@ -101,16 +103,16 @@ const onMapClick = (evt, s, key) => {
 </script>
 
 <template>
-  <div id="stop-manager-drawer" class="absolute inset-0 z-20 p-3 bg-base-100 backdrop-blur-sm scroll-mt-16 h-full overflow-y-auto">
+  <div id="stop-manager-drawer" role="region" aria-label="Gestione tappe" class="absolute inset-0 z-20 p-3 bg-base-100 scroll-mt-16 h-full overflow-y-auto">
     <div class="p-4 mt-4 flex items-center justify-between">
       <h3 class="font-semibold flex items-center gap-2">
         Gestione Tappe
         <font-awesome-icon :icon="['fas', 'route']" class="text-xl"/>
       </h3>
-      <button type="button" class="btn btn-sm btn-outline" @click="emit('close')">
+      <AppAction type="button"  @click="emit('close')" variant="neutral">
         <font-awesome-icon :icon="['fas', 'xmark']" class="text-sm"/>
         Riduci
-      </button>
+      </AppAction>
     </div>
 
     <div class="p-4">
@@ -128,9 +130,9 @@ const onMapClick = (evt, s, key) => {
             {{ action.label }}
           </option>
         </select>
-        <button type="button" class="btn btn-primary btn-sm" @click="addTechnical">
+        <AppAction type="button"  @click="addTechnical" variant="function">
           Aggiungi
-        </button>
+        </AppAction>
       </div>
 
       <Box v-if="localOrder.length === 0" padding="p-2">
@@ -153,7 +155,7 @@ const onMapClick = (evt, s, key) => {
         <template #item="{ element: key, index }">
           <Box :key="`stop-${key}`" padding="p-2">
             <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0 w-3/4">
+              <div class="min-w-0 flex-1">
                 <div class="font-semibold truncate">
                   <font-awesome-icon :icon="['fas', 'grip-vertical']" class="stop-handle cursor-grab select-none opacity-60 mr-2" />
                   {{ index + 1 }}. {{ stopTitle(resolveStop(key)) }}
@@ -163,8 +165,8 @@ const onMapClick = (evt, s, key) => {
                 </div>
                 <div v-if="isTechnical(resolveStop(key))" class="text-xs opacity-70">
                   Sosta tecnica - scegli posizione sulla mappa
-                  
-                  <div class="mt-2 flex flex-row gap-2">
+
+                  <div class="mt-2 flex flex-wrap gap-2">
                     <input
                       type="text"
                       class="input input-bordered input-sm w-1/2"
@@ -191,13 +193,13 @@ const onMapClick = (evt, s, key) => {
                   sosta tecnica
                 </div>
                 <div v-if="canRemove(resolveStop(key))" class="flex">
-                  <button
+                  <AppAction
                     type="button"
-                    class="btn btn-ghost btn-xs"
+
                     @click.stop="emit('remove-technical-stop', key)"
-                  >
+                   variant="remove" shape="circle" aria-label="Rimuovi sosta tecnica">
                     <font-awesome-icon :icon="['fas', 'trash']" class="text-sm"/>
-                  </button>
+                  </AppAction>
                 </div>
               </div>
             </div>
@@ -237,5 +239,3 @@ const onMapClick = (evt, s, key) => {
     </div>
   </div>
 </template>
-
-

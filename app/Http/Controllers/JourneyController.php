@@ -277,10 +277,10 @@ public function store(Request $request)
         'planned_start_at'    => 'required|date',
         'planned_end_at'      => 'required|date',
         'notes'               => 'nullable|string',
-        'vehicle_id'  => 'required',
-        'trailer_id'  => 'nullable',
-        'vehicle_cargo_id'  => 'required',
-        'trailer_cargo_id'  => 'nullable',
+        'vehicle_id'  => 'required|integer',
+        'trailer_id'  => 'nullable|integer',
+        'vehicle_cargo_id'  => 'required|integer',
+        'trailer_cargo_id'  => 'nullable|integer',
         'driver_id'   => 'required',
         'logistics_user_id' => 'nullable',
 
@@ -315,6 +315,8 @@ public function store(Request $request)
         'stops.*.orders' => 'nullable|array',
             'stops.*.orders.*' => 'integer|exists:orders,id',
         ]);
+
+        app(\App\Services\JourneyPlanning\VehicleConfiguration::class)->validate($validated);
 
         return DB::transaction(function () use ($validated) {
 
@@ -541,10 +543,10 @@ private function applyOrdersToJourney(
             'planned_start_at'    => 'required|date',
             'planned_end_at'      => 'required|date',
             'notes'               => 'nullable|string',
-            'vehicle_id'  => 'required',
-            'trailer_id'  => 'nullable',
-            'vehicle_cargo_id'  => 'required',
-            'trailer_cargo_id'  => 'nullable',
+            'vehicle_id'  => 'required|integer',
+            'trailer_id'  => 'nullable|integer',
+            'vehicle_cargo_id'  => 'required|integer',
+            'trailer_cargo_id'  => 'nullable|integer',
             'driver_id'   => 'required',
             'logistics_user_id' => 'nullable',
 
@@ -571,6 +573,8 @@ private function applyOrdersToJourney(
             'stops.*.orders' => 'nullable|array',
             'stops.*.orders.*' => 'integer|exists:orders,id',
         ]);
+
+        app(\App\Services\JourneyPlanning\VehicleConfiguration::class)->validate($validated);
 
         return DB::transaction(function () use ($validated, $journey) {
             $journey = Journey::query()

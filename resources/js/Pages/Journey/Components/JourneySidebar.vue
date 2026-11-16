@@ -1,4 +1,6 @@
 <script setup>
+import AppAction from '@/Components/UI/AppAction.vue'
+
 import { computed } from 'vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import Box from '@/Components/UI/Box.vue'
@@ -53,7 +55,7 @@ const stopOrderModel = computed({
         <select
           v-model="form.driver_id"
           required
-          id="driver_id"
+          id="driver_id" aria-label="Autista" name="driver_id"
           class="select select-bordered w-full max-w-xs"
           @change=""
         >
@@ -67,7 +69,7 @@ const stopOrderModel = computed({
       <div class="flex flex-row justify-between items-center gap-2 mb-1">
         <font-awesome-icon :icon="['fas', 'person-walking-arrow-right']" class="text-xl"/>
         <VueDatePicker
-          v-model="form.planned_start_at"
+          v-model="form.planned_start_at" uid="planned_start_at" name="planned_start_at" :aria-labels="{input:'Partenza prevista'}"
           model-type="yyyy-MM-dd HH:mm:ss"
           locale="it"
           format="dd/MM/yyyy HH:mm"
@@ -89,7 +91,7 @@ const stopOrderModel = computed({
       <div class="flex flex-row justify-between items-center gap-2 mb-1">
         <font-awesome-icon :icon="['fas', 'person-walking-arrow-loop-left']" class="text-xl"/>
         <VueDatePicker
-          v-model="form.planned_end_at"
+          v-model="form.planned_end_at" uid="planned_end_at" name="planned_end_at" :aria-labels="{input:'Ritorno previsto'}"
           model-type="yyyy-MM-dd HH:mm:ss"
           locale="it"
           format="dd/MM/yyyy HH:mm"
@@ -121,7 +123,7 @@ const stopOrderModel = computed({
       </div>
     </Box>
 
-    <div class="sticky top-24 shadow-md px-4 pb-4 mt-4 rounded-md flex flex-col gap-4 w-full">
+    <div class="2xl:sticky 2xl:top-24 border-t border-base-300 pt-4 mt-4 flex flex-col gap-4 w-full">
       <!-- TOTALE VIAGGIO -->
       <div>
         <div class="w-full">
@@ -131,7 +133,7 @@ const stopOrderModel = computed({
           </div>
         </div>
 
-        <div class="mt-3 hidden md:grid grid-cols-[36px_repeat(4,minmax(0,1fr))] text-xs text-gray-500">
+        <div class="mt-3 hidden md:grid grid-cols-[36px_repeat(4,minmax(0,1fr))] text-xs text-base-content/75">
           <div></div>
           <div class="text-center">Casse</div>
           <div class="text-center">Bancali</div>
@@ -148,20 +150,20 @@ const stopOrderModel = computed({
             Totale
           </div>
 
-          <div class="rounded-md border border-gray-500/60 p-2 text-center">
-            <div class="text-xs text-gray-500 md:hidden">Casse</div>
+          <div class="rounded-md border border-base-300 p-2 text-center">
+            <div class="text-xs text-base-content/75 md:hidden">Casse</div>
             <div class="text-xl font-medium">{{ spaziCasseMotrice + spaziCasseRimorchio }}</div>
           </div>
-          <div class="rounded-md border border-gray-500/60 p-2 text-center">
-            <div class="text-xs text-gray-500 md:hidden">Bancali</div>
+          <div class="rounded-md border border-base-300 p-2 text-center">
+            <div class="text-xs text-base-content/75 md:hidden">Bancali</div>
             <div class="text-xl font-medium">{{ spaziBancaleMotrice + spaziBancaleRimorchio }}</div>
           </div>
-          <div class="rounded-md border border-gray-500/60 p-2 text-center">
-            <div class="text-xs text-gray-500 md:hidden">Spazi</div>
+          <div class="rounded-md border border-base-300 p-2 text-center">
+            <div class="text-xs text-base-content/75 md:hidden">Spazi</div>
             <div class="text-xl font-medium">{{ spaziBancaleMotrice + spaziBancaleRimorchio }}</div>
           </div>
-          <div class="rounded-md border border-gray-500/60 p-2 text-center">
-            <div class="text-xs text-gray-500 md:hidden">Peso</div>
+          <div class="rounded-md border border-base-300 p-2 text-center">
+            <div class="text-xs text-base-content/75 md:hidden">Peso</div>
             <div class="text-xl font-medium">{{ (capacitaCaricoMotrice + capacitaCaricoRimorchio) / 1000 }}</div>
           </div>
         </div>
@@ -176,32 +178,32 @@ const stopOrderModel = computed({
             Residuo
           </div>
 
-          <div class="rounded-md border border-gray-500/60 p-2 text-center">
-            <div class="text-xs text-gray-500 md:hidden">Casse</div>
+          <div class="rounded-md border border-base-300 p-2 text-center">
+            <div class="text-xs text-base-content/75 md:hidden">Casse</div>
             <div class="text-xl font-medium">
               <span :class="(ordiniBancaleMotrice + ordiniBancaleRimorchio + ordiniBancaleRiempimento) < 0 ? 'text-error' : 'text-success'">
                 {{ (spaziCasseMotrice + spaziCasseRimorchio) - (ordiniBancaleMotrice + ordiniBancaleRimorchio + ordiniBancaleRiempimento) }}
               </span>
             </div>
           </div>
-          <div class="rounded-md border border-gray-500/60 p-2 text-center">
-            <div class="text-xs text-gray-500 md:hidden">Bancali</div>
+          <div class="rounded-md border border-base-300 p-2 text-center">
+            <div class="text-xs text-base-content/75 md:hidden">Bancali</div>
             <div class="text-xl font-medium">
               <span :class="(ordiniCasseMotrice + ordiniCasseRimorchio + ordiniCasseRiempimento) < 0 ? 'text-error' : 'text-success'">
                 {{ (spaziBancaleMotrice + spaziBancaleRimorchio) - (ordiniCasseMotrice + ordiniCasseRimorchio + ordiniCasseRiempimento) }}
               </span>
             </div>
           </div>
-          <div class="rounded-md border border-gray-500/60 p-2 text-center">
-            <div class="text-xs text-gray-500 md:hidden">Spazi</div>
+          <div class="rounded-md border border-base-300 p-2 text-center">
+            <div class="text-xs text-base-content/75 md:hidden">Spazi</div>
             <div class="text-xl font-medium">
               <span :class="(spaziBancaleMotrice + spaziBancaleRimorchio) - (ordiniBancaleMotrice + ordiniBancaleRimorchio + ordiniBancaleRiempimento + ordiniCasseMotrice + ordiniCasseRimorchio + ordiniCasseRiempimento) < 0 ? 'text-error' : 'text-success'">
                 {{ (spaziBancaleMotrice + spaziBancaleRimorchio ) - (ordiniBancaleMotrice + ordiniBancaleRimorchio + ordiniBancaleRiempimento + ordiniCasseMotrice + ordiniCasseRimorchio + ordiniCasseRiempimento) }}
               </span>
             </div>
           </div>
-          <div class="rounded-md border border-gray-500/60 p-2 text-center">
-            <div class="text-xs text-gray-500 md:hidden">Peso</div>
+          <div class="rounded-md border border-base-300 p-2 text-center">
+            <div class="text-xs text-base-content/75 md:hidden">Peso</div>
             <div class="text-xl font-medium">
               {{ (capacitaCaricoMotrice + capacitaCaricoRimorchio - (ordiniCaricoMotrice + ordiniCaricoRimorchio + ordiniCaricoRiempimento) )  / 1000 }}
             </div>
@@ -218,28 +220,28 @@ const stopOrderModel = computed({
             Ordini
           </div>
 
-          <div class="rounded-md border border-gray-500/60 p-2 text-center">
-            <div class="text-xs text-gray-500 md:hidden">Casse</div>
+          <div class="rounded-md border border-base-300 p-2 text-center">
+            <div class="text-xs text-base-content/75 md:hidden">Casse</div>
             <div class="text-xl font-medium">
               {{ ordiniCasseMotrice + ordiniCasseRimorchio + ordiniCasseRiempimento }}
             </div>
           </div>
-          <div class="rounded-md border border-gray-500/60 p-2 text-center">
-            <div class="text-xs text-gray-500 md:hidden">Bancali</div>
+          <div class="rounded-md border border-base-300 p-2 text-center">
+            <div class="text-xs text-base-content/75 md:hidden">Bancali</div>
             <div class="text-xl font-medium">
               {{ ordiniBancaleMotrice + ordiniBancaleRimorchio + ordiniBancaleRiempimento }}
             </div>
           </div>
-          <div class="rounded-md border border-gray-500/60 p-2 text-center">
-            <div class="text-xs text-gray-500 md:hidden">Spazi</div>
+          <div class="rounded-md border border-base-300 p-2 text-center">
+            <div class="text-xs text-base-content/75 md:hidden">Spazi</div>
             <div class="text-xl font-medium">
               <span :class="(ordiniBancaleMotrice + ordiniBancaleRimorchio + ordiniBancaleRiempimento + ordiniCasseMotrice + ordiniCasseRimorchio + ordiniCasseRiempimento) >  (spaziBancaleMotrice + spaziBancaleRimorchio + spaziCasseMotrice + spaziCasseRimorchio) ? 'text-error' : 'text-success'">
                 {{ (ordiniBancaleMotrice + ordiniBancaleRimorchio + ordiniBancaleRiempimento + ordiniCasseMotrice + ordiniCasseRimorchio + ordiniCasseRiempimento) }}
               </span>
             </div>
           </div>
-          <div class="rounded-md border border-gray-500/60 p-2 text-center">
-            <div class="text-xs text-gray-500 md:hidden">Peso</div>
+          <div class="rounded-md border border-base-300 p-2 text-center">
+            <div class="text-xs text-base-content/75 md:hidden">Peso</div>
             <div class="text-xl font-medium">
               {{ (ordiniCaricoMotrice + ordiniCaricoRimorchio + ordiniCaricoRiempimento) / 1000 }}
             </div>
@@ -257,13 +259,13 @@ const stopOrderModel = computed({
             </h3>
           </div>
           <div v-if="viewMode != 'empty'">
-            <button
+            <AppAction
               type="button"
-              class="btn btn-primary btn-circle btn-sm"
+
               @click.prevent="clearViewMode()"
-            >
+             variant="neutral" shape="circle" aria-label="Chiudi dettaglio">
               <font-awesome-icon :icon="['fas', 'xmark']" class="text-lg"/>
-            </button>
+            </AppAction>
           </div>
         </div>
 
@@ -281,7 +283,7 @@ const stopOrderModel = computed({
           {{ clickedElement }}
         </Box>
         <EmptyState v-else>
-          Nssun ordine selezionato
+          Nessun ordine selezionato
         </EmptyState>
       </div>
 
@@ -294,14 +296,14 @@ const stopOrderModel = computed({
       />
 
       <div class="mb-2">
-        <button
+        <AppAction
           type="submit"
           :disabled="submitDisabled || form.processing"
-          class="btn btn-primary"
-        >
+
+         variant="confirm">
           <font-awesome-icon :icon="['fas', 'floppy-disk']" class="text-xl"/>
           {{ submitLabel }}
-        </button>
+        </AppAction>
       </div>
     </div>
   </div>

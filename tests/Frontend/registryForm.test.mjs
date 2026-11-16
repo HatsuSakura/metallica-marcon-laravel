@@ -24,3 +24,7 @@ test('dirty comparison matches displayed optional and numeric values, preserving
     assert.notEqual(registrySnapshot({vat_number:'00123'}), registrySnapshot({vat_number:'123'}))
     assert.notEqual(registrySnapshot({name:'A'}), registrySnapshot({name:'B'}))
 })
+test('date values retain their meaning in the shared form dirty comparison',()=>{
+ assert.notEqual(registrySnapshot({requested_at:new Date('2026-11-16T08:00:00Z')}),registrySnapshot({requested_at:new Date('2026-11-16T09:00:00Z')}))
+ assert.equal(registrySnapshot({requested_at:new Date('2026-11-16T08:00:00Z')}),registrySnapshot({requested_at:new Date('2026-11-16T08:00:00Z')}))
+})

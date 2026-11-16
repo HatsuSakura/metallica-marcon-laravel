@@ -1,16 +1,20 @@
 <template>
-    <section>
-        <div class="flex items-center justify-between gap-3 mb-4">
-            <Link :href="returnToUrl" class="btn btn-ghost btn-sm">
+<AppPage title="Dettaglio viaggio">
+<template #back><AppAction :href="returnToUrl"  variant="neutral" :as="Link">
                 <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-lg" />
                 Torna a Viaggi
-            </Link>
+            </AppAction></template>
 
-            <Link :href="route('journey.edit', { journey: journey.id })" class="btn btn-primary btn-sm">
+        <template #actions>
+
+
+            <AppAction :href="route('journey.edit', { journey: journey.id })"  variant="function" :as="Link">
                 <font-awesome-icon :icon="['fas', 'pen']" class="text-lg" />
                 Modifica viaggio
-            </Link>
-        </div>
+            </AppAction>
+        </template>
+
+    <section>
 
         <div class="card bg-base-100 border border-base-200 shadow-sm mb-4">
             <div class="card-body p-4">
@@ -34,9 +38,7 @@
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <span class="badge badge-outline">
-                            Stato: {{ journey.status }}
-                        </span>
+                        <JourneyStatusBadge :status="journey.status" />
                         <span class="badge badge-outline">
                             Tappe: {{ journey.stops_count ?? stops.length }}
                         </span>
@@ -61,18 +63,16 @@
                 </div>
 
                 <div v-else class="space-y-2">
-                    <button
+                    <AppAction
                         v-for="stop in stops"
                         :key="stop.id"
                         type="button"
-                        class="btn btn-ghost w-full justify-start"
+                         class="w-full justify-start"
                         :class="selectedStopId === stop.id ? 'btn-active' : ''"
-                        @click="selectedStopId = stop.id"
-                    >
+                        :aria-pressed="selectedStopId === stop.id" @click="selectedStopId = stop.id"
+                     variant="neutral">
                         <div class="flex items-start gap-2 w-full">
-                            <span class="badge badge-outline">
-                                {{ stopStatusLabel(stop.status) }}
-                            </span>
+                            <JourneyStatusBadge kind="stop" :status="stop.status" />
                             <div class="min-w-0 text-left">
                                 <div class="font-semibold truncate">{{ stopTitle(stop) }}</div>
                                 <div v-if="stopSubtitle(stop)" class="text-xs opacity-70 truncate">
@@ -80,7 +80,7 @@
                                 </div>
                             </div>
                         </div>
-                    </button>
+                    </AppAction>
                 </div>
             </Box>
 
@@ -100,9 +100,7 @@
                             {{ stopSubtitle(selectedStop) }}
                         </div>
                         <div class="mt-2 flex items-center gap-2">
-                            <span class="badge badge-outline">
-                                Stato: {{ stopStatusLabel(selectedStop.status) }}
-                            </span>
+                            <JourneyStatusBadge kind="stop" :status="selectedStop.status" />
                             <span v-if="selectedStop.kind === 'technical'" class="badge badge-neutral">
                                 Tecnica
                             </span>
@@ -178,9 +176,16 @@
             :field-labels="auditFieldLabels"
         />
     </section>
+</AppPage>
 </template>
 
 <script setup>
+import JourneyStatusBadge from '@/Components/UI/JourneyStatusBadge.vue'
+
+import AppPage from '@/Components/UI/AppPage.vue'
+
+import AppAction from '@/Components/UI/AppAction.vue'
+
 import { computed, ref } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import dayjs from 'dayjs';

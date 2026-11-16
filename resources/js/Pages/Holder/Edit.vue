@@ -1,16 +1,14 @@
 <template>
 <RegistryPage title="Modifica contenitore">
-
-    <div class="mb-4 flex flex-wrap items-center gap-3">
-        <Link
+<template #back><Link
             class="btn btn-outline"
             :href="route('holder.index')"
         >
             <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>
             Torna ad elenco Contenitori
-        </Link>
+        </Link></template>
 
-    </div>
+
 
     <RegistryForm :form="form" editing v-slot="{canSubmit, busy}" @submit="edit" >
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-4">

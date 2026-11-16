@@ -7,6 +7,7 @@ defineProps({
   cargos: Array,
   form: Object,
   trailerEnabled: Boolean,
+  configuration: Object,
   setPreferredTrailerAndCargo: Function,
   checkCargo: Function,
   spaziCasseMotrice: [Number, String],
@@ -25,9 +26,9 @@ defineProps({
 </script>
 
 <template>
-  <div class="flex flex-row justify-items-stretch gap-2 w-full">
+  <div class="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2">
     <!-- MOTRICE -->
-    <Box class="flex-1">
+    <Box class="min-w-0">
       <div class="w-full">
         <div class="flex flex-row justify-center items-center">
           Motrice &nbsp;
@@ -35,11 +36,12 @@ defineProps({
         </div>
       </div>
 
-      <div class="flex flex-row items-center gap-4 mt-2 pr-2">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 mt-2">
         <select
           v-model="form.vehicle_id"
           required
-          id="vehicle_id"
+          :class="{'select-warning': configuration.issues.vehicle_id}"
+          id="vehicle_id" aria-label="Motrice" name="vehicle_id"
           class="select select-bordered w-full max-w-xs"
           @change="setPreferredTrailerAndCargo"
         >
@@ -52,19 +54,20 @@ defineProps({
         <select
           v-model="form.vehicle_cargo_id"
           required
-          id="vehicle_cargo_id"
+          :class="{'select-warning': configuration.issues.vehicle_cargo_id}"
+          id="vehicle_cargo_id" aria-label="Cassone motrice" name="vehicle_cargo_id"
           class="select select-bordered w-full max-w-xs"
-          :disabled="!trailerEnabled"
+          :disabled="!configuration.vehicle || !!configuration.fixedName"
           @change="checkCargo"
         >
           <option disabled value="">Nessun cassone</option>
-          <option v-for="cargo in cargos" :key="cargo.id" :value="cargo.id">
+          <option v-for="cargo in cargos" :key="cargo.id" :value="cargo.id" :disabled="configuration.fixedName ? cargo.name !== configuration.fixedName : ['Sponda','Furgone'].includes(cargo.name)">
             {{ cargo.name }}
           </option>
         </select>
       </div>
 
-      <div class="mt-3 hidden md:grid grid-cols-[36px_repeat(4,minmax(0,1fr))] text-xs text-gray-500">
+      <div class="mt-3 hidden md:grid grid-cols-[36px_repeat(4,minmax(0,1fr))] text-xs text-base-content/75">
         <div></div>
         <div class="text-center">Casse</div>
         <div class="text-center">Bancali</div>
@@ -82,20 +85,20 @@ defineProps({
           Capienza
         </div>
 
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Casse</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Casse</div>
           <div class="text-xl font-medium">{{ spaziCasseMotrice }}</div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Bancali</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Bancali</div>
           <div class="text-xl font-medium">{{ spaziBancaleMotrice }}</div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Spazi</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Spazi</div>
           <div class="text-xl font-medium">{{ spaziBancaleMotrice }}</div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Peso</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Peso</div>
           <div class="text-xl font-medium">{{ capacitaCaricoMotrice / 1000 }} </div>
         </div>
       </div>
@@ -110,34 +113,34 @@ defineProps({
           Residuo
         </div>
 
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Casse</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Casse</div>
           <div class="text-xl font-medium">
             <span :class="(spaziCasseMotrice - ordiniBancaleMotrice) < ordiniCasseMotrice ? 'text-error' : 'text-success'">
               {{ spaziCasseMotrice - ordiniBancaleMotrice }}
             </span>
           </div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Bancali</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Bancali</div>
           <div class="text-xl font-medium">
             <span :class="(spaziBancaleMotrice - ordiniCasseMotrice) < ordiniBancaleMotrice ? 'text-error' : 'text-success'">
               {{ spaziBancaleMotrice - ordiniCasseMotrice}}
             </span>
           </div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Spazi</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Spazi</div>
           <div class="text-xl font-medium">
             <span :class="(spaziBancaleMotrice - ordiniCasseMotrice - ordiniBancaleMotrice) < 0 ? 'text-error' : 'text-success'">
               {{ spaziBancaleMotrice - ordiniCasseMotrice - ordiniBancaleMotrice }}
             </span>
           </div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden"></div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden"></div>
           <div class="text-xl font-medium">
-            {{ (capacitaCaricoMotrice - ordiniCaricoMotrice) / 1000 }} 
+            {{ (capacitaCaricoMotrice - ordiniCaricoMotrice) / 1000 }}
           </div>
         </div>
       </div>
@@ -152,31 +155,31 @@ defineProps({
           Ordini
         </div>
 
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Casse</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Casse</div>
           <div class="text-xl font-medium">{{ ordiniCasseMotrice }}</div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Bancali</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Bancali</div>
           <div class="text-xl font-medium">{{ ordiniBancaleMotrice }}</div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Spazi</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Spazi</div>
           <div class="text-xl font-medium">
             <span :class="(spaziBancaleMotrice) < (ordiniBancaleMotrice + ordiniCasseMotrice) ? 'text-error' : 'text-success'">
               {{ ordiniBancaleMotrice + ordiniCasseMotrice}}
             </span>
           </div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Peso</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Peso</div>
           <div class="text-xl font-medium">{{ ordiniCaricoMotrice / 1000 }} </div>
         </div>
       </div>
     </Box>
 
     <!-- RIMORCHIO -->
-    <Box class="flex-1">
+    <Box class="min-w-0" :class="!trailerEnabled ? 'bg-base-200 opacity-60' : ''" :aria-disabled="!trailerEnabled">
       <div class="w-full">
         <div class="flex flex-row justify-center items-center">
           Rimorchio &nbsp;
@@ -184,10 +187,10 @@ defineProps({
         </div>
       </div>
 
-      <div class="flex flex-row items-center gap-4 mt-2 pr-2">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 mt-2">
         <select
           v-model="form.trailer_id"
-          id="trailer_id"
+          id="trailer_id" aria-label="Rimorchio" name="trailer_id"
           class="select select-bordered w-full max-w-xs"
           :disabled="!trailerEnabled"
           @change="checkCargo"
@@ -201,19 +204,20 @@ defineProps({
         <select
           v-model="form.trailer_cargo_id"
           :required="form.trailer_id ? true : false"
-          id="trailer_cargo_id"
+          :class="{'select-warning': configuration.issues.trailer_cargo_id}"
+          id="trailer_cargo_id" aria-label="Cassone rimorchio" name="trailer_cargo_id"
           class="select select-bordered w-full max-w-xs"
-          :disabled="!trailerEnabled"
+          :disabled="!trailerEnabled || !form.trailer_id"
           @change="checkCargo"
         >
           <option disabled value="">Nessun cassone</option>
-          <option v-for="cargo in cargos" :key="cargo.id" :value="cargo.id">
+          <option v-for="cargo in cargos" :key="cargo.id" :value="cargo.id" :disabled="['Sponda','Furgone'].includes(cargo.name)">
             {{ cargo.name }}
           </option>
         </select>
       </div>
 
-      <div class="mt-3 hidden md:grid grid-cols-[36px_repeat(4,minmax(0,1fr))] text-xs text-gray-500">
+      <div class="mt-3 hidden md:grid grid-cols-[36px_repeat(4,minmax(0,1fr))] text-xs text-base-content/75">
         <div></div>
         <div class="text-center">Casse</div>
         <div class="text-center">Bancali</div>
@@ -231,20 +235,20 @@ defineProps({
           Capienza
         </div>
 
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Casse</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Casse</div>
           <div class="text-xl font-medium">{{ spaziCasseRimorchio }}</div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Bancali</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Bancali</div>
           <div class="text-xl font-medium">{{ spaziBancaleRimorchio }}</div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Spazi</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Spazi</div>
           <div class="text-xl font-medium">{{ spaziBancaleRimorchio }}</div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Peso</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Peso</div>
           <div class="text-xl font-medium">{{ capacitaCaricoRimorchio / 1000 }} </div>
         </div>
       </div>
@@ -259,34 +263,34 @@ defineProps({
           Residuo
         </div>
 
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Casse</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Casse</div>
           <div class="text-xl font-medium">
             <span :class="(spaziCasseRimorchio - ordiniBancaleRimorchio) < ordiniCasseRimorchio ? 'text-error' : 'text-success'">
               {{ spaziCasseRimorchio - ordiniBancaleRimorchio }}
             </span>
           </div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Bancali</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Bancali</div>
           <div class="text-xl font-medium">
             <span :class="(spaziBancaleRimorchio - ordiniCasseRimorchio) < ordiniBancaleRimorchio ? 'text-error' : 'text-success'">
               {{ spaziBancaleRimorchio - ordiniCasseRimorchio}}
             </span>
           </div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Spazi</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Spazi</div>
           <div class="text-xl font-medium">
             <span :class="(spaziBancaleRimorchio - ordiniCasseRimorchio - ordiniBancaleRimorchio) < 0 ? 'text-error' : 'text-success'">
               {{ spaziBancaleRimorchio - ordiniCasseRimorchio - ordiniBancaleRimorchio }}
             </span>
           </div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Peso</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Peso</div>
           <div class="text-xl font-medium">
-            {{ (capacitaCaricoRimorchio - ordiniCaricoRimorchio) / 1000 }} 
+            {{ (capacitaCaricoRimorchio - ordiniCaricoRimorchio) / 1000 }}
           </div>
         </div>
       </div>
@@ -301,28 +305,27 @@ defineProps({
           Ordini
         </div>
 
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Casse</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Casse</div>
           <div class="text-xl font-medium">{{ ordiniCasseRimorchio }}</div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Bancali</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Bancali</div>
           <div class="text-xl font-medium">{{ ordiniBancaleRimorchio }}</div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Spazi</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Spazi</div>
           <div class="text-xl font-medium">
             <span :class="(spaziBancaleRimorchio) < (ordiniBancaleRimorchio + ordiniCasseRimorchio) ? 'text-error' : 'text-success'">
               {{ ordiniBancaleRimorchio + ordiniCasseRimorchio}}
             </span>
           </div>
         </div>
-        <div class="rounded-md border border-gray-500/60 p-2 text-center">
-          <div class="text-xs text-gray-500 md:hidden">Peso</div>
+        <div class="rounded-md border border-base-300 p-2 text-center">
+          <div class="text-xs text-base-content/75 md:hidden">Peso</div>
           <div class="text-xl font-medium">{{ ordiniCaricoRimorchio / 1000 }} </div>
         </div>
       </div>
     </Box>
   </div>
 </template>
-

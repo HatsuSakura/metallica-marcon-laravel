@@ -1,78 +1,15 @@
 <template>
-
-
-    <div class="accordion-section accordion-custom-item">
-      <!-- Accordion Header -->
-      <button
-        @click="toggleOpen"
-        class="accordion-header p-4 w-full"
-        :aria-expanded="isOpen"
-        type="button"
-      >
-        <div class="flex flex-row justify-between items-center w-full">
-            <div class="flex font-medium">
-                {{ title }}
-            </div>
-            <div class="flex">
-                <font-awesome-icon
-                :icon="isOpen ? ['fas', 'chevron-up'] : ['fas', 'chevron-down']"
-                />
-            </div>
-
-        </div>
-      </button>
-  
-      <!-- Accordion Content -->
-      <div
-        v-if="isOpen"
-        class="accordion-content p-4"
-      >
-        <slot>
-            Default
-        </slot>
-
-      </div>
-    </div>
-  </template>
-
+    <section class="border-b border-base-300">
+        <h2><button :id="`order-section-heading-${id}`" type="button" class="flex min-h-12 w-full items-center justify-between gap-3 py-3 text-left font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary" :aria-expanded="isOpen" :aria-controls="`order-section-${id}`" @click="isOpen = !isOpen"><span>{{ title }}</span><font-awesome-icon :icon="['fas',isOpen ? 'chevron-up' : 'chevron-down']" class="shrink-0" aria-hidden="true" /></button></h2>
+        <div v-show="isOpen" :id="`order-section-${id}`" :aria-labelledby="`order-section-heading-${id}`" class="min-w-0 space-y-3 pb-4"><slot /></div>
+    </section>
+</template>
 <script setup>
-import { ref, onMounted } from "vue";
-
-// Props
-const props = defineProps({
-  id: {
-    type: [String, Number],
-    required: true,
-  },
-  title: {
-    type: String,
-    required: true,
-  },
-  initialOpen: {
-    type: Boolean,
-    default: false,
-  },
-});
-
-// Reactive state
-const isOpen = ref(props.initialOpen);
-
-// Methods
-const toggleOpen = () => {
-  isOpen.value = !isOpen.value;
-};
-
-const closeSection = () => {
-  isOpen.value = false;
-};
-
-const openSection = () => {
-  isOpen.value = true;
-};
-
-// Emit self to parent
-const emit = defineEmits(["register"]);
-onMounted(() => {
-  emit("register", { closeSection, openSection });
-});
+import {ref,onMounted,onBeforeUnmount} from 'vue'
+const props = defineProps({id:{type:[String,Number],required:true},title:{type:String,required:true},initialOpen:Boolean})
+const emit = defineEmits(['register','unregister'])
+const isOpen = ref(props.initialOpen)
+const controls = {openSection:()=>{isOpen.value=true},closeSection:()=>{isOpen.value=false}}
+onMounted(()=>emit('register',controls))
+onBeforeUnmount(()=>emit('unregister',controls))
 </script>

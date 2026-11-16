@@ -24,7 +24,8 @@ function submit() {
 
 <template>
     <RegistryPage :title="props.item ? 'Modifica materiale / componente' : 'Nuovo materiale / componente'">
-        <template #actions><AppAction :as="Link" :href="route('catalog-items.index')">Torna al catalogo</AppAction></template>
+<template #back><AppAction :as="Link" :href="route('catalog-items.index')">Torna al catalogo</AppAction></template>
+
         <RegistryForm :form="form" :editing="!!props.item" v-slot="{canSubmit, busy}" @submit="submit" class="max-w-3xl">
             <div class="space-y-4">
                 <label class="form-control"><span class="label">Nome</span><input id="catalog-name" v-model="form.name" name="name" class="input input-bordered" :aria-invalid="!!form.errors.name" aria-describedby="catalog-name-error" /><span v-if="form.errors.name" id="catalog-name-error" class="text-sm text-error">{{ form.errors.name }}</span></label>

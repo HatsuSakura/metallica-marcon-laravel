@@ -1,12 +1,11 @@
 <template>
 <RegistryPage title="Nuovo cliente">
-
-  <div class="mb-4">
-    <Link class="btn btn-outline" :href="route('customer.index')">
+<template #back><Link class="btn btn-outline" :href="route('customer.index')">
       <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl" />
       Torna a Clienti
-    </Link>
-  </div>
+    </Link></template>
+
+
 
   <RegistryForm :form="form" v-slot="{canSubmit, busy}" @submit="create" >
     <CustomerFields :form="form" :managers="props.managers" :business-types="props.businessTypes" @address-input="manualPosition = false">

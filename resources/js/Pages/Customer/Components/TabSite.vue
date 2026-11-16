@@ -49,12 +49,7 @@
         <div class="h-64 min-w-0 overflow-hidden rounded-xl border border-base-300"><SimpleMapWithMarker :site="props.site" :withInfoWindow="false" /></div>
     </div>
     <h3 class="pt-3 font-semibold">Dotazioni e consulenza</h3>
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <SiteBooleanParameter title="Consulente ADR" icon-string="vial-circle-check" :boolean-value="!!props.site.has_adr_consultant" positive-label="Presente" negative-label="Assente" />
-        <SiteBooleanParameter title="Muletto" icon-string="truck-ramp-box" :boolean-value="!!props.site.has_muletto" positive-label="Disponibile" negative-label="Non disponibile" />
-        <SiteBooleanParameter title="Transpallet elettrico" icon-string="cart-flatbed" :boolean-value="!!props.site.has_electric_pallet_truck" positive-label="Disponibile" negative-label="Non disponibile" />
-        <SiteBooleanParameter title="Transpallet manuale" icon-string="dolly" :boolean-value="!!props.site.has_manual_pallet_truck" positive-label="Disponibile" negative-label="Non disponibile" />
-    </div>
+    <SiteEquipmentSummary :site="props.site" />
 </section>
 
         <!-- SEZIONE 01 REFERENTI INTERNI -->
@@ -127,7 +122,7 @@ import EditableTimetable from './EditableTimetable.vue';
 import SimpleMapWithMarker from '@/Pages/Map/Components/SimpleMapWithMarker.vue';
 import StoricoRitiri from './StoricoRitiri.vue';
 import OrdiniInCorso from './OrdiniInCorso.vue';
-import SiteBooleanParameter from './SiteBooleanParameter.vue';
+import SiteEquipmentSummary from '@/Components/Site/SiteEquipmentSummary.vue';
 import axios from 'axios';
 import SiteInternalContacts from '@/Components/SiteInternalContacts.vue';
 

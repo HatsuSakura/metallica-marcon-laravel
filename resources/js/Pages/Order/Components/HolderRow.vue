@@ -1,66 +1,18 @@
 <template>
-  <div
-    class="flex flex-row items-start gap-2 mb-2 p-2 rounded-md"
-    :class="holder._highlight ? 'ring-2 ring-warning/60' : ''"
-  >
-    <!-- Selettore holder -->
-    <div class="form-control">
-      <select v-model="localId" id="holder" class="select select-bordered">
-        <option disabled value="">Seleziona un contenitore</option>
-        <option v-for="h in holders" :key="h.id" :value="h.id">
-          {{ h.name }}
-        </option>
-      </select>
+    <div class="mb-3 grid min-w-0 grid-cols-1 items-end gap-3 rounded-xl bg-base-200 p-3 sm:grid-cols-2 xl:grid-cols-5" :class="holder._highlight ? 'ring-2 ring-warning/60' : ''">
+        <label class="form-control min-w-0"><span class="label">Contenitore</span><select v-model="localId" :id="`order-holder-${index}`" :name="`holders.${index}.holder_id`" class="select select-bordered"><option disabled :value="null">Seleziona contenitore</option><option v-for="h in holders" :key="h.id" :value="h.id">{{ h.name }}</option></select></label>
+        <label class="form-control min-w-0"><span class="label">Pieni da ritirare</span><input :value="Number(holder.filled_holders_count ?? 0)" type="number" class="input input-bordered" disabled /></label>
+        <label class="form-control min-w-0"><span class="label">Vuoti richiesti (±)</span><input v-model.number="holder.empty_holders_count" :id="`order-holder-${index}-empty`" :name="`holders.${index}.empty_holders_count`" type="number" step="1" class="input input-bordered" /></label>
+        <label class="form-control min-w-0"><span class="label">Totale da consegnare</span><input :value="Number(holder.total_holders_count ?? 0)" type="number" class="input input-bordered" disabled /></label>
+        <AppAction variant="remove" shape="circle" :aria-label="`Rimuovi contenitore ${holders.find(h=>h.id === holder.holder_id)?.name || index+1}`" @click="$emit('remove')"><font-awesome-icon :icon="['fas','trash-can']" aria-hidden="true" /></AppAction>
     </div>
-
-    <!-- Pieni AUTOMATICI (read-only) -->
-    <div class="form-control flex flex-row items-center gap-2">
-      <label class="label" for="empty_holders_count"><span class="label-text">Pieni</span></label>
-      <input
-        :value="Number(holder.filled_holders_count ?? 0)"
-        id="filled_holders_count"
-        type="number"
-        class="input input-bordered w-32 opacity-70"
-        disabled
-      />
-    </div>
-
-    <!-- Vuoti richiesti (±) -->
-    <div class="form-control flex flex-row items-center gap-2">
-      <label class="label" for="empty_holders_count"><span class="label-text">Vuoti richiesti (±)</span></label>
-      <input
-        v-model.number="holder.empty_holders_count"
-        id="empty_holders_count"
-        type="number"
-        step="1"
-        class="input input-bordered w-32"
-        placeholder="+/- Quantità"
-      />
-    </div>
-
-    <!-- Totale (read-only) -->
-    <div class="form-control flex flex-row items-center gap-2">
-      <label class="label" for="total_holders_count"><span class="label-text font-medium">Totale</span></label>
-      <input
-        :value="Number(holder.total_holders_count ?? 0)"
-        id="total_holders_count"
-        type="number"
-        class="input input-bordered w-32 font-medium"
-        placeholder="Totale"
-        disabled
-      />
-    </div>
-
-    <button @click="$emit('remove')" class="btn btn-error btn-circle self-end">
-      <font-awesome-icon :icon="['fas', 'xmark']" />
-    </button>
-  </div>
 </template>
 
 <script setup>
+import AppAction from '@/Components/UI/AppAction.vue'
 import { watch, ref } from 'vue'
 
-const props = defineProps({ 
+const props = defineProps({
   index: { type: Number, required: true },
   holder: { type: Object, required: true }, // { holder_id, filled_holders_count, empty_holders_count, total_holders_count, _highlight? }
   holders: { type: Array, default: () => [] },

@@ -1,14 +1,15 @@
 <template>
 <RegistryPage title="Scheda contenitore">
-
-    <div class="mb-4 flex flex-row items-center gap-4">
-        <Link
+<template #back><Link
             class="btn btn-outline"
             :href="route('holder.index')"
         >
             <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>
             Torna ad elenco Contenitori
-        </Link>
+        </Link></template>
+
+    <div class="mb-4 flex flex-row items-center gap-4">
+
         <div class="text-lg font-medium">
             Dettaglio contenitore
         </div>

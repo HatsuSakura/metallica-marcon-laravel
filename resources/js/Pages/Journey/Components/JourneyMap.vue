@@ -1,10 +1,10 @@
 <template>
     <div class="full-width-map">
         <div class="my-container">
-            <GoogleMap mapId="DEMO_MAP_ID" 
-                style="width: 100%; height: 100%" 
+            <GoogleMap mapId="DEMO_MAP_ID"
+                style="width: 100%; height: 100%"
                 :api-key=mapApiKey
-                :center="mapCenter" 
+                :center="mapCenter"
                 :zoom="mapZoom"
                 :fullscreenControl = false
                 >
@@ -31,7 +31,7 @@
                         :withInfoWindow="true"
                         list="listRiempimento"
                     />
-                    
+
             </GoogleMap>
         </div>
     </div>
@@ -67,7 +67,7 @@ const mapZoom   = Number(import.meta.env.VITE_MAPS_ZOOM_DEFAULT);
 const mapCenter = ref({lng:0, lat:0});
 // Function to calculate the centroid
 function calculateCentroid() {
-    const sumLat = ref(0); 
+    const sumLat = ref(0);
     const sumLng = ref(0);
     const totVal = ref(0);
 
@@ -117,7 +117,7 @@ onMounted(() => {
     padding: 0;
     width: 100%;
     /* Full viewport width */
-    height: 100vh;
+    height: 100%;
     /* Full viewport height */
     box-sizing: border-box;
 }
@@ -172,4 +172,3 @@ RIEMPIMENTO
     <p>RIEMPIMENTO: {{ listRiempimento }}</p>
   </div>
 -->
-

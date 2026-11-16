@@ -1,9 +1,6 @@
 <template>
 <RegistryPage title="Modifica utente">
-
-
-<div class="flex mb-4">
-    <Link
+<template #back><Link
         :href="route('user.index')"
         method="get"
         as="button"
@@ -11,8 +8,10 @@
         >
         <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-2xl"/>
         Torna all'elenco utenti
-    </Link>
-</div>
+    </Link></template>
+
+
+
 
     <RegistryForm :form="form" editing v-slot="{canSubmit, busy}" @submit="update" >
         <div class="flex flex-col gap-1 w-full max-w-4xl mx-auto">

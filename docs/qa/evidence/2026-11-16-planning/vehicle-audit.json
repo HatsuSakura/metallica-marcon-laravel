@@ -1,0 +1,46 @@
+[
+  {
+    "scenario": "Motrice normale senza rimorchio",
+    "cargo": "",
+    "cargoDisabled": true,
+    "trailerDisabled": true,
+    "alerts": [],
+    "errors": []
+  },
+  {
+    "scenario": "Sponda coerente",
+    "cargo": "2",
+    "cargoDisabled": true,
+    "trailerDisabled": true,
+    "alerts": [],
+    "errors": []
+  },
+  {
+    "scenario": "Furgone coerente",
+    "cargo": "3",
+    "cargoDisabled": true,
+    "trailerDisabled": true,
+    "alerts": [],
+    "errors": []
+  },
+  {
+    "scenario": "Sponda con flag anagrafico incoerente",
+    "cargo": "",
+    "cargoDisabled": false,
+    "trailerDisabled": false,
+    "alerts": [
+      "Opzione \"Sponda\" selezionabile solo per motrice di tipo Sponda"
+    ],
+    "errors": []
+  },
+  {
+    "scenario": "Furgone con flag anagrafico incoerente",
+    "cargo": "",
+    "cargoDisabled": false,
+    "trailerDisabled": false,
+    "alerts": [
+      "Opzione \"Furgone\" selezionabile solo per motrice di tipo Furgone"
+    ],
+    "errors": []
+  }
+]

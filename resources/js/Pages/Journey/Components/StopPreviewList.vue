@@ -1,4 +1,6 @@
 <script setup>
+import AppAction from '@/Components/UI/AppAction.vue'
+
 import { computed } from 'vue'
 import draggable from 'vuedraggable'
 import Box from '@/Components/UI/Box.vue'
@@ -49,14 +51,14 @@ const hasCoords = (s) => {
         Tappe Viaggio
         <font-awesome-icon :icon="['fas', 'map-marker-alt']" class="text-2xl" />
       </h3>
-      <button
+      <AppAction
         type="button"
-        class="btn btn-sm btn-outline"
+
         @click="emit('open-manager')"
-      >
+       variant="function">
         <font-awesome-icon :icon="['fas', 'up-right-and-down-left-from-center']" class="text-sm"/>
         Gestisci
-      </button>
+      </AppAction>
     </div>
 
     <div class="mt-2">
@@ -113,4 +115,3 @@ const hasCoords = (s) => {
     </div>
   </div>
 </template>
-

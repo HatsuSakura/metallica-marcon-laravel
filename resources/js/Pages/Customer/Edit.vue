@@ -1,13 +1,11 @@
 <template>
 <RegistryPage title="Modifica cliente">
-
-  <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-    <Link class="btn btn-outline" :href="backHref">
+<template #back><Link class="btn btn-outline" :href="backHref">
       <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl" />
-      Torna indietro
-    </Link>
+      Torna alla pagina precedente
+    </Link></template>
 
-  </div>
+
 
   <RegistryForm :form="form" editing v-slot="{canSubmit, busy}" @submit="update" >
     <CustomerFields :form="form" :managers="props.managers" :business-types="props.businessTypes" @address-input="manualPosition = false">

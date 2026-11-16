@@ -269,6 +269,35 @@ componente di navigazione del chiamante. Attributi ARIA, form e listener sono
 conservati; disabled/busy bloccano anche il click sulle varianti non native.
 Le eccezioni header/chiamata restano nei rispettivi componenti condivisi.
 
+## Ordini e pianificazione viaggi
+
+La prima riga segue la regola `[back] titolo — [funzioni]`: collocare i comandi
+della pagina nello slot `actions`, evitando barre separate sotto il titolo.
+Il comando di ritorno occupa lo slot `back` di AppPage/RegistryPage, prima del
+titolo a sinistra; le azioni della pagina rimangono a destra. Da mobile il
+ritorno precede il titolo su una riga dedicata; da sm sono affiancati. Usare
+neutral outline e una destinazione esplicita. La pagina conserva la logica
+di destinazione, inclusi ritorni parametrici e `return_to`: il layout non
+deduce né modifica la navigazione.
+
+`AppPage` contiene la struttura e gli stili comuni dei form; `RegistryPage`
+ne rimane un alias compatibile. Non duplicare gli override dei controlli nei
+singoli form. Le dimensioni correnti DaisyUI 4 restano invariate.
+
+`SiteEquipmentSummary` e `SiteOperationalParameter` presentano le dotazioni
+con icona, nome e valore testuale: disponibile in success, non disponibile
+in neutral. L'assenza di una dotazione non è un errore. Riutilizzarli nella
+scheda sede, negli ordini e nelle informazioni ordine dei viaggi.
+
+`SectionVisibilityActions` usa comandi neutral outline: aprire o chiudere
+sezioni non conferma né annulla dati. `useDisclosureSections` coordina solo
+la visibilità; i pannelli chiusi conservano i campi montati e le bozze.
+`PlanningColumns` passa a due colonne in base allo spazio del contenitore,
+così la mappa laterale non comprime la pianificazione.
+
+Le note della sede sono informazioni di contesto in lettura, separate dalle
+note modificabili dell'ordine. Il colore non sostituisce il valore testuale.
+
 ## Evidenze e limiti
 
 Evidenze precedenti all’applicazione (non screenshot dello stato finale).

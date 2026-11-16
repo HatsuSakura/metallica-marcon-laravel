@@ -1,16 +1,19 @@
 <template>
-<section class="flex items-center gap-2 justify-between">
-
-    <Link :href="route('logistic.home')" class="btn btn-ghost btn-sm">
+<AppPage title="Viaggi">
+<template #back><AppAction :href="route('logistic.home')"  variant="neutral" :as="Link">
         <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-lg"/>
         Torna a Dashboard
-    </Link>
+    </AppAction></template>
 
-    <Link :href="route('journey.create')" class="btn btn-primary btn-sm">
+<template #actions>
+
+
+
+    <AppAction :href="route('journey.create')"  variant="function" :as="Link">
         <font-awesome-icon :icon="['fas', 'map-location-dot']" class="text-lg"/>
         Pianifica nuovo viaggio
-    </Link>
-</section>
+    </AppAction>
+</template>
 
 <section class="mt-4">
     <div class="mb-4 px-3 pb-3 pt-0 rounded-box">
@@ -46,8 +49,8 @@
             </label>
         </div>
 
-        <div class="mt-3 flex justify-between items-center gap-2">
-            <div role="tablist" class="tabs tabs-boxed w-fit"> <!-- tab-lifted -->
+        <div class="mt-3 flex flex-wrap justify-between items-center gap-2">
+            <div role="tablist" class="tabs tabs-boxed flex max-w-full flex-wrap w-fit"> <!-- tab-lifted -->
                 <Link :href="tabHref('tutti')" class="tab" :class="{ 'tab-active': activeTab === 'tutti' }" preserve-scroll>tutti</Link>
                 <Link :href="tabHref('creato')" class="tab" :class="{ 'tab-active': activeTab === 'creato' }" preserve-scroll>creato</Link>
                 <Link :href="tabHref('attivo')" class="tab" :class="{ 'tab-active': activeTab === 'attivo' }" preserve-scroll>attivo</Link>
@@ -55,8 +58,8 @@
                 <Link :href="tabHref('chiuso')" class="tab" :class="{ 'tab-active': activeTab === 'chiuso' }" preserve-scroll>chiuso</Link>
             </div>
             <div class="flex items-center gap-2">
-                <button type="button" class="btn btn-sm btn-primary" @click="applyFilters">Applica filtri</button>
-                <button type="button" class="btn btn-sm btn-outline" @click="resetFilters">Reset</button>
+                <AppAction type="button"  @click="applyFilters" variant="neutral">Applica filtri</AppAction>
+                <AppAction type="button"  @click="resetFilters" variant="neutral">Reset</AppAction>
             </div>
         </div>
     </div>
@@ -111,9 +114,14 @@
         </div>
     </template>
 </section>
+</AppPage>
 </template>
 
 <script setup>
+import AppPage from '@/Components/UI/AppPage.vue'
+
+import AppAction from '@/Components/UI/AppAction.vue'
+
 import { computed, reactive, watch } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import Box from '@/Components/UI/Box.vue';

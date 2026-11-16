@@ -1,4 +1,17 @@
 <script setup>
+import PlanningColumns from '@/Components/UI/PlanningColumns.vue'
+import AppAction from '@/Components/UI/AppAction.vue'
+import {registrySnapshot} from '@/utils/registryFormState'
+import {useJourneyVehicleConfiguration} from '@/Composables/useJourneyVehicleConfiguration'
+import OpenOrdersFilter from './Components/OpenOrdersFilter.vue'
+import {matchesCustomerName} from '@/utils/customerNameSearch'
+import AppPage from '@/Components/UI/AppPage.vue'
+import RegistryForm from '@/Components/Registry/RegistryForm.vue'
+import PlanningMapPanel from '@/Components/UI/PlanningMapPanel.vue'
+import {usePlanningMapMode} from '@/Composables/usePlanningMapMode'
+import DetachedTrailerOrders from './Components/DetachedTrailerOrders.vue'
+import JourneyPlanningActions from './Components/JourneyPlanningActions.vue'
+
     import { computed, watch, ref, onMounted, onUnmounted, toRaw, nextTick } from 'vue';
     import { useStore } from 'vuex';
     import { Link, useForm, usePage, router } from '@inertiajs/vue3'
@@ -33,7 +46,7 @@
       orders: Array,
       currentUser: Object
     })
-    
+
     const page = usePage()
     const store = useStore();
     /*
@@ -43,11 +56,12 @@
     const user = computed(
       () => page.props.user
     )
-    
+
     const goBackToOrders = () => {
       router.visit(route('journey.index'))
     }
 
+    const mapMode = usePlanningMapMode();
     const extendedMapMode = ref(false);
     const toggleExtendedMapMode = () => {
       extendedMapMode.value = !extendedMapMode.value;
@@ -57,6 +71,9 @@
     const listRimorchio    = ref([]);
     const listRiempimento  = ref([]);
     const listOrdini       = ref([...props.orders]);
+    const openOrderQuery = ref('')
+    const visibleOpenOrderIds = computed(() => new Set(listOrdini.value.filter(order => matchesCustomerName(order.customer?.company_name, openOrderQuery.value)).map(order => order.id)))
+
 
     const { stops } = useJourneyStopsBuilder({
       listMotrice,
@@ -110,7 +127,7 @@
       ...(technicalStops.value || []),
     ])
 
-    const stopsEnriched = computed(() => 
+    const stopsEnriched = computed(() =>
       (allStops.value || []).map(s => {
         const key = stopKey(s)
         const meta = stopMeta.value[key] ?? {}
@@ -215,8 +232,12 @@
       },
       stops: [],
     })
-    
+
+    const initialPlanning = ref(null)
+    const planningSnapshot = () => registrySnapshot({form:form.data(), truck:listMotrice.value.map(o=>o.id), trailer:listRimorchio.value.map(o=>o.id), fill:listRiempimento.value.map(o=>o.id), stops:orderedStopsForSubmit.value})
+    const createDirty = computed(() => initialPlanning.value !== null && planningSnapshot() !== initialPlanning.value)
     const create = () => {
+      if (form.processing || !createDirty.value || !configurationReady.value) return;
       // Before submitting, format the date correctly
       form.planned_start_at = dayjs(form.planned_start_at).format('YYYY-MM-DD HH:mm:ss');
       form.planned_end_at   = dayjs(form.planned_end_at  ).format('YYYY-MM-DD HH:mm:ss');
@@ -300,7 +321,7 @@
           ordiniCaricoRimorchio.value += item.weight_declared;
         })
       });
-      
+
       ordiniCasseRiempimento.value= 0
       ordiniBancaleRiempimento.value= 0
       ordiniCaricoRiempimento.value= 0
@@ -309,7 +330,7 @@
           ordiniCaricoRiempimento.value += item.weight_declared;
         })
       });
-      
+
     }
  */
 
@@ -355,7 +376,8 @@
 }
 
 
-    const trailerEnabled          = ref(false);
+    const {configuration, trailerEnabled} = useJourneyVehicleConfiguration(form, props);
+    const configurationReady = computed(() => configuration.value.ready && (form.trailer_id || (!listRimorchio.value.length && !listRiempimento.value.length)));
 
     const spaziCasseMotrice       = ref(0);
     const spaziBancaleMotrice     = ref(0);
@@ -370,124 +392,30 @@
     const ordiniCasseRimorchio    = ref(0);
     const ordiniBancaleRimorchio  = ref(0);
     const ordiniCaricoRimorchio   = ref(0);
-        
+
     const ordiniCasseRiempimento    = ref(0);
     const ordiniBancaleRiempimento  = ref(0);
     const ordiniCaricoRiempimento   = ref(0);
-     
-    const setPreferredTrailerAndCargo = () => {
-      const selectedVehicle = props.vehicles.find(vehicle => Number(vehicle.id) === Number(form.vehicle_id))
-      if (!selectedVehicle) {
-        capacitaCaricoMotrice.value = 0;
-        capacitaCaricoRimorchio.value = 0;
-        form.trailer_id = '';
-        form.vehicle_cargo_id = '';
-        trailerEnabled.value = false;
-        return;
-      }
 
-      capacitaCaricoMotrice.value = selectedVehicle.load_capacity ?? 0;
-      capacitaCaricoRimorchio.value = 0;
-      // Verifico se può avere un rimorchio (NON POSSONO Furgoni e Camion con Sponda)
-      if (selectedVehicle.has_trailer){
-        form.trailer_id = selectedVehicle.trailer_id? selectedVehicle.trailer_id : '';
-        trailerEnabled.value = true;
-        const selectedTrailer = props.trailers.find(trailer => Number(trailer.id) === Number(form.trailer_id));
-        capacitaCaricoRimorchio.value = selectedTrailer?.load_capacity ?? 0;
-      }
-      else{
-        form.trailer_id = '';
-        trailerEnabled.value = false;
-      }
-
-      // Verifico se SPONDA o FURGONE e setto il corretto CASSONE PREDEFINITO
-      if (selectedVehicle.type === 'sponda'){
-        form.vehicle_cargo_id = props.cargos.find(cargo => cargo.name === 'Sponda')?.id ?? '';
-      }
-      else if (selectedVehicle.type === 'furgone') {
-        form.vehicle_cargo_id = props.cargos.find(cargo => cargo.name === 'Furgone')?.id ?? '';
-      }
-      else{
-        form.vehicle_cargo_id = ''
-      }
-
-      checkCargo({target:'internal'});
-    }
-
-    const checkCargo = (evt) => {
-      //console.log(evt.target.id);
-      const fieldName = evt?.target?.id;
-      const selectedVehicle = props.vehicles.find(vehicle => Number(vehicle.id) === Number(form.vehicle_id));
-      if (!selectedVehicle) {
-        spaziCasseMotrice.value = 0;
-        spaziBancaleMotrice.value = 0;
-        spaziCasseRimorchio.value = 0;
-        spaziBancaleRimorchio.value = 0;
-        calculateTotalLoad();
-        return;
-      }
-      const selectedVehicleCargo = ref(props.cargos.find(cargo => Number(cargo.id) === Number(form.vehicle_cargo_id)));
-      const selectedTrailerCargo = ref(props.cargos.find(cargo => Number(cargo.id) === Number(form.trailer_cargo_id)));
-
-      // Gestisco il caso in cui si sia modificato il rimorchio "TRAILER"
-      if (fieldName === 'trailer_id') {
-        if (form.trailer_id === '' ){
-          selectedTrailerCargo.value = null;
-          form.trailer_cargo_id = '';
-          capacitaCaricoRimorchio.value = 0;
-        }
-        else{
-          const selectedTrailer = props.trailers.find(trailer => Number(trailer.id) === Number(form.trailer_id));
-          capacitaCaricoRimorchio.value = selectedTrailer?.load_capacity ?? 0;
-        }
-      }
-      
-
-
-      if (selectedVehicleCargo.value && selectedTrailerCargo.value){
-        if (selectedVehicleCargo.value.is_long && selectedTrailerCargo.value.is_long){
-          alert('ATTENZIONE: autotreno con combinazione di due cassoni LUNGHI')
-          // Reset the correct form field based on the event source
-          if (fieldName === 'vehicle_cargo_id') {
-            selectedVehicleCargo.value = null;
-            form.vehicle_cargo_id = ''; // Reset the form value
-          } 
-          else if (fieldName === 'trailer_cargo_id') {
-            selectedTrailerCargo.value = null;
-            form.trailer_cargo_id = ''; // Reset the form value
-          }
-
-          // Also reset the select element visually
-          evt.target.value = '';
-        }
-      }
-
-      if (selectedVehicle.has_trailer && selectedVehicleCargo.value && (
-          (selectedVehicleCargo.value.name === 'Sponda') || (selectedVehicleCargo.value.name === 'Furgone')
-        )
-      ){
-        alert('Opzione "' + selectedVehicleCargo.value.name + '" selezionabile solo per motrice di tipo ' + selectedVehicleCargo.value.name);
-        selectedVehicleCargo.value = null;
-        form.vehicle_cargo_id = ''; // Reset the form value
-      }
-
-      spaziCasseMotrice.value     = 0;
-      spaziBancaleMotrice.value   = 0;
-      if(selectedVehicleCargo.value) {
-        spaziCasseMotrice.value   = selectedVehicleCargo.value.spazi_casse;
-        spaziBancaleMotrice.value = selectedVehicleCargo.value.spazi_bancale;
-      }
-
-      spaziCasseRimorchio.value   = 0;
-      spaziBancaleRimorchio.value = 0;
-      if(selectedTrailerCargo.value) {
-        spaziCasseRimorchio.value   = selectedTrailerCargo.value.spazi_casse;
-        spaziBancaleRimorchio.value = selectedTrailerCargo.value.spazi_bancale;
-      }
-
+    const checkCargo = () => {
+      const c = configuration.value
+      capacitaCaricoMotrice.value = Number(c.vehicle?.load_capacity ?? 0)
+      capacitaCaricoRimorchio.value = c.trailerAllowed ? Number(c.trailer?.load_capacity ?? 0) : 0
+      spaziCasseMotrice.value = Number(c.cargo?.spazi_casse ?? 0)
+      spaziBancaleMotrice.value = Number(c.cargo?.spazi_bancale ?? 0)
+      spaziCasseRimorchio.value = c.trailerAllowed && c.trailer ? Number(c.trailerCargo?.spazi_casse ?? 0) : 0
+      spaziBancaleRimorchio.value = c.trailerAllowed && c.trailer ? Number(c.trailerCargo?.spazi_bancale ?? 0) : 0
       calculateTotalLoad()
     }
-
+    const setPreferredTrailerAndCargo = () => {
+      const c = configuration.value
+      form.vehicle_cargo_id = c.fixedName ? (props.cargos.find(cargo => cargo.name === c.fixedName)?.id ?? '') : ''
+      form.trailer_id = c.trailerAllowed ? (c.vehicle.trailer_id ?? '') : ''
+      form.trailer_cargo_id = ''
+      checkCargo()
+    }
+    const syncVehicleDerivedStateFromCurrentSelection = checkCargo
+    watch(() => form.trailer_id, value => { if (!value) form.trailer_cargo_id = ''; checkCargo() })
 
 // Handlers for moving orders
 const handleSetToTruck = (order) => {
@@ -508,7 +436,8 @@ const handleSetToOrders = (order) => {
 
 // Helper function to move an order between lists
 const moveOrder = (order, targetList) => {
- 
+  if (targetList !== listOrdini && !configurationReady.value) return;
+
   if ( targetList != listMotrice &&
       listMotrice.value.findIndex( (o) => o.id === order.id) !== -1
     ) {
@@ -643,13 +572,15 @@ const updateStopFields = ({ key, description, address_text }) => {
 }
 
 // Set up event listeners on mount and clean up on unmount
-onMounted(() => {
+onMounted(async () => {
   eventBus.on('setOrderToTruckList', handleSetToTruck);
   eventBus.on('setOrderToTrailerList', handleSetToTrailer);
   eventBus.on('setOrderToRiempimentoList', handleSetToRiempimento);
   eventBus.on('setOrderToOrdersList', handleSetToOrders);
 
   calculateTotalLoad(); // inizializza peso + spazi
+  await nextTick()
+  initialPlanning.value = planningSnapshot()
 });
 
 onUnmounted(() => {
@@ -868,51 +799,39 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
   if (loadObj.casse.over) {
     messages.push(`${labelCompartimento}: spazi CASSE superati (usati ${loadObj.casse.used_spaces} / disp ${loadObj.casse.cap_available})`)
   }
-  if (messages.length) alert(messages.join('\n'))
+  if (configurationReady.value && messages.length) alert(messages.join('\n'))
 }
 
 
 </script>
-    
+
 
 <template>
-
-<section class="flex flex-row items-center justify-end gap-4 mb-2">
-  <button
-    type="button"
-    class="btn btn-primary btn-outline btn-sm"
-    @click="goBackToOrders"
-  >
-    <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>
-    Torna a lista Viaggi
-  </button>
-</section>
-
-<button 
-    type="button"
-    class="btn btn-primary btn-circle btn-toggle-map z-20"
-    :class="extendedMapMode? 'btn-error' : 'btn-success'"
-    @click.prevent="toggleExtendedMapMode()"
->
-  <font-awesome-icon 
-    :icon="['fas', 'location-pin-lock']" 
-    class="text-2xl"
-  />
- </button>
-
+<AppPage title="Pianifica viaggio" :fluid="extendedMapMode && mapMode === 'split'">
+<template #back><AppAction @click="goBackToOrders"><font-awesome-icon :icon="['fas','arrow-left']" aria-hidden="true" />Torna ai viaggi</AppAction></template>
+<template #actions><JourneyPlanningActions v-model:map-mode="mapMode" :map-open="extendedMapMode" @toggle-map="toggleExtendedMapMode" /></template>
 <!-- MAIN CONTAINER -->
-<div class="flex flex-row" :class="extendedMapMode? 'full-width' : 'container mx-auto'">
+<div class="flex min-w-0 flex-col gap-4 xl:flex-row">
   <!-- LIST HALF -->
-  <div ref="mainPaneRef" :class="extendedMapMode? 'w-1/2 px-8 relative' : 'w-full relative'">
-    <form @submit.prevent="create">
+  <div ref="mainPaneRef" class="relative min-w-0 flex-1">
+    <RegistryForm :form="form" @submit="create">
 
-      <div class="grid grid-cols-12 justify-stretch gap-2 w-full mb-4">
+      <PlanningColumns>
 
 
-        
-        <div class="col-span-9">
+
+        <template #main>
 
           <!-- TESTATA TOTALI -->
+          <div v-if="!configurationReady" class="mb-3 rounded-lg border border-warning p-3 text-sm" role="status">
+            <p class="font-semibold">Configura il mezzo prima di caricare gli ordini</p>
+            <p v-for="(message, field) in configuration.issues" :key="field">{{ message }}</p>
+            <DetachedTrailerOrders v-if="!form.trailer_id && (listRimorchio.length || listRiempimento.length)"
+              :can-move-to-truck="configuration.ready" :busy="form.processing"
+              @move-to-truck="if (configuration.ready && !form.processing) { listMotrice.push(...listRimorchio.splice(0), ...listRiempimento.splice(0)); calculateTotalLoad() }"
+              @return-to-orders="if (!form.processing) { listOrdini.push(...listRimorchio.splice(0), ...listRiempimento.splice(0)); calculateTotalLoad() }"
+            />
+          </div>
           <JourneyVehiclePanels
             :vehicles="props.vehicles"
             :trailers="props.trailers"
@@ -921,6 +840,7 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
             :trailer-enabled="trailerEnabled"
             :set-preferred-trailer-and-cargo="setPreferredTrailerAndCargo"
             :check-cargo="checkCargo"
+            :configuration="configuration"
             :spazi-casse-motrice="spaziCasseMotrice"
             :spazi-bancale-motrice="spaziBancaleMotrice"
             :capacita-carico-motrice="capacitaCaricoMotrice"
@@ -936,18 +856,18 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
           />
 
           <!-- LISTE DRAGGABILI -->
-          <div class="flex flex-row justify-items-stretch gap-2 w-full mt-4">
-            <div class="flex-1">
-              
+          <div class="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-3 mt-4">
+            <div class="min-w-0">
+
               <h3 class="font-semibold">Carico Motrice</h3>
-              <draggable 
-                v-model="listMotrice" 
-                group="orders" 
-                @start="drag=true" 
-                @end="drag=false" 
+              <draggable :disabled="form.processing || !configurationReady"
+                v-model="listMotrice"
+                group="orders"
+                @start="drag=true"
+                @end="drag=false"
                 @change="calculateTotalLoad"
                 item-key="id"
-                class=" bg-primary p-1 pb-16 rounded-md"
+                class="min-h-24 space-y-2 rounded-xl border border-base-300 bg-base-200 p-2"
               >
                 <template #item="{element, index}">
                   <DraggableOrder
@@ -961,17 +881,17 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
               </draggable>
 
             </div>
-            <div class="flex-1">
+            <div class="min-w-0">
               <h3 class="font-semibold">Carico Rimorchio</h3>
-              <draggable 
-                v-if="trailerEnabled"
-                v-model="listRimorchio" 
-                group="orders" 
-                @start="drag=true" 
-                @end="drag=false" 
+              <draggable :disabled="form.processing || !configurationReady"
+                v-if="trailerEnabled || listRimorchio.length || listRiempimento.length"
+                v-model="listRimorchio"
+                group="orders"
+                @start="drag=true"
+                @end="drag=false"
                 @change="calculateTotalLoad"
                 item-key="id"
-                class=" bg-primary p-1 pb-16 rounded-md"
+                class="min-h-24 space-y-2 rounded-xl border border-base-300 bg-base-200 p-2"
               >
                 <template #item="{element, index}">
                   <DraggableOrder
@@ -984,18 +904,18 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
                 </template>
               </draggable>
             </div>
-            <div class="flex-1">
+            <div class="min-w-0">
               <h3 class="font-semibold">Carico a riempimento</h3>
 
-              <draggable 
-                v-model="listRiempimento" 
-                v-if="trailerEnabled"
-                group="orders" 
-                @start="drag=true" 
-                @end="drag=false" 
+              <draggable :disabled="form.processing || !configurationReady"
+                v-model="listRiempimento"
+                v-if="trailerEnabled || listRimorchio.length || listRiempimento.length"
+                group="orders"
+                @start="drag=true"
+                @end="drag=false"
                 @change="calculateTotalLoad"
                 item-key="id"
-                class=" bg-primary p-1 pb-16 rounded-md"
+                class="min-h-24 space-y-2 rounded-xl border border-base-300 bg-base-200 p-2"
               >
                 <template #item="{element, index}">
                   <DraggableOrder
@@ -1012,18 +932,19 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
 
           <!-- MASONRY ORDINI -->
           <div class="w-full mb-8 mt-4">
-          <h3 class="font-semibold">Ordini Aperti</h3>
-            <draggable
+          <OpenOrdersFilter v-model="openOrderQuery" />
+            <p v-if="listOrdini.length && !visibleOpenOrderIds.size" class="py-2 text-sm" role="status">Nessun ordine aperto corrisponde alla ricerca.</p>
+            <draggable :disabled="form.processing || !configurationReady"
               :list="listOrdini"
               group="orders"
-              @start="drag=true" 
-              @end="drag=false" 
+              @start="drag=true"
+              @end="drag=false"
               tag="div"
-              class="masonry-grid bg-primary p-1 pb-16 rounded-md"
-              item-key="id"          
+              class="grid min-h-24 grid-cols-1 gap-2 rounded-xl border border-base-300 bg-base-200 p-2 lg:grid-cols-2"
+              item-key="id"
             >
               <template #item="{element, index}">
-                <div class="masonry-item">
+                <div v-show="visibleOpenOrderIds.has(element.id)" class="masonry-item">
                 <DraggableOrder
                   :element = "element"
                   :index = "index"
@@ -1041,11 +962,12 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
             :selected-orders="selectedJourneyOrders"
           />
 
-        </div>
+        </template>
 
         <!-- FLOATING INFO OBJECT -->
-        <div class="col-span-3">
+        <template #sidebar>
           <JourneySidebar
+            :submit-disabled="!createDirty || !configurationReady"
             v-model:manualStopOrder="manualStopOrder"
             :form="form"
             :drivers="props.drivers"
@@ -1072,11 +994,11 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
             @dragging="isDraggingStops = $event"
             @open-stops-manager="openStopsDrawer"
           />
-        </div>
+        </template>
 
-      </div>
+      </PlanningColumns>
 
-    </form>
+    </RegistryForm>
 
     <StopManagerDrawer
       v-if="stopsDrawerOpen"
@@ -1094,8 +1016,8 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
   <!-- END-OF LIST HALF -->
 
   <!-- MAP HALF -->
-  <div v-if="extendedMapMode" :class="extendedMapMode? 'w-1/2 sticky top-24' : 'w-0'">
-    <JourneyMap 
+  <PlanningMapPanel :open="extendedMapMode" :mode="mapMode" @close="extendedMapMode = false">
+    <JourneyMap
       :orders="props.orders"
       v-model:listMotrice = "listMotrice"
       v-model:listRimorchio = "listRimorchio"
@@ -1103,13 +1025,14 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
     >
 
     </JourneyMap>
-  </div>
+  </PlanningMapPanel>
   <!-- END-OF MAP HALF -->
 
 </div>
 
+</AppPage>
 </template>
-    
+
 
     <style scoped>
     .button {
@@ -1120,27 +1043,20 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
       padding-top: 8px;
       padding-bottom: 8px;
     }
-    
+
     .close {
       float: right;
       padding-top: 8px;
       padding-bottom: 8px;
     }
-    
-    input {
-      display: inline-block;
-      width: 50%;
-    }
-    
+
+
+
     .text {
       margin: 20px;
     }
 
-    .btn-toggle-map{
-      position: fixed;
-      left: 32px;
-      top: 74px;
-    }
+
 
     .masonry-grid {
       display: grid;

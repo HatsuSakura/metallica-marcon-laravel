@@ -1,125 +1,49 @@
 <template>
-    <section v-if="site" class="mb-8"> <!-- SERVE per evitare errori in apertura se VUEX STORE non è in sync-->
-      <form @submit.prevent="create('create_stay')">   
+    <AppPage v-if="site" title="Nuovo ordine">
+<template #back><AppAction :as="Link" :href="route('customer.show', {customer:site.customer_id})"><font-awesome-icon :icon="['fas','arrow-left']" aria-hidden="true" />Torna al cliente</AppAction></template> <!-- SERVE per evitare errori in apertura se VUEX STORE non è in sync-->
+      <template #actions><SectionVisibilityActions :disabled="form.processing" @open-all="openAll" @close-all="closeAll" /></template>
+      <RegistryForm :form="form" v-slot="{busy}" @submit="create('create_stay')">
 
-        <!-- Intestazione + Buttons to Open/Close All -->
-        <div class="mb-4 flex items-center justify-between">
-          <div class="flex">
-            <button
-                type="button"
-                class="btn btn-ghost" 
-                  @click="goBack()"
-            >
-              <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>
-              Torna al Cliente
-          </button>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <div class="text-xl font-medium pr-2">Modulo d'Ordine {{ form.id == null ? 'non ancora salvato' : '#' + String(form.id).padStart('9', '0') + ' del ' + dayjs(form.requested_at).format('YYYY-MM-DD HH:mm:ss') }}</div> 
-            <button @click="openAll()" type="button" class="btn btn-sm btn-success">Apri tutto <font-awesome-icon :icon="['fas', 'chevron-down']" /></button>
-            <button @click="closeAll()" type="button" class="btn btn-sm btn-error">Chiudi tutto <font-awesome-icon :icon="['fas', 'chevron-up']" /></button>
-          </div>
-        </div>  
-  
         <!-- Static HTML Sections -->
         <div class="accordion-custom">
-  
-          <!-- SEZIONE 0-->      
+
+          <!-- SEZIONE 0-->
           <AccordionRow
             id="0"
-            title="Intestazione"
+            title="Dati ordine"
             :initialOpen=true
-            @register="registerSection"
+            @register="registerSection" @unregister="unregisterSection"
           >
-            <div class="flex flex-row justify-between content-center">
-                
-              <div class="flex items-center">
-                <span class="font-medium">Data Richiesta: &nbsp;</span>  
-                <VueDatePicker v-model="form.requested_at" format="dd/MM/yyyy, HH:mm"></VueDatePicker> 
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+
+              <div class="flex min-w-0 items-center gap-2">
+                <label for="dp-input-requested_at" class="shrink-0 text-sm font-semibold">Richiesta</label>
+                <VueDatePicker class="min-w-0 flex-1" style="max-width: 14rem" uid="requested_at" name="requested_at" :aria-labels="{input:'Data richiesta'}" v-model="form.requested_at" format="dd/MM/yyyy, HH:mm"></VueDatePicker>
               </div>
 
               <div class="flex items-center ">
-                <label class="font-medium" for="is_urgent">Urgenza  &nbsp;</label>
+                <label class="text-sm font-semibold" for="is_urgent">Urgenza  &nbsp;</label>
                 <input v-model="form.is_urgent" id="is_urgent" type="checkbox" class="toggle" />
               </div>
 
               <div class="flex items-center ">
-                <span class="font-medium">Commerciale: &nbsp;</span> {{ site.customer.seller.name}}
+                <span class="text-sm font-semibold">Commerciale: &nbsp;</span> {{ site.customer?.seller?.name || 'Non assegnato'}}
               </div>
 
               <div class="flex items-center ">
-                <span class="font-medium">Logistica: &nbsp;</span> {{ user.name }} {{ user.surname }}
+                <span class="text-sm font-semibold">Logistica: &nbsp;</span> {{ user.name }} {{ user.surname }}
               </div>
 
             </div>
           </AccordionRow>
 
-          <!-- SEZIONE 1-->
-          <AccordionRow
-            id="1"
-            title="Dati Cliente"
-            :initialOpen=true
-            @register="registerSection"
-          >
-          <div class="flex flex-row place-content-between w-full">
-  
-            <div class="flex content-center">
-              <div>
-                <font-awesome-icon :icon="['fas', 'user-tie']" class="text-4xl p-4"/>
-              </div>
-              <div>
-                  <div class="font-medium">
-                    Produttore
-                  </div>
-                  <div>
-                    {{ site.customer.company_name }}
-                  </div>
-                  <div>
-                    {{ site.customer.legal_address }}
-                  </div>
-              </div>
-            </div>
-
-            <div class="flex content-center">
-              <div>
-                <div class="flex content-center pr-4">
-                  <div class="radial-progress" :style="{ '--value': riskPercent, color: backgroundColor }" role="progressbar">{{ riskPercent }}%</div>
-                  <font-awesome-icon :icon="['fas', buildingFaIcon]" class="text-4xl p-4" :style="{ color: backgroundColor }" />
-                </div>
-                
-              </div>
-              <div>
-                  <div class="font-medium">
-                    Sede di carico
-                  </div>
-                  <div>
-                    {{ site.name }}
-                  </div>
-                  <div>
-                    {{ site.address }}
-                  </div>
-              </div>
-            </div>
-
-            <div class="flex flex-col items-center justify-evenly">
-              <div class="flex font-medium">
-                Consulente ADR&nbsp;<span v-if="site.has_adr_consultant">PRESENTE</span><span v-else>ASSENTE</span>
-              </div>
-              <div class="flex">
-                <font-awesome-icon :icon="['fas', 'vial-circle-check']" class="text-4xl" :class="site.has_adr_consultant? 'text-success' : 'text-error'" />
-              </div>
-            </div>
-
-          </div>
-          </AccordionRow>
-  
+          <AccordionRow id="1" title="Cliente e sede" :initial-open="true" @register="registerSection" @unregister="unregisterSection"><OrderSiteSummary :site="site" /></AccordionRow>
           <!-- SEZIONE 2-->
           <AccordionRow
             id="2"
-            title="Annotazioni Logistiche"
+            title="Informazioni per il ritiro"
             :initialOpen=true
-            @register="registerSection"
+            @register="registerSection" @unregister="unregisterSection"
           >
             <div>
                 <div class="font-medium">Mezzi di sollevamento:</div>
@@ -128,6 +52,7 @@
 
               <hr class="my-4"/>
 
+              <div class="space-y-1"><h3 class="text-sm font-semibold">Note della sede</h3><p class="whitespace-pre-line break-words text-sm">{{ siteNotesText }}</p></div>
               <div class="mt-4">
                 <div class="font-medium">Referenti Interni:</div>
                 <SiteInternalContacts :contacts="site.internal_contacts" />
@@ -137,57 +62,41 @@
 
                 <div class="font-medium">Verifica Data/Orari:</div>
 
-                <div class="mt-2 flex flex-row justify-between align-middle gap-4">
-                  <div class="flex w-full">
-                    <label for="expected_withdraw_at" class="label w-64">Data presunta ritiro</label>
-                    <VueDatePicker 
-                      id="expected_withdraw_at" 
-                      v-model="form.expected_withdraw_at" 
-                      format="dd/MM/yyyy, HH:mm" 
-                      auto-apply 
+                <div class="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <div class="min-w-0">
+                    <label for="dp-input-expected_withdraw_at" class="label">Data presunta ritiro</label>
+                    <VueDatePicker
+                      uid="expected_withdraw_at" name="expected_withdraw_at"
+                      v-model="form.expected_withdraw_at"
+                      format="dd/MM/yyyy, HH:mm"
+                      auto-apply
                       :enableTimePicker="true"
                       :disabled="hasFixedWithdrawAt"
                       @update:model-value="manageDate()">
-                    </VueDatePicker> 
+                    </VueDatePicker>
                     <div class="input-error" v-if="form.errors.expected_withdraw_at">
                       {{ form.errors.expected_withdraw_at }}
                     </div>
                   </div>
 
-                  <div class="flex w-full">
-                    <label for="orariApertura" class="label w-48">Orari sede in data: </label>
-                    <input 
-                      v-model.text="orariApertura" 
-                      id="orariApertura"
-                      type="text" 
-                      class="input input-bordered w-full"
-                      placeholder="Orari popolati automaticamente"
-                    />
+                  <div class="min-w-0">
+                    <label for="orariApertura" class="label">Orari sede in data: </label>
+                    <output id="orariApertura" class="block min-h-12 rounded-lg border border-base-300 px-3 py-2 text-sm">{{ orariApertura }}</output>
                   </div>
                 </div>
 
-                <div class="mt-4 flex flex-row items-center gap-4">
-                  <label for="fixed_withdraw_toggle" class="label w-64">Data fissa</label>
-                  <input
-                    id="fixed_withdraw_toggle"
-                    :checked="hasFixedWithdrawAt"
-                    type="checkbox"
-                    class="toggle"
-                    @change="toggleFixedWithdraw($event.target.checked)"
-                  />
-                  <span class="text-sm opacity-70 flex-1">Se attiva, blocca la data presunta e la sincronizza con la data fissa.</span>
-                  <div class="flex items-center gap-2 min-w-[24rem]">
-                    <label for="fixed_withdraw_at" class="label">Data e ora</label>
+                <div class="mt-4 grid min-w-0 grid-cols-1 items-start gap-3 md:grid-cols-2">
+                    <div class="space-y-1"><label for="fixed_withdraw_toggle" class="flex min-h-12 w-fit items-center gap-2 text-sm font-semibold"><input id="fixed_withdraw_toggle" :checked="hasFixedWithdrawAt" type="checkbox" class="toggle toggle-primary" @change="toggleFixedWithdraw($event.target.checked)" />Data fissa</label><p class="text-sm">Se attiva, la data presunta coincide con la data fissa.</p></div>
+                    <div class="min-w-0"><label for="dp-input-fixed_withdraw_at" class="label">Data e ora fisse</label>
                     <VueDatePicker
-                      id="fixed_withdraw_at"
+                      uid="fixed_withdraw_at" name="fixed_withdraw_at"
                       v-model="form.fixed_withdraw_at"
                       format="dd/MM/yyyy, HH:mm"
                       auto-apply
                       :enableTimePicker="true"
                       :disabled="!hasFixedWithdrawAt"
                       @update:model-value="onFixedWithdrawChanged()"
-                    />
-                  </div>
+                    /></div>
                 </div>
                 <div class="mt-1">
                   <div class="input-error" v-if="form.errors.fixed_withdraw_at">
@@ -203,14 +112,14 @@
             id="3"
             title="Note Ordine"
             :initialOpen=true
-            @register="registerSection"
+            @register="registerSection" @unregister="unregisterSection"
           >
 
-          <div class="flex flex-row gap-4 justify-stretch w-full">
-            <div class="w-1/2">
-              <label class="label">Annotazioni aggiuntive per il ritiro</label>
+          <div class="grid grid-cols-1 gap-3">
+            <div class="min-w-0">
+              <label for="order-notes" class="label">Annotazioni aggiuntive per il ritiro</label>
               <textarea
-                v-model="form.notes"
+                v-model="form.notes" id="order-notes" name="notes" :aria-invalid="!!form.errors.notes"
                 class="textarea textarea-bordered w-full"
                 rows="4"
                 placeholder="Inserisci eventuali note operative per l'ordine"
@@ -220,15 +129,7 @@
               </div>
             </div>
 
-            <div class="w-1/2">
-              <label class="label">Note di questa sede</label>
-              <textarea
-                :value="siteNotesText"
-                class="textarea textarea-bordered w-full"
-                rows="4"
-                readonly
-              />
-            </div>
+
           </div>
 
           </AccordionRow>
@@ -237,9 +138,9 @@
           <!-- SEZIONE 4 ITEMS-->
           <AccordionRow
             id="4"
-            :title= "'Descrizione Materiali - Peso totale attuale : ' + totalItemsWeight + ' Kg = ' + totalItemsWeight / 1000 + ' Ton'"
+            :title="'Materiali · ' + totalItemsWeight + ' kg (' + totalItemsWeight / 1000 + ' t)'"
             :initialOpen=true
-            @register="registerSection"
+            @register="registerSection" @unregister="unregisterSection"
           >
             <div v-for="group in groupedItems" :key="group.key" class="mb-4 border border-base-300 rounded-box">
               <div class="px-3 py-2 bg-base-200 rounded-box flex items-center gap-2">
@@ -264,10 +165,9 @@
                 />
               </div>
             </div>
-              <button type="button" @click="addItem" class="btn btn-primary btn-sm">
-                <font-awesome-icon :icon="['fas', 'diagram-successor']" class="text-2xl"/>
+              <button type="button" @click="addItem" class="btn btn-primary btn-outline">
                 <font-awesome-icon :icon="['fas', 'plus']" class="text-2xl"/>
-                Materiale
+                Aggiungi materiale / CER
               </button>
               <!--
               <pre>{{ form.items }}</pre>
@@ -279,12 +179,12 @@
             id="5"
             title="Contenitori da Ritirare/Consegnare"
             :initialOpen=true
-            @register="registerSection"
+            @register="registerSection" @unregister="unregisterSection"
           >
 <!--
           <div class="flex flex-row items-center gap-2 mb-2">
             <div class="flex">
-              <button type="button" @click="calculateHolders" class="btn btn-primary btn-circle">
+              <button type="button" @click="calculateHolders" class="btn btn-primary btn-outline btn-circle">
                 <font-awesome-icon :icon="['fas', 'calculator']" class="text-2xl"/>
               </button>
             </div>
@@ -305,11 +205,10 @@
               @change-holder-id="onChangeHolderId"
               @remove="removeHolder(index)"
             />
-            
-            <button type="button" @click="addHolder" class="btn btn-primary btn-sm">
-              <font-awesome-icon :icon="['fas', 'diagram-successor']" class="text-2xl"/>
+
+            <button type="button" @click="addHolder(null)" class="btn btn-primary btn-outline">
               <font-awesome-icon :icon="['fas', 'plus']" class="text-2xl"/>
-              Elemento contenitore
+              Aggiungi contenitore
             </button>
 
           <!--
@@ -320,40 +219,48 @@
 
         </div>
 
-        <div class="mt-4 flex justify-end gap-2">
-          <button
+        <div class="mt-4 flex flex-wrap justify-end gap-2"><AppAction :as="Link" variant="cancel" :disabled="form.processing" :href="route('customer.show', {customer:site.customer_id})">Annulla</AppAction>
+          <AppAction
             type="button"
-            class="btn btn-outline"
+
             :disabled="form.processing"
             @click="create('create_exit')"
-          >
-            Crea & Esci
-          </button>
-          <button type="submit" class="btn btn-primary" :disabled="form.processing">
+           variant="confirm" :busy="form.processing">
+            Crea e torna all’elenco
+          </AppAction>
+          <AppAction type="submit" :disabled="form.processing" variant="confirm" :busy="form.processing">
             Crea
-          </button>
+          </AppAction>
         </div>
-    
-      </form>
-    </section>
+
+      </RegistryForm>
+    </AppPage>
     </template>
-    
+
     <script setup>
+import {siteOpeningHours} from '@/utils/siteOpeningHours';
+import AppPage from '@/Components/UI/AppPage.vue';
+import AppAction from '@/Components/UI/AppAction.vue';
+import RegistryForm from '@/Components/Registry/RegistryForm.vue';
+import SectionVisibilityActions from '@/Components/UI/SectionVisibilityActions.vue';
+import OrderSiteSummary from '@/Components/Site/OrderSiteSummary.vue';
+import {useDisclosureSections} from '@/Composables/useDisclosureSections';
+import {Link} from '@inertiajs/vue3';
+
 import { groupOrderItems } from '@/utils/orderItemGroups';
     import { computed, watch, ref, watchEffect , onMounted } from 'vue';
     import { createStore, useStore } from 'vuex';
     import { useForm, usePage } from '@inertiajs/vue3'
     import dayjs from 'dayjs';
     import VueDatePicker from '@vuepic/vue-datepicker';
-    import { getIconForSite } from '@/Composables/getIconForSite';
     import SiteInternalContacts from '@/Components/SiteInternalContacts.vue';
     import ItemRow from './Components/ItemRow.vue';
     import HolderRow from './Components/HolderRow.vue';
     import AccordionRow from './Components/AccordionRow.vue';
     import { uuid } from '@/utils/uuid';
 import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
- 
-    
+
+
     const props = defineProps({
       site: Object,
       customer: Object,
@@ -365,20 +272,20 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
       warehouses: Array,
       currentUser: Object
     })
-    
+
     const page = usePage();
     const user = computed(
       () => page.props.user
     )
     const goBack = () => {
-      window.history.back(); 
+      window.history.back();
     }
 
     const store = useStore();
     const site = props.site;
     const siteNotesText = site?.notes?.trim()
       ? site.notes
-      : 'nessuna nota particoalre per questa sede';
+      : 'Nessuna nota particolare per questa sede';
     const customer = props.customer;
 
     const currentDate = computed(
@@ -399,19 +306,9 @@ const riskPercent = computed(() => {
 
 const groupedItems = computed(() => groupOrderItems(form.items, props.cerList || []));
 
-    // Declare the ref
-    const orariApertura = ref('');
+    const orariApertura = computed(() => siteOpeningHours(site, form.expected_withdraw_at));
 
-    // Watch for changes in site and update orariApertura dynamically
-    watchEffect(() => {
-      if (site.timetable?.hours_json) {
-        orariApertura.value = 'Orari compilati automaticamente';
-      } else {
-        orariApertura.value = 'ATTENZIONE: non ci sono orari salvati per questa sede!';
-      }
-    });
-
-	    const form = useForm({
+    const form = useForm({
 	      is_urgent: false,
 	      requested_at: currentDate.value,
 	      expected_withdraw_at: null,
@@ -459,7 +356,7 @@ const groupedItems = computed(() => groupOrderItems(form.items, props.cerList ||
         form.fixed_withdraw_at = normalizeDateOrNull(form.fixed_withdraw_at);
         syncExpectedWithFixed();
       };
-    
+
     // form ITEMS
 const addItem = () => {
   form.items.push({
@@ -491,7 +388,7 @@ const addItem = () => {
 const removeItem = (index) => {
   form.items.splice(index, 1);
 };
-   
+
 
 
 // form HOLDERS
@@ -499,7 +396,7 @@ const removeItem = (index) => {
     const removeHolder = (index) => {
       form.holders.splice(index, 1);
     };
-    
+
     // Watch the form.holders array for changes
     // 1) Ricalcolo automatico: solo filled_holders_count, mai toccare empty_holders_count
     watch(
@@ -547,7 +444,7 @@ const removeItem = (index) => {
 
     // 2) Aggiunta manuale di una riga holder (niente duplicati)
     function addHolder(id) {
-      const holderId = Number(id)
+      const holderId = id == null || id === '' ? null : Number(id)
       const existing = form.holders.find(h => Number(h.holder_id) === holderId)
       if (existing) {
         window.alert("Contenitore già presente: gestisci i totali con 'Vuoti richiesti' senza aggiungere altre righe.")
@@ -601,45 +498,8 @@ const removeItem = (index) => {
 
 
 
-  
-	    const manageDate = (date) => {
-	      console.log('gestisco la data')
-          form.expected_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at);
-	      if(form.expected_withdraw_at){
-	        console.log('data inserita', form.expected_withdraw_at)
-	        console.log('giorno della settimana', form.expected_withdraw_at.getDay())
-        const hours = site.timetable.hours_json
-        console.log('array Orari', hours)
-    
-        const daySchedule = JSON.parse(hours).find(
-            (item) => item.position === form.expected_withdraw_at.getDay()
-        );
-          if (daySchedule) {
-            orariApertura.value = daySchedule.orarioApM + " - " + daySchedule.orarioChM + " e " + daySchedule.orarioApP + " - " + daySchedule.orarioChP;
-          }
-      }
-      else{
-        console.log('data non inserita o cancellata')
-        orariApertura.value = '';
-      }
-    }
-    
-    const updateAdrFieldsVisibility = () => {
-      form.items.forEach((item, index) => {
-        const adrField = document.querySelector(`#adr-fields-${index}`);
-        if (adrField) {
-          adrField.classList.toggle("hidden", !item.adr);
-        }
-      });
-    };
 
-    watch(
-      () => form.items,
-      (newItems) => {
-        updateAdrFieldsVisibility();
-      },
-      { deep: true }
-    );
+    const manageDate = () => { form.expected_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at); };
 
     const isBlank = (value) => value === null || value === undefined || `${value}`.trim() === '';
     const isTruthy = (value) => value === true || value === 1 || value === '1';
@@ -694,6 +554,7 @@ const removeItem = (index) => {
       });
 
       if (Object.keys(errors).length > 0) {
+        openAll();
         form.setError(errors);
         const firstError = Object.values(errors)[0] ?? "Verifica i campi obbligatori dell'ordine.";
         if (store?.dispatch) {
@@ -705,57 +566,17 @@ const removeItem = (index) => {
       }
       return true;
     };
-    
-    // CUSTOM ACCORDION SECTIONS MANAGMENT
-    const sections = ref([]); // Will hold section states dynamically
-       
-    // Register a section
-    const registerSection = (section) => {
-      if (section && !sections.value.includes(section)) {
-        sections.value.push(section);
-      }
-    };
 
-    // Close all sections
-    const closeAll = () => {
-      console.log("Closing all sections");
-      sections.value.forEach((accordion) => accordion?.closeSection());
-    };
-
-    // Open all sections
-    const openAll = () => {
-      console.log("Opening all sections");
-      sections.value.forEach((accordion) => accordion?.openSection());
-    };
-        
-        // Declare separate constants for each value
-        const buildingType = ref(null);
-        const buildingFaIcon = ref(null);
-        const backgroundColor = ref(null);
-        const borderColor = ref(null);
-    
-    // Watch for changes in site and update form fields accordingly
-    watch(site, (newSite) => {
-      if (newSite) {
-        form.customer_id = newSite.customer_id;
-        form.site_id = newSite.id;
-        const icons = getIconForSite(newSite);
-              buildingType.value = icons.buildingType.value;
-              buildingFaIcon.value = icons.buildingFaIcon.value;
-              backgroundColor.value = icons.backgroundColor.value;
-              borderColor.value = icons.borderColor.value;
-      }
-    }, { immediate: true }); // This ensures it also runs initially
-    
-    
+    const {registerSection, unregisterSection, openAll, closeAll} = useDisclosureSections();
     watch(user, (newUser) => {
       if (newUser) {
         form.user_id = newUser.id;
         form.logistics_user_id = newUser.id;
       }
     }, { immediate: true });
-    
+
 	    const create = (postAction = 'create_stay') => {
+      if (form.processing) return;
       form.clearErrors();
       // Ensure filled_holders_count and empty_holders_count is set to 0 if empty
       form.holders.forEach(holder => {
@@ -785,32 +606,7 @@ const removeItem = (index) => {
 
 	      form.post(route('order.store'));
 	    }
-       
-    
-    
-    </script>
-    
-   
-    <style>
-    
-    .custom-style-chooser .vs__dropdown-toggle,
-    .custom-style-chooser .vs__dropdown-menu {
-      padding: 8px 2px;
-      border-radius: 0.375rem;
-    }
-    
-    .custom-style-chooser .vs__search::placeholder {
-      color: rgb(107 114 128);
-      padding: 8px 2px;
-    }
-    
-    .custom-style-chooser .vs__clear,
-    .custom-style-chooser .vs__open-indicator {
-      fill: #394066;
-    }
 
-    .dp__input{
-      padding: 10px 30px;
-      border-radius: 0.375rem;
-    }
-    </style>
+
+
+    </script>

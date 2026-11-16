@@ -18,7 +18,7 @@
 
       <!-- MAIN -->
       <main :class="{
-        'container': !isMapPage,
+        'container': !isMapPage && !contentWidth.fluid,
         'full-width': isMapPage,
         'absolute': isMapPage,
         'pt-24':  !isMapPage,
@@ -115,7 +115,10 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, reactive, provide } from 'vue'
+import {layoutContentWidthKey} from '@/Composables/layoutContentWidth'
+const contentWidth = reactive({fluid:false, owner:null})
+provide(layoutContentWidthKey, contentWidth)
 import { Link, usePage } from '@inertiajs/vue3';
 import { route } from 'ziggy';
 import { useStore } from 'vuex';

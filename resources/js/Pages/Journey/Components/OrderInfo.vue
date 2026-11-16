@@ -1,7 +1,7 @@
 <template>
     <div>
-    <span v-if="Boolean(props.order.is_urgent)" class="font-semibold text-error">UGENTE</span>
-    <span v-else class="font-semibold text-success">NON urgente</span>
+    <span v-if="Boolean(props.order.is_urgent)" class="font-semibold text-error">Urgente</span>
+    <span v-else class="font-semibold">Non urgente</span>
     </div>
     <div>
     <font-awesome-icon :icon="['fas', 'user-tie']" class="text-xl"/>
@@ -16,20 +16,10 @@
     {{formatDate(props.order.requested_at)}}
     </div>
     <div>
-    <font-awesome-icon :icon="['fas', 'user-tag']" class="text-xl"/>  
+    <font-awesome-icon :icon="['fas', 'user-tag']" class="text-xl"/>
     {{ props.order.logistic.name }}
     </div>
-    <div class="flex flex-row justify-items-stretch content-center w-full my-4">
-        <div class="flex flex-1" :class="order.site.has_muletto? 'text-error font-medium' : 'font-medium' ">
-            <font-awesome-icon :icon="['fas', 'truck-ramp-box']" class="text-2xl"/>
-        </div>
-        <div class="flex flex-1" :class="(order.site.has_electric_pallet_truck ?? order.site.has_transpallet_el) ? 'text-error font-medium' : 'font-medium' ">
-            <font-awesome-icon :icon="['fas', 'cart-flatbed']" class="text-2xl"/>
-        </div>
-        <div class="flex flex-1" :class="(order.site.has_manual_pallet_truck ?? order.site.has_transpallet_ma) ? 'text-error font-medium' : 'font-medium' ">
-            <font-awesome-icon :icon="['fas', 'dolly']" class="text-2xl"/>
-        </div>
-    </div>
+    <SiteEquipmentSummary :site="props.order.site" compact show-other-machines />
 
     <div v-for="item in props.order.items" :key="item.id">
         <div class="flex flex-row justify-start items-center gap-2 my-1">
@@ -43,7 +33,7 @@
                     <span :class="item.cer_code.is_dangerous? 'text-error font-medium' : 'font-medium' ">{{ item.cer_code.code }}</span> &nbsp;
                     <font-awesome-icon :icon="['fas', 'weight-scale']" class="text-xl"/> {{ item.weight_declared }} Kg
                 </div>
-                <div class="text-gray-500 text-sm">
+                <div class="text-base-content/75 text-sm">
                     {{ holderLabel(item) }}
                     <span v-if="customDimsLabel(item)">
                         <br />{{ customDimsLabel(item) }}
@@ -51,12 +41,13 @@
                 </div>
             </div>
         </div>
-        
+
     </div>
 
 </template>
 
 <script setup>
+import SiteEquipmentSummary from '@/Components/Site/SiteEquipmentSummary.vue'
 import dayjs from 'dayjs';
 
 const props = defineProps({

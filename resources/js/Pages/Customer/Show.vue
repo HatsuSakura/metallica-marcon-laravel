@@ -1,11 +1,12 @@
 <template>
 <RegistryPage title="Scheda cliente">
-
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <Link class="btn btn-outline" :href="route('customer.index')">
+<template #back><Link class="btn btn-outline" :href="route('customer.index')">
             <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>
             Torna a Clienti
-        </Link>
+        </Link></template>
+
+    <template #actions>
+
         <Link
             class="btn btn-primary btn-outline"
             :href="route('customer.edit', {
@@ -16,7 +17,7 @@
             <font-awesome-icon :icon="['fas', 'pen']" class="text-base" />
             Modifica dati cliente
         </Link>
-    </div>
+    </template>
 
     <section class="flex flex-col md:grid md:grid-cols-12 gap-4 mb-4">
 

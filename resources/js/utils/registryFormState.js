@@ -5,6 +5,7 @@ export function registrySnapshot(value) {
     const numericFields = new Set(['load_capacity', 'volume', 'equivalent_units', 'length', 'casse', 'spazi_casse', 'spazi_bancale', 'total_count', 'latitude', 'longitude', 'version'])
     const normalize = (entry, key) => {
         if (entry === null || entry === undefined) return ''
+        if (entry instanceof Date) return Number.isNaN(entry.getTime()) ? '' : entry.toISOString()
         if (Array.isArray(entry)) return entry.map(value => normalize(value))
         if (entry && typeof entry === 'object') return Object.fromEntries(Object.keys(entry).sort().map(key => [key, normalize(entry[key], key)]))
         if (numericFields.has(key) && String(entry).trim() !== '' && Number.isFinite(Number(entry))) return Number(entry)

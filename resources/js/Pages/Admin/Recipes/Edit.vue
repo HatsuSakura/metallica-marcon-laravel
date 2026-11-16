@@ -40,7 +40,7 @@ function goBack() {
 
 <template>
     <RegistryPage :title="props.recipe ? 'Modifica ricetta' : 'Nuova ricetta'">
-        <template #actions><AppAction v-if="props.backUrl" :as="Link" :href="props.backUrl">Torna a {{ props.backLabel || 'elenco' }}</AppAction><AppAction v-else @click="goBack">Indietro</AppAction></template>
+<template #back><AppAction v-if="props.backUrl" :as="Link" :href="props.backUrl">Torna a {{ props.backLabel || 'elenco' }}</AppAction><AppAction v-else @click="goBack">Indietro</AppAction></template>
         <RegistryForm :form="form" :editing="!!props.recipe" v-slot="{canSubmit, busy}" @submit="submit" class="max-w-3xl">
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label class="form-control"><span class="label">Nome</span><input id="recipe-name" v-model="form.name" name="name" class="input input-bordered" :aria-invalid="!!form.errors.name" aria-describedby="recipe-name-error" /><span v-if="form.errors.name" id="recipe-name-error" class="text-sm text-error">{{ form.errors.name }}</span></label>

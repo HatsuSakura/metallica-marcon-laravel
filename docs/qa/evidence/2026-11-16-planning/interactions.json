@@ -1,0 +1,7 @@
+[
+  "Vehicle wizard: mandatory truck/cargo, optional trailer requires cargo, long+short, fixed sponda/furgone despite inconsistent flags, solo truck cargo selectable",
+  "Order create: neutral disclosure controls, CER/material/holder input, fixed-date synchronization, draft retained, single POST",
+  "Remove draft holder does not accidentally submit the form",
+  "Order edit: unchanged disabled, dirty/revert, ADR visibility, one PUT",
+  "Journey edit: no-op/dirty/revert retained, neutral map state, no mobile overflow with map, one PUT and planning payload retained"
+]

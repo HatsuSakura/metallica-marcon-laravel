@@ -1,16 +1,14 @@
 <template>
 <RegistryPage title="Nuovo rimorchio">
-
-    <div class="mb-4 flex flex-wrap items-center gap-3">
-        <Link
+<template #back><Link
             class="btn btn-outline"
             :href="route('trailer.index')"
         >
             <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-xl"/>
             Torna ad elenco Rimorchi
-        </Link>
+        </Link></template>
 
-    </div>
+
 
     <RegistryForm :form="form" v-slot="{canSubmit, busy}" @submit="create" >
       <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">

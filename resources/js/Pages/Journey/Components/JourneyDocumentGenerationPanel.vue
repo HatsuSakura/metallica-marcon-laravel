@@ -214,7 +214,7 @@ onBeforeUnmount(() => {
     <div class="card-body p-4 space-y-3">
       <div class="flex items-center justify-between">
         <div class="font-semibold">Documentazione Ordini associati al Viaggio</div>
-        <button v-if="journeyId" type="button" class="btn btn-ghost btn-sm" :disabled="loading" @click="refresh">
+        <button v-if="journeyId" type="button" class="btn btn-outline min-h-12" :disabled="loading" @click="refresh">
           <font-awesome-icon :icon="['fas', 'rotate-right']" />
           Aggiorna
         </button>
@@ -238,7 +238,7 @@ onBeforeUnmount(() => {
         <div class="flex flex-wrap gap-2">
           <button
             type="button"
-            class="btn btn-primary btn-sm"
+            class="btn btn-success min-h-12"
             :disabled="disabled || busy || selectedOrderIds.length === 0 || selectedSummary.allReady"
             @click="generateBulk"
           >
@@ -282,7 +282,7 @@ onBeforeUnmount(() => {
                     <div class="flex nowrap gap-2">
                       <div v-if="order.has_model_document" class="tooltip tooltip-success" data-tip="Modulo Ritiro">
                         <a
-                          class="btn btn-ghost btn-sm"
+                          class="btn btn-outline min-h-12"
                           :class="{ 'btn-disabled pointer-events-none opacity-50': !order.has_model_document }"
                           :href="order.has_model_document ? downloadUrl(order, 'xlsx') : undefined"
                           :aria-disabled="!order.has_model_document"
@@ -294,7 +294,7 @@ onBeforeUnmount(() => {
                       </div>
                       <div v-if="order.has_adr_hp_document" class="tooltip tooltip-error" data-tip="Etichette PERICOLOSI">
                         <a
-                          class="btn btn-ghost btn-sm"
+                          class="btn btn-outline min-h-12"
                           :class="{ 'btn-disabled pointer-events-none opacity-50': !order.has_adr_hp_document }"
                           :href="order.has_adr_hp_document ? downloadUrl(order, 'pdf') : undefined"
                           :aria-disabled="!order.has_adr_hp_document"
@@ -311,7 +311,7 @@ onBeforeUnmount(() => {
                 <td>
                   <button
                     type="button"
-                    class="btn btn-outline btn-xs"
+                    class="btn btn-success min-h-12"
                     :disabled="disabled || busy || order.current"
                     @click="generateSingle(order.id)"
                   >

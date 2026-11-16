@@ -1,6 +1,7 @@
 <template>
     <RegistryPage title="Scheda utente">
-        <template #actions><AppAction :as="Link" :href="route('user.index')">Torna agli utenti</AppAction><AppAction :as="Link" variant="function" :href="route('user.edit', {user:props.user.id})">Modifica utente</AppAction></template>
+<template #back><AppAction :as="Link" :href="route('user.index')">Torna agli utenti</AppAction></template>
+        <template #actions><AppAction :as="Link" variant="function" :href="route('user.edit', {user:props.user.id})">Modifica utente</AppAction></template>
         <div class="flex flex-col gap-4 lg:flex-row">
             <dl class="grid min-w-0 flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div v-for="field in details" :key="field.label" class="min-w-0"><dt class="text-sm font-semibold">{{ field.label }}</dt><dd class="mt-1 break-words">{{ field.value ?? '—' }}</dd></div>

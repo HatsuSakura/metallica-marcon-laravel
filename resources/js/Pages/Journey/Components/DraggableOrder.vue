@@ -1,35 +1,37 @@
 <template>
     <Box padding="p-2" class="bg-base-100">
-    <div class="flex flex-row justify-between gap-1">
-        <div class="flex flex-col items-start">
+    <div class="flex flex-col gap-2">
+        <div class="min-w-0 flex flex-col items-start">
             <div>
                 <font-awesome-icon :icon="['fas', 'grip-vertical']" class="stop-handle cursor-grab select-none opacity-60 mr-2" />
-                <span class="text-sm font-medium">{{props.element.customer.company_name}}</span>
+                <span class="break-words text-sm font-medium">{{props.element.customer.company_name}}</span>
             </div>
-            <div class="text-xs text-gray-500">{{props.element.legacy_code }}</div>
+            <div class="text-xs text-base-content/75">{{props.element.legacy_code }}</div>
         </div>
         <div class="flex items-center gap-1">
-            <button type="button" class="btn btn-primary btn-circle btn-sm"
+            <AppAction size="sm" type="button"
                 @click.prevent="emitEditItem()"
-            >
-                <font-awesome-icon :icon="['fas', 'pencil']" class="text-lg"/>
-            </button>
-            <button type="button" class="btn btn-primary btn-circle btn-sm"
+             variant="function" shape="circle" aria-label="Modifica ordine">
+                <font-awesome-icon :icon="['fas', 'pencil']" class="text-sm"/>
+            </AppAction>
+            <AppAction size="sm" type="button"
                 @click.prevent="emitViewItem()"
-            >
-                <font-awesome-icon :icon="['fas', 'eye']" class="text-lg"/>
-            </button>
-            <button type="button" class="btn btn-primary btn-circle btn-sm"
+             variant="neutral" shape="circle" aria-label="Visualizza ordine">
+                <font-awesome-icon :icon="['fas', 'eye']" class="text-sm"/>
+            </AppAction>
+            <AppAction size="sm" type="button"
                 @click.prevent="emitViewMap()"
-            >
-                <font-awesome-icon :icon="['fas', 'map-location-dot']" class="text-lg"/>
-            </button>
+             variant="neutral" shape="circle" aria-label="Mostra posizione ordine">
+                <font-awesome-icon :icon="['fas', 'map-location-dot']" class="text-sm"/>
+            </AppAction>
         </div>
     </div>
     </Box>
 </template>
 
 <script setup>
+import AppAction from '@/Components/UI/AppAction.vue'
+
 import Box from '@/Components/UI/Box.vue';
 
 const props = defineProps({

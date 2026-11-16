@@ -1,5 +1,9 @@
 # Documentazione Metallica Marcon
 
+- [Ordini e gestione viaggi: convenzione UX/UI — 2026-11-16](qa/2026-11-16-planning-ui.md): componenti condivisi, dotazioni della sede, form responsive e verifiche locali.
+
+- [Gap analysis DaisyUI 5 / Tailwind 4 — 2026-11-16](design/2026-11-16-daisyui5-gap-analysis.md): inventario, dipendenze e piano proposto; nessun upgrade eseguito, pulsanti attuali conservati.
+
 - [Anagrafiche: form e punti di modifica — 2026-11-16](qa/2026-11-16-registry-forms.md): struttura comune, editor sede unico e verifiche locali; revisione grafica di clienti/sedi e orari ancora da concordare.
 
 - [Convenzione grafica applicata agli autisti — 2026-11-16](qa/2026-11-16-driver-convention.md): pulsanti condivisi, dashboard compatta, temi e verifiche; solo locale. Eccezioni PO: menu con icone pulite e chiamate verdi; Salva verde, Annulla rosso outline.
