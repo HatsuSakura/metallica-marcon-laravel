@@ -84,6 +84,7 @@ abstract class JourneyExecutionTestCase extends TestCase
         }
         (require database_path('migrations/2026_10_31_200000_create_journey_execution_context.php'))->up();
         (require database_path('migrations/2026_11_02_180000_add_execution_load_allocations.php'))->up();
+        (require database_path('migrations/2026_11_13_160000_add_driver_uat_preferences.php'))->up();
         Storage::fake('local');
         Bus::fake();
         foreach ([1, 2] as $id) {

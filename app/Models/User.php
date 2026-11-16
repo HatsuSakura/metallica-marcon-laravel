@@ -14,6 +14,23 @@ class User extends Authenticatable implements MustVerifyEmail, AuditableContract
 {
     use HasFactory, Notifiable, HasDomainAudit;
 
+    protected static function booted(): void
+    {
+        static::updating(function (self $user) {
+            if ($user->isDirty('email')) $user->email_verified_at = null;
+        });
+        static::updated(function (self $user) {
+            if ($user->wasChanged('email') && filled($user->email)) {
+                \Illuminate\Support\Facades\DB::afterCommit(function () use ($user) {
+                    $fresh = $user->fresh();
+                    if ($fresh && $fresh->email === $user->email && !$fresh->hasVerifiedEmail()) {
+                        $fresh->sendEmailVerificationNotification();
+                    }
+                });
+            }
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *

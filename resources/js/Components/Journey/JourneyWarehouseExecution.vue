@@ -9,7 +9,7 @@
             <div class="grid grid-cols-2 gap-3"><label class="form-control min-w-0">Lordo (kg)<input v-model="forms[item.id].weight_gross" type="number" min="0" step="0.001" class="input input-bordered w-full" /></label><label class="form-control min-w-0">Tara (kg)<input v-model="forms[item.id].weight_tare" type="number" min="0" step="0.001" class="input input-bordered w-full" /></label></div>
             <label class="form-control min-w-0">Stato<select v-model="forms[item.id].warehouse_status" class="select select-bordered w-full min-w-0"><option value="received">Ricevuto</option><option value="weighed">Pesato</option><option value="classified">Pesato e classificato</option></select></label>
             <label class="form-control min-w-0">Note<textarea v-model="forms[item.id].warehouse_notes" class="textarea textarea-bordered w-full min-w-0" /></label>
-            <button class="btn btn-primary min-h-12" :disabled="busy || journey.status === 'chiuso'">Salva ricezione</button>
+            <button class="btn btn-success min-h-12" :disabled="busy || journey.status === 'chiuso'">Salva ricezione</button>
         </form>
         <button v-if="journey.status === 'eseguito'" class="btn btn-success min-h-12 mt-3" :disabled="busy" @click="emit('command', 'close', {})">Chiudi viaggio</button>
     </details>

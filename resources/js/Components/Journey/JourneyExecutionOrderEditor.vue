@@ -1,10 +1,10 @@
 <template>
     <div class="space-y-3">
-        <button type="button" class="btn btn-primary min-h-12 w-full sm:w-auto" :disabled="busy" :aria-expanded="addingMaterial" @click="addingMaterial = !addingMaterial">{{ addingMaterial ? 'Chiudi aggiunta materiale' : 'Aggiungi materiale / CER' }}</button>
+        <AppAction type="button" class="w-full sm:w-auto" :disabled="busy" :aria-expanded="addingMaterial" @click="addingMaterial = !addingMaterial" variant="function">{{ addingMaterial ? 'Chiudi aggiunta materiale' : 'Aggiungi materiale / CER' }}</AppAction>
         <form v-if="addingMaterial" class="space-y-3 border-y border-base-300 py-3" @submit.prevent="addItem">
             <h5 class="font-semibold">Nuovo materiale nell’ordine</h5>
             <JourneyExecutionMaterialFields v-model="newItem" :lookups="lookups" :disabled="busy" :has-trailer="hasTrailer" />
-            <button class="btn btn-primary min-h-12" :disabled="busy">Aggiungi all’ordine</button>
+            <AppAction type="submit" :disabled="busy" variant="confirm">Aggiungi all’ordine</AppAction>
         </form>
         <JourneyOrderMaterials :order="order" :census="census" :show-original-plan="showOriginalPlan">
             <template #item-checklist="{item}">
@@ -16,40 +16,53 @@
             <template #item-actions="{item}">
                 <div v-if="!isSplitting(item.id)" class="flex shrink-0 items-center gap-2">
                     <template v-if="isEditing(item.id)">
-                        <button type="button" class="btn btn-circle btn-outline min-h-12 min-w-12" :disabled="busy" title="Annulla e chiudi" :aria-label="`Annulla e chiudi modifica materiale CER ${item.cer_code?.code || 'non indicato'}`" @click="cancelItem(item.id)"><font-awesome-icon :icon="['fas', 'xmark']" aria-hidden="true" /></button>
-                        <button type="submit" :form="materialFormId(item.id)" class="btn btn-circle btn-primary min-h-12 min-w-12" :disabled="busy || !itemDirty(item.id)" title="Salva materiale" :aria-label="`Salva materiale CER ${item.cer_code?.code || 'non indicato'}`"><font-awesome-icon :icon="['fas', 'floppy-disk']" aria-hidden="true" /></button>
+                        <AppAction type="button" :disabled="busy" title="Annulla e chiudi" :aria-label="`Annulla e chiudi modifica materiale CER ${item.cer_code?.code || 'non indicato'}`" @click="cancelItem(item.id)" shape="circle" variant="cancel"><font-awesome-icon :icon="['fas', 'xmark']" aria-hidden="true" /></AppAction>
+                        <AppAction type="submit" :form="materialFormId(item.id)" :disabled="busy || !itemDirty(item.id)" title="Salva materiale" :aria-label="`Salva materiale CER ${item.cer_code?.code || 'non indicato'}`" shape="circle" variant="confirm"><font-awesome-icon :icon="['fas', 'floppy-disk']" aria-hidden="true" /></AppAction>
                     </template>
-                    <button v-else type="button" class="btn btn-circle btn-outline min-h-12 min-w-12" :disabled="busy" aria-expanded="false" title="Modifica materiale" :aria-label="`Modifica materiale CER ${item.cer_code?.code || 'non indicato'}${item.description ? ` · ${item.description}` : ''}`" @click="openItem(item.id)"><font-awesome-icon :icon="['fas', 'pencil']" aria-hidden="true" /></button>
+                    <AppAction v-else type="button" :disabled="busy" aria-expanded="false" title="Modifica materiale" :aria-label="`Modifica materiale CER ${item.cer_code?.code || 'non indicato'}${item.description ? ` · ${item.description}` : ''}`" @click="openItem(item.id)" shape="circle" variant="function"><font-awesome-icon :icon="['fas', 'pencil']" aria-hidden="true" /></AppAction>
                 </div>
             </template>
             <template #item-editor="{item}">
                 <div v-if="isEditing(item.id)" class="space-y-3 border-t border-base-300 pt-3">
                     <form :id="materialFormId(item.id)" class="space-y-3" @submit.prevent="saveItem(item.id)">
                         <JourneyExecutionMaterialFields v-model="items[item.id]" :lookups="lookups" :disabled="busy" include-actuals />
-                        <button type="button" class="btn btn-outline min-h-12" :disabled="busy" @click="send('remove_item', {item_id:item.id})">Rimuovi materiale</button>
+                        <AppAction type="button" :disabled="busy" @click="send('remove_item', {item_id:item.id})" variant="remove">Rimuovi materiale</AppAction>
                     </form>
                     <JourneyRestoreMenu :item-id="item.id" :options="item.restore_options" :busy="busy" :dirty="itemDirty(item.id)" @command="send" />
                 </div>
             </template>
-            <template #delivery-actions><button type="button" class="btn btn-outline min-h-12 mt-2" :disabled="busy" :aria-expanded="editingDeliveries" @click="editingDeliveries = !editingDeliveries">{{ editingDeliveries ? 'Chiudi consegne' : 'Modifica contenitori in consegna' }}</button></template>
+            <template #delivery-actions><AppAction type="button" class="mt-2" :disabled="busy" :aria-expanded="editingDeliveries" @click="editingDeliveries = !editingDeliveries" variant="function">{{ editingDeliveries ? 'Chiudi consegne' : 'Modifica contenitori in consegna' }}</AppAction></template>
         </JourneyOrderMaterials>
-        <details v-if="order.removed_items?.length" class="border-t border-base-300 pt-2"><summary class="cursor-pointer py-3">Materiali rimossi ({{ order.removed_items.length }})</summary><div v-for="item in order.removed_items" :key="item.id" class="mt-3"><p>CER {{ item.cer_code }} · {{ item.description }} (rimosso)</p><JourneyRestoreMenu :item-id="item.id" :options="item.restore_options" :fields="[{value:'removed',label:'Presenza del materiale'}]" :busy="busy" @command="send" /></div></details>
+        <section v-if="order.removed_items?.length" class="space-y-2" aria-label="Materiali rimossi">
+            <article v-for="item in order.removed_items" :key="item.id" class="rounded-xl border border-base-300 bg-base-200 p-3 space-y-2">
+                <p class="text-sm opacity-60">CER {{ item.cer_code }} · {{ item.description }} (rimosso)</p>
+                <div class="flex flex-wrap gap-2"><AppAction type="button" :disabled="busy" @click="send('restore_item', {item_id:item.id})" variant="function">Ripristina</AppAction><AppAction type="button" :disabled="busy" @click="hideRemoved(item)" variant="remove">Elimina definitivamente</AppAction></div>
+            </article>
+        </section>
         <section v-if="editingDeliveries" class="mt-3 border-t border-base-300 pt-3 space-y-3">
-            <form v-for="holder in order.holders" :key="holder.id" class="space-y-2" @submit.prevent="send('update_holder', { holder_id: holder.id, total_holders_count: numeric(holders[holder.id].total_holders_count), actual_delivered: numeric(holders[holder.id].actual_delivered) })">
-                <p>{{ holder.holder?.name }}</p>
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2"><div class="form-control min-w-0"><span>Da consegnare</span><QuantityCounter v-model="holders[holder.id].total_holders_count" label="Contenitori da consegnare" required :disabled="busy" /></div><div class="form-control min-w-0"><span>Consegnati</span><QuantityCounter v-model="holders[holder.id].actual_delivered" label="Contenitori consegnati" placeholder="—" :disabled="busy" /></div></div>
-                <button class="btn btn-primary min-h-12" :disabled="busy">Salva consegna</button>
+            <form v-for="holder in order.holders" :key="holder.id" class="space-y-2" @submit.prevent="saveDelivery(holder)">
+                <h5 class="text-base font-semibold">{{ holder.holder?.name || 'Contenitore' }}</h5>
+                <QuantityCounter v-model="holders[holder.id].actual_delivered" :label="`${holder.holder?.name || 'Contenitori'} consegnati`" :max="deliveryLimit(balance, holder.holder_id, holder.actual_delivered)" required :disabled="busy" />
+                <div class="flex items-center justify-between gap-2">
+                    <p class="min-w-0 text-sm">Disponibili: {{ availableContainers(balance, holder.holder_id) ?? 'da verificare' }}</p>
+                    <AppAction type="submit" class="shrink-0 px-3" :disabled="!canSaveDelivery(holder)" variant="confirm">Salva</AppAction>
+                </div>
+                <p v-if="!deliveryWithinLimit(holders[holder.id].actual_delivered, deliveryLimit(balance, holder.holder_id, holder.actual_delivered))" class="text-sm text-warning">Riduci la quantità ai vuoti disponibili prima di salvare.</p>
             </form>
-            <form class="space-y-2" @submit.prevent="send('add_holder', { execution_order_id: order.execution_order_id, holder_id: newHolder.holder_id, total_holders_count: numeric(newHolder.quantity) })">
-                <label class="form-control min-w-0">Tipo contenitore<select v-model="newHolder.holder_id" required class="select select-bordered w-full min-w-0"><option disabled value="">Seleziona tipo</option><option v-for="holder in lookups.holders" :value="holder.id" :key="holder.id">{{ holder.name }}</option></select></label>
-                <div class="form-control min-w-0"><span>Da consegnare</span><QuantityCounter v-model="newHolder.quantity" label="Nuovi contenitori da consegnare" required :disabled="busy" /></div><button class="btn btn-outline min-h-12" :disabled="busy">Aggiungi consegna</button>
+            <hr class="border-base-300" />
+            <form class="space-y-2" @submit.prevent="send('add_holder', { execution_order_id: order.execution_order_id, holder_id: newHolder.holder_id, total_holders_count: numeric(newHolder.quantity), actual_delivered: numeric(newHolder.quantity) })">
+                <label class="form-control min-w-0"><span class="text-base font-semibold">Aggiungi contenitore</span><select v-model="newHolder.holder_id" required class="select select-bordered w-full min-w-0"><option disabled value="">Seleziona tipo</option><option v-for="holder in lookups.holders" :value="holder.id" :key="holder.id">{{ holder.name }}</option></select></label>
+                <p v-if="newHolder.holder_id" class="text-sm">Disponibili: {{ deliveryLimit(balance, newHolder.holder_id) ?? 'da verificare' }}.</p>
+                <div class="form-control min-w-0"><span>Consegnati</span><QuantityCounter v-model="newHolder.quantity" label="Nuovi contenitori consegnati" :max="deliveryLimit(balance, newHolder.holder_id)" required :disabled="busy" /></div><AppAction type="submit" variant="confirm" :disabled="busy || !newHolder.holder_id || !deliveryWithinLimit(newHolder.quantity, deliveryLimit(balance, newHolder.holder_id))">Aggiungi consegna</AppAction>
             </form>
         </section>
 
     </div>
 </template>
 <script setup>
+import AppAction from '@/Components/UI/AppAction.vue'
 import { reactive, ref, watch } from 'vue'
+import {availableContainers,deliveryLimit,deliveryWithinLimit} from '@/utils/deliveryAvailability'
 import QuantityCounter from '@/Components/UI/QuantityCounter.vue'
 import JourneyRestoreMenu from './JourneyRestoreMenu.vue'
 import JourneyItemLoadPlacement from './JourneyItemLoadPlacement.vue'
@@ -57,7 +70,7 @@ import JourneyItemLoadChecklist from './JourneyItemLoadChecklist.vue'
 import JourneyOrderMaterials from './JourneyOrderMaterials.vue'
 import JourneyExecutionMaterialFields from './JourneyExecutionMaterialFields.vue'
 import {mergeSavedDraft, hasUnsavedDraft, changedDraftValues} from '@/utils/journeyExecutionDrafts'
-const props = defineProps({ order: Object, lookups: Object, busy: Boolean, hasTrailer: {type:Boolean,default:true}, showOriginalPlan: {type:Boolean,default:false}, census: { type: Array, default: () => [] } })
+const props = defineProps({ order: Object, lookups: Object, busy: Boolean, balance: {type:Object,default:null}, hasTrailer: {type:Boolean,default:true}, showOriginalPlan: {type:Boolean,default:false}, census: { type: Array, default: () => [] } })
 const emit = defineEmits(['command'])
 const savedItems = reactive({}), savedHolders = reactive({})
 const items = reactive({}), holders = reactive({})
@@ -74,7 +87,7 @@ watch(() => props.order, order => {
         savedItems[item.id] = {...next}
     }
     for (const holder of order.holders || []) {
-        const next = { total_holders_count: holder.total_holders_count, actual_delivered: holder.actual_delivered }
+        const next = { total_holders_count: holder.total_holders_count, actual_delivered: holder.actual_delivered ?? holder.total_holders_count }
         holders[holder.id] = mergeSavedDraft(holders[holder.id], savedHolders[holder.id], next)
         savedHolders[holder.id] = {...next}
     }
@@ -96,6 +109,15 @@ const setSplitting = (id, editing) => {
 }
 const numeric = value => value === '' || value === null || value === undefined ? null : Number(value)
 const send = (operation, input, onSaved) => emit('command', operation, input, onSaved)
+const canSaveDelivery = holder => !props.busy
+    && numeric(holders[holder.id]?.actual_delivered) !== numeric(savedHolders[holder.id]?.actual_delivered)
+    && deliveryWithinLimit(holders[holder.id]?.actual_delivered, deliveryLimit(props.balance, holder.holder_id, holder.actual_delivered))
+const saveDelivery = holder => {
+    if (canSaveDelivery(holder)) send('update_holder', {holder_id:holder.id, actual_delivered:numeric(holders[holder.id].actual_delivered)})
+}
+const hideRemoved = item => {
+    if (window.confirm(`Nascondere il materiale CER ${item.cer_code || 'non indicato'} dalla lista? Non sarà più ripristinabile da questa schermata.`)) send('hide_removed_item', {item_id:item.id})
+}
 const saveItem = id => {
     if (props.busy || !itemDirty(id)) return
     const normalized = {...items[id], ...Object.fromEntries(['holder_quantity','weight_declared','actual_containers','actual_weight_kg'].map(key => [key,numeric(items[id][key])]))}

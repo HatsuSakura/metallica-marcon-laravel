@@ -1,7 +1,7 @@
 <template>
     <div class="space-y-4">
         <section v-for="group in sections" :key="group.key" class="space-y-2 border-b border-base-300 pb-2" :aria-label="group.isUnassigned ? 'CER non indicato' : `CER ${group.cerCode}`">
-            <h5 class="flex flex-wrap items-center gap-2 font-bold"><UiBadge :tone="group.isUnassigned ? 'warning' : 'primary'">{{ group.isUnassigned ? 'CER non indicato' : `CER ${group.cerCode}` }}</UiBadge><slot v-if="group.items.length === 1" name="item-checklist" :item="group.items[0].item"><span class="text-xs font-normal opacity-70">{{ completed ? 'Ritirato' : group.items[0].item.is_loaded ? 'Caricato' : 'Da ritirare' }}</span></slot></h5>
+            <h5 class="flex flex-wrap items-center gap-2 font-bold"><CerCodeBadge :code="group.cerCode" :unassigned="group.isUnassigned" :dangerous="group.items.some(row => Number(row.item.cer_code?.is_dangerous) === 1)" /><slot v-if="group.items.length === 1" name="item-checklist" :item="group.items[0].item"><span class="text-xs font-normal opacity-70">{{ completed ? 'Ritirato' : group.items[0].item.is_loaded ? 'Caricato' : 'Da ritirare' }}</span></slot></h5>
                 <ul class="divide-y divide-base-300">
                     <li v-for="row in group.items" :key="row.item.id ?? row.index" class="space-y-1 py-2 break-words">
                         <slot v-if="group.items.length > 1" name="item-checklist" :item="row.item"><span class="text-xs opacity-70">{{ completed ? 'Ritirato' : row.item.is_loaded ? 'Caricato' : 'Da ritirare' }}</span></slot>
@@ -13,6 +13,7 @@
                                     </slot>
                                     <span class="text-sm font-medium">{{ materialWeightLabel(row.item, census, completed) }}</span>
                                 </div>
+                                <span v-if="row.item.has_adr || row.item.adr" class="badge badge-warning">ADR</span>
                                 <p v-if="row.item.description" class="text-sm opacity-80">{{ row.item.description }}</p>
                             </div>
                             <slot name="item-actions" :item="row.item" />
@@ -41,7 +42,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import UiBadge from '@/Components/UI/UiBadge.vue';
+import CerCodeBadge from '@/Components/UI/CerCodeBadge.vue';
 import JourneyItemLoadPlacement from './JourneyItemLoadPlacement.vue';
 import JourneyContainerQuantities from './JourneyContainerQuantities.vue';
 import { groupOrderItems } from '@/utils/orderItemGroups';

@@ -1,0 +1,68 @@
+{
+  "viewports": [
+    {
+      "width": 390,
+      "overflow": false,
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "complete": 2,
+      "skip": 2,
+      "danger": "CER 020108 · Pericoloso",
+      "header": true,
+      "ghost": true,
+      "errors": []
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "scrollWidth": 768,
+      "clientWidth": 768,
+      "complete": 2,
+      "skip": 2,
+      "danger": "CER 020108 · Pericoloso",
+      "header": true,
+      "ghost": true,
+      "errors": []
+    },
+    {
+      "width": 1280,
+      "overflow": false,
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "complete": 2,
+      "skip": 2,
+      "danger": "CER 020108 · Pericoloso",
+      "header": true,
+      "ghost": true,
+      "errors": []
+    }
+  ],
+  "interaction": {
+    "defaultDelivery": "6",
+    "deliveryMax": "12",
+    "delivery": {
+      "revision": 1,
+      "operation": "update_holder",
+      "input": {
+        "holder_id": 1,
+        "actual_delivered": 0
+      }
+    },
+    "zeroReload": "0",
+    "restored": true,
+    "hidden": true,
+    "preference": {
+      "header_open_on_entry": false
+    },
+    "headerAfterReload": false,
+    "errors": []
+  },
+  "planning": {
+    "initialDisabled": true,
+    "initialNotes": "Nota iniziale",
+    "changedEnabled": true,
+    "revertedDisabled": true,
+    "generatingDisabled": true,
+    "errors": []
+  }
+}

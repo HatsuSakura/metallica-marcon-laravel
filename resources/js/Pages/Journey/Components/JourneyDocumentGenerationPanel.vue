@@ -5,6 +5,7 @@ import { useStore } from 'vuex';
 import { ORDER_DOCUMENTS_STATUS, ORDER_STATUS, normalizeOrderDocumentsStatus, normalizeOrderStatus } from '@/Constants/orderStatus';
 
 const props = defineProps({
+  disabled: Boolean,
   journeyId: {
     type: Number,
     default: null,
@@ -15,6 +16,8 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['busy']);
+const initialized = ref(false);
 const store = useStore();
 const loading = ref(false);
 const generatingAll = ref(false);
@@ -58,9 +61,12 @@ const selectedSummary = computed(() => {
 
 const hasGeneratingOrders = computed(() =>
   (serverOrders.value ?? []).some(
-    (order) => normalizeOrderDocumentsStatus(order?.documents_status) === ORDER_DOCUMENTS_STATUS.GENERATING
+    (order) => normalizeOrderDocumentsStatus(order?.documents_status) === ORDER_DOCUMENTS_STATUS.GENERATING && order.generation_active !== false
   )
 );
+
+const busy = computed(() => !initialized.value || generatingAll.value || Object.keys(generatingByOrder.value).length > 0 || hasGeneratingOrders.value);
+watch(busy, value => emit('busy', value), {immediate:true});
 
 async function refresh() {
   if (!props.journeyId) return;
@@ -68,8 +74,10 @@ async function refresh() {
   try {
     const response = await axios.get(`/api/journeys/${props.journeyId}/documents-status`);
     serverOrders.value = response?.data?.orders ?? [];
+    initialized.value = true;
     summary.value = response?.data?.summary ?? summary.value;
   } catch (error) {
+    initialized.value = false;
     serverOrders.value = [];
     summary.value = { total: 0, ready: 0, not_ready: 0, all_ready: false };
     store.dispatch('flash/queueMessage', {
@@ -82,7 +90,7 @@ async function refresh() {
 }
 
 async function generateBulk() {
-  if (!props.journeyId || generatingAll.value || selectedOrderIds.value.length === 0) return;
+  if (props.disabled || busy.value || !props.journeyId || generatingAll.value || selectedOrderIds.value.length === 0) return;
   generatingAll.value = true;
   try {
     const response = await axios.post(`/api/journeys/${props.journeyId}/generate-documents`, {
@@ -104,7 +112,7 @@ async function generateBulk() {
 }
 
 async function generateSingle(orderId) {
-  if (!props.journeyId || !orderId || generatingByOrder.value[orderId]) return;
+  if (props.disabled || busy.value || !props.journeyId || !orderId || generatingByOrder.value[orderId]) return;
   generatingByOrder.value = { ...generatingByOrder.value, [orderId]: true };
   try {
     const response = await axios.post(`/api/journeys/${props.journeyId}/generate-documents`, {
@@ -217,6 +225,8 @@ onBeforeUnmount(() => {
       </div>
 
       <template v-else>
+        <p v-if="disabled" class="text-sm text-info">Salva le modifiche al viaggio prima di generare i documenti.</p>
+        <p v-if="busy" role="status" class="text-sm">{{ initialized ? 'Generazione documenti in corso. Attendi prima di salvare il viaggio.' : 'Verifica dello stato dei documenti in corso. Se non termina, premi Aggiorna.' }}</p>
         <div class="flex flex-wrap gap-2 text-sm">
           <span class="badge badge-neutral">Journey ordini: {{ summary.total }}</span>
           <span class="badge badge-success">Journey ready: {{ summary.ready }}</span>
@@ -229,7 +239,7 @@ onBeforeUnmount(() => {
           <button
             type="button"
             class="btn btn-primary btn-sm"
-            :disabled="generatingAll || selectedOrderIds.length === 0 || selectedSummary.allReady"
+            :disabled="disabled || busy || selectedOrderIds.length === 0 || selectedSummary.allReady"
             @click="generateBulk"
           >
             <font-awesome-icon :icon="['fas', 'file-export']" />
@@ -302,7 +312,7 @@ onBeforeUnmount(() => {
                   <button
                     type="button"
                     class="btn btn-outline btn-xs"
-                    :disabled="Boolean(generatingByOrder[order.id]) || order.current"
+                    :disabled="disabled || busy || order.current"
                     @click="generateSingle(order.id)"
                   >
                     {{ generatingByOrder[order.id] ? 'Avvio...' : order.current ? 'Aggiornati' : 'Genera' }}

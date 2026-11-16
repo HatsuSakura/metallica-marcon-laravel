@@ -147,7 +147,9 @@ class OrderDocumentGenerationService
     {
         if ($this->isCurrent($order)) return;
         // Content changes invalidate documents, never the order/journey business state.
-        if ($order->documents_status !== OrderDocumentsStatus::GENERATING) app(DocumentRevision::class)->persist($order, ['documents_status' => 'not_generated', 'documents_error' => null]);
+        if ($order->documents_status !== OrderDocumentsStatus::GENERATING || $this->isGeneratingStateStale($order)) {
+            app(DocumentRevision::class)->persist($order, ['documents_status' => 'not_generated', 'documents_error' => null, 'documents_requested_hash' => null, 'documents_generation_started_at' => null]);
+        }
     }
 
     public function statusPayload(Order $order): array

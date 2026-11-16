@@ -7,13 +7,17 @@
                 <h1 class="min-w-0 flex-1 text-lg font-bold break-words">Viaggio #{{ journey.id }}</h1>
                 <JourneyStatusBadge :status="journey.status" class="shrink-0" />
             </div>
-            <DisclosureCard>
+            <DisclosureCard :key="journey.id" :open="headerOpen" @toggle="headerOpen = $event">
                 <template #summary>
                     <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-xs">
                         <span>{{ journeyDateLabel }}</span>
                         <span>{{ completedStops.length }} di {{ stops.length }} tappe completate</span>
                     </div>
                 </template>
+                <label v-if="!readOnly" class="ml-auto flex min-h-12 w-fit max-w-full cursor-pointer items-center justify-end gap-2 text-right text-xs">
+                    <span>Testata aperta ad ogni accesso</span>
+                    <input type="checkbox" role="switch" class="toggle toggle-sm toggle-primary shrink-0" :checked="journey.header_open_on_entry ?? true" :disabled="preferenceBusy" @change="saveHeaderPreference($event.target.checked)" />
+                </label>
                 <JourneyVehicleSummary :vehicle="journey.vehicle" :trailer="journey.trailer" />
                 <JourneyContainerMovements :orders="journeyOrders.filter(order => order.execution_status !== 'released')" :census="journey.load_census_items ?? []" :completed="['eseguito', 'chiuso'].includes(journey.status)" :balance="journey.container_balance" aria-label="Totali contenitori del viaggio" />
                 <section class="space-y-1 text-sm">
@@ -47,6 +51,7 @@
                 @move-stop="moveStop"
                 @select-stop="selectStop"
             >
+                <template #stop-actions="{stop}"><JourneyStopOutcomeActions v-if="canManage && journey.status === 'attivo' && stop.id === currentStop?.id" id-prefix="card-outcome" compact class="mx-3 mb-3" :busy="isLoading" :skip-reasons="skipReasons" v-model:skip-panel-open="skipPanelOpen" v-model:skip-form="skipForm" @complete="completeCurrentStop" @skip="confirmSkip" /></template>
                 <template #before-stops><JourneyStartReorderPrompt v-if="startReorderPrompt" :busy="isLoading" :error="startReorderError" @cancel="startReorderPrompt = false" @confirm="startJourney(true)" /></template>
             </JourneyStopsPanel>
 
@@ -60,10 +65,10 @@
                         <p v-if="stopSubtitle(selectedStop)" class="text-sm break-words opacity-80">{{ stopSubtitle(selectedStop) }}</p>
                         <div v-if="!isCurrentSelected || selectedStop.kind === 'technical'" class="flex flex-wrap gap-2"><JourneyStatusBadge v-if="!isCurrentSelected" :status="selectedStop.status" kind="stop" /><span v-if="selectedStop.kind === 'technical'" class="badge badge-neutral">Sosta tecnica</span></div>
                     </div>
+                    <JourneyStopSiteNotes :stop="selectedStop" :id-prefix="`detail-stop-${selectedStop.id}`" :editable="canManage && journey.status === 'attivo'" :busy="isLoading" @command="executeCommand" />
                     <JourneyStopContacts :stop="selectedStop" />
-                    <JourneyStopSiteNotes :stop="selectedStop" :editable="canManage && journey.status === 'attivo'" :busy="isLoading" @command="executeCommand" />
                     <div v-if="canManage && ['done','skipped','cancelled'].includes(selectedStop.status)" class="space-y-2">
-                        <button type="button" class="btn btn-outline min-h-12" :disabled="isLoading || !selectedStop.reopen_available" @click="reopenStop(selectedStop.id)">Riapri tappa</button>
+                        <button type="button" class="btn btn-primary btn-outline min-h-12" :disabled="isLoading || !selectedStop.reopen_available" @click="reopenStop(selectedStop.id)">Riapri tappa</button>
                         <p class="text-sm" :class="selectedStop.reopen_available ? 'opacity-70' : 'text-warning'">{{ selectedStop.reopen_available ? 'La tappa torna corrente. Quantità, pesi e consegne già registrati vengono conservati.' : selectedStop.reopen_unavailable_reason }}</p>
                     </div>
                     <details v-if="selectedStop.kind !== 'technical' && stopPrimarySite(selectedStop)" class="rounded-xl border border-base-300 p-3">
@@ -72,34 +77,17 @@
                         <p v-if="!stopTimetableSummary(selectedStop).length" class="mt-2 text-sm opacity-70">Nessun orario configurato.</p>
                         <dl v-else class="mt-3 space-y-2"><div v-for="slot in stopTimetableSummary(selectedStop)" :key="slot.dayNumber" class="flex flex-wrap justify-between gap-x-3 gap-y-1 text-sm" :class="{ 'font-bold': slot.isToday }"><dt>{{ slot.label }}</dt><dd>{{ slot.output }}</dd></div></dl>
                     </details>
-                    <div v-if="canManage && journey.status === 'attivo' && isCurrentSelected" class="rounded-xl bg-base-200 p-3 space-y-3">
-                        <p class="text-sm font-medium">Esito della tappa</p>
-                        <ul class="list-disc pl-4 text-xs space-y-1">
-                            <li><strong>Completa:</strong> conferma le quantità correnti.</li>
-                            <li><strong>Salta:</strong> esclude la tappa dal viaggio corrente.</li>
-                        </ul>
-                        <div class="grid grid-cols-2 items-stretch gap-3">
-                            <button type="button" class="btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3" :disabled="isLoading" :aria-expanded="skipPanelOpen" @click="skipPanelOpen = !skipPanelOpen">{{ skipPanelOpen ? 'Annulla salto' : 'Salta' }}</button>
-                            <button type="button" class="btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3" :disabled="isLoading" @click="completeCurrentStop">Completa</button>
-                        </div>
-                        <div v-if="skipPanelOpen" class="space-y-3">
-                            <label for="skip-reason" class="block text-sm font-medium">Motivo del salto</label>
-                            <select id="skip-reason" v-model="skipForm.reason_code" class="select select-bordered min-h-12 w-full" :disabled="isLoading"><option value="" disabled>Seleziona un motivo</option><option v-for="reason in skipReasons" :key="reason.value" :value="reason.value">{{ reason.label }}</option></select>
-                            <label for="skip-notes" class="block text-sm font-medium">Note {{ skipForm.reason_code === 'other' ? '(obbligatorie)' : '(facoltative)' }}</label>
-                            <textarea id="skip-notes" v-model="skipForm.driver_notes" class="textarea textarea-bordered w-full" rows="3" :disabled="isLoading"></textarea>
-                            <button type="button" class="btn btn-warning min-h-12 w-full" :disabled="isLoading || !skipForm.reason_code || (skipForm.reason_code === 'other' && !skipForm.driver_notes.trim())" @click="confirmSkip">Conferma salto</button>
-                        </div>
-                    </div>
                     <section v-if="stopOrdersCount(selectedStop)" class="space-y-3" aria-label="Ordini collegati">
                         <article v-for="order in stopOrders(selectedStop)" :key="order.id" class="min-w-0 rounded-xl border border-base-300 p-3 space-y-3 text-sm">
                             <h4 class="font-semibold break-words">Ordine {{ order.legacy_code || `#${order.id}` }}</h4>
                             <p v-if="orderCustomerNotes(order)" class="whitespace-pre-line break-words"><span class="font-semibold">Note cliente: </span>{{ orderCustomerNotes(order) }}</p>
                             <p v-if="order.notes" class="whitespace-pre-line break-words"><span class="font-semibold">Note ordine: </span>{{ order.notes }}</p>
-                            <JourneyExecutionOrderEditor v-if="canManage && journey.status === 'attivo' && order.execution_status === 'pending'" :order="order" :has-trailer="!!journey.trailer_id" :show-original-plan="canViewExecutionHistory" :lookups="executionCatalogs" :census="journey.load_census_items ?? []" :busy="isLoading" @command="executeCommand" />
+                            <JourneyExecutionOrderEditor v-if="canManage && journey.status === 'attivo' && order.execution_status === 'pending'" :order="order" :balance="journey.container_balance" :has-trailer="!!journey.trailer_id" :show-original-plan="canViewExecutionHistory" :lookups="executionCatalogs" :census="journey.load_census_items ?? []" :busy="isLoading" @command="executeCommand" />
                             <JourneyOrderMaterials v-else :show-original-plan="canViewExecutionHistory" :order="order" :census="journey.load_census_items ?? []" :completed="isSelectedCompleted" />
                             <p v-if="order.execution_status === 'released'" class="text-warning">Ordine rilasciato alla Logistica: nessuna movimentazione eseguita.</p>
                         </article>
                     </section>
+                    <JourneyStopOutcomeActions v-if="canManage && journey.status === 'attivo' && isCurrentSelected" id-prefix="detail-outcome" :busy="isLoading" :skip-reasons="skipReasons" v-model:skip-panel-open="skipPanelOpen" v-model:skip-form="skipForm" @complete="completeCurrentStop" @skip="confirmSkip" />
                 </template>
             </section>
         </div>
@@ -118,6 +106,7 @@ import DisclosureCard from '@/Components/UI/DisclosureCard.vue'
 import JourneyWarehouseExecution from '@/Components/Journey/JourneyWarehouseExecution.vue'
 import JourneyExecutionOrderEditor from '@/Components/Journey/JourneyExecutionOrderEditor.vue'
 import JourneyExecutionTools from '@/Components/Journey/JourneyExecutionTools.vue'
+import JourneyStopOutcomeActions from './Components/JourneyStopOutcomeActions.vue'
 import JourneyStopsPanel from './Components/JourneyStopsPanel.vue'
 import JourneyVehicleSummary from '@/Components/Journey/JourneyVehicleSummary.vue'
 import JourneyStopContacts from './Components/JourneyStopContacts.vue'
@@ -140,6 +129,19 @@ const props = defineProps({
 })
 
 const journey = ref(props.journey)
+const headerOpen = ref(props.journey.header_open_on_entry ?? true)
+const preferenceBusy = ref(false)
+const saveHeaderPreference = async value => {
+    if (preferenceBusy.value) return
+    preferenceBusy.value = true
+    try {
+        const response = await axios.patch(`/api/journeys/${journey.value.id}/driver-preferences`, {header_open_on_entry:value})
+        journey.value.header_open_on_entry = response.data.preferences.header_open_on_entry
+        notify('success', 'Preferenza di apertura della testata salvata.')
+    } catch (error) {
+        notify('error', error?.response?.data?.message || 'Preferenza non salvata. Riprova.')
+    } finally { preferenceBusy.value = false }
+}
 const executionCatalogs = ref(props.executionLookups)
 watch(() => props.executionLookups, value => { executionCatalogs.value = value })
 const startReorderPrompt = ref(false), startReorderError = ref('')
@@ -350,7 +352,7 @@ const executeCommand = async (operation, input = {}, onSaved = null) => {
             : operation === 'set_item_allocations' ? 'Suddivisione salvata correttamente.'
             : operation === 'set_item_loaded' ? (input.is_loaded ? 'Carico aggiornato.' : 'Materiale da ritirare.')
             : operation === 'undo_restore' ? 'Ripristino annullato.'
-            : ['add_item','update_item'].includes(operation) ? materialCommandMessage(operation,input,response.data.journey,previousJourney)
+            : ['add_item','update_item','remove_item','restore_item','hide_removed_item'].includes(operation) ? materialCommandMessage(operation,input,response.data.journey,previousJourney)
             : operation === 'reopen' ? 'Tappa riaperta correttamente.'
             : undoAction.value ? 'Valore ripristinato correttamente.' : 'Modifica salvata correttamente.')
         return true

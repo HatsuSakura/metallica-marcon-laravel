@@ -12,13 +12,14 @@
                 <p v-else class="mt-2 text-sm opacity-70">{{ selected.original.reason }}</p>
             </template>
             <p v-if="!selected.previous.available" class="mt-2 text-sm opacity-70">{{ selected.previous.reason }}</p>
-            <div class="mt-3 flex flex-wrap gap-2"><button v-for="action in actions" :key="action.operation" type="button" class="btn btn-outline h-auto min-h-12 max-w-full whitespace-normal" :disabled="busy || dirty" @click="emit('command', action.operation, {item_id:itemId,field})">{{ action.label }}</button></div>
+            <div class="mt-3 flex flex-wrap gap-2"><AppAction variant="function" v-for="action in actions" :key="action.operation" type="button" class="max-w-full whitespace-normal" :disabled="busy || dirty" @click="emit('command', action.operation, {item_id:itemId,field})">{{ action.label }}</AppAction></div>
             <p v-if="actions.length" class="mt-2 text-xs opacity-70">Puoi annullare il ripristino dal messaggio di conferma.</p>
         </template>
         <p v-else class="mt-2 text-sm opacity-70">Nessun valore ripristinabile.</p>
     </details>
 </template>
 <script setup>
+import AppAction from '@/Components/UI/AppAction.vue'
 import {computed, ref} from 'vue'
 import {restoreActions, restoreFields} from '@/utils/journeyRestore'
 const props = defineProps({itemId:Number, options:{type:Object,default:()=>({})}, fields:{type:Array,default:()=>restoreFields}, busy:Boolean, dirty:Boolean})

@@ -8,7 +8,7 @@ class JourneyExecutionItem extends Model
 {
     protected $guarded = [];
 
-    protected $casts = ['data' => 'array', 'removed' => 'boolean', 'is_loaded' => 'boolean', 'actual_containers' => 'integer', 'actual_weight_kg' => 'decimal:3'];
+    protected $casts = ['hidden_from_driver' => 'boolean', 'data' => 'array', 'removed' => 'boolean', 'is_loaded' => 'boolean', 'actual_containers' => 'integer', 'actual_weight_kg' => 'decimal:3'];
 
     public function allocations()
     {

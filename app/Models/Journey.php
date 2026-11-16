@@ -19,6 +19,7 @@ class Journey extends Model implements AuditableContract
     protected $keepOldVersions = true; // Keep all versions of the model
 
     protected $casts = [
+        'header_open_on_entry' => 'boolean',
         'status' => JourneyStatus::class,
         'dispatch_status' => DispatchStatus::class,
         'plan_version' => 'integer',

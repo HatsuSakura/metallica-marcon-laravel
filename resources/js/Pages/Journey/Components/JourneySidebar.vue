@@ -30,6 +30,7 @@ const props = defineProps({
   ordiniCaricoRiempimento: [Number, String],
   manualStopOrder: Array,
   stopsByKey: Object,
+  submitDisabled: Boolean,
   submitLabel: {
     type: String,
     default: 'Crea Viaggio',
@@ -295,6 +296,7 @@ const stopOrderModel = computed({
       <div class="mb-2">
         <button
           type="submit"
+          :disabled="submitDisabled || form.processing"
           class="btn btn-primary"
         >
           <font-awesome-icon :icon="['fas', 'floppy-disk']" class="text-xl"/>

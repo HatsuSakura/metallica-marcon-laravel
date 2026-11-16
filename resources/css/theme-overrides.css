@@ -1,34 +1,34 @@
-/* UI overrides (theme-specific)
-   Keep all visual exceptions/custom tweaks here. */
+/* Shared DaisyUI 4 controls. Theme tokens remain authoritative in both themes. */
+[data-theme='lighttheme'] { color-scheme: light; }
+[data-theme='darktheme'] { color-scheme: dark; }
 
-.label{
-  padding-top:0;
-  padding-bottom: 0;
+.label { padding-top: 0; padding-bottom: 0; }
+[data-theme] .label,
+[data-theme] .label-text,
+[data-theme] .input:not(.input-primary, .input-secondary, .input-accent, .input-info, .input-success, .input-warning, .input-error),
+[data-theme] .select:not(.select-primary, .select-secondary, .select-accent, .select-info, .select-success, .select-warning, .select-error),
+[data-theme] .textarea:not(.textarea-primary, .textarea-secondary, .textarea-accent, .textarea-info, .textarea-success, .textarea-warning, .textarea-error) {
+  color: var(--fallback-bc, oklch(var(--bc) / 1));
 }
-
-/* Base light look */
-@media (prefers-color-scheme: light) {
-  .label,
-  .label-text {
-    color: #333333 !important;
-  }
+[data-theme] .input-bordered:not(.input-primary, .input-secondary, .input-accent, .input-info, .input-success, .input-warning, .input-error),
+[data-theme] .select-bordered:not(.select-primary, .select-secondary, .select-accent, .select-info, .select-success, .select-warning, .select-error),
+[data-theme] .textarea-bordered:not(.textarea-primary, .textarea-secondary, .textarea-accent, .textarea-info, .textarea-success, .textarea-warning, .textarea-error) {
+  border-color: var(--fallback-bc, oklch(var(--bc) / .5));
 }
-
-/* Dark look aligned with system dark mode */
-@media (prefers-color-scheme: dark) {
-  .label,
-  .label-text {
-    color: #cccccc !important;
-  }
+[data-theme] .input::placeholder,
+[data-theme] .textarea::placeholder {
+  color: var(--fallback-bc, oklch(var(--bc) / .75));
 }
-
-/* Theme-explicit fallback (when app forces data-theme) */
-[data-theme='lighttheme'] .label,
-[data-theme='lighttheme'] .label-text {
-  color: #333333 !important;
-}
-
-[data-theme='darktheme'] .label,
-[data-theme='darktheme'] .label-text {
-  color: #cccccc !important;
+/* Preserve DaisyUI semantic borders over legacy generic .input utilities. */
+[data-theme] :is(.input-primary, .select-primary, .textarea-primary) { border-color: var(--fallback-p, oklch(var(--p) / 1)); }
+[data-theme] :is(.input-secondary, .select-secondary, .textarea-secondary) { border-color: var(--fallback-s, oklch(var(--s) / 1)); }
+[data-theme] :is(.input-accent, .select-accent, .textarea-accent) { border-color: var(--fallback-a, oklch(var(--a) / 1)); }
+[data-theme] :is(.input-info, .select-info, .textarea-info) { border-color: var(--fallback-in, oklch(var(--in) / 1)); }
+[data-theme] :is(.input-success, .select-success, .textarea-success) { border-color: var(--fallback-su, oklch(var(--su) / 1)); }
+[data-theme] :is(.input-warning, .select-warning, .textarea-warning) { border-color: var(--fallback-wa, oklch(var(--wa) / 1)); }
+[data-theme] :is(.input-error, .select-error, .textarea-error) { border-color: var(--fallback-er, oklch(var(--er) / 1)); }
+/* Stable targets: DaisyUI's entry pop must not move controls under the pointer. */
+.btn { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .btn, .input, .select, .textarea { transition: none; }
 }

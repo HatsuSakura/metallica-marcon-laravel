@@ -417,6 +417,7 @@ Route::prefix('api')
         Route::put('/journeys/{journey}/sites/{site}/notes', [\App\Http\Controllers\API_JourneySiteNotesController::class, 'update'])->name('api.journey.site-notes.update');
         Route::get('/journeys/{journey}/execution', [\App\Http\Controllers\API_JourneyExecutionController::class, 'read']);
         Route::get('/journeys/{journey}/execution/history', [\App\Http\Controllers\API_JourneyExecutionController::class, 'history']);
+        Route::patch('/journeys/{journey}/driver-preferences', [\App\Http\Controllers\API_JourneyExecutionController::class, 'preferences']);
         Route::post('/journeys/{journey}/execution/commands', [\App\Http\Controllers\API_JourneyExecutionController::class, 'command']);
         Route::match(['get','post'], '/journeys/{journey}/execution/orders/{executionOrder}/documents', [\App\Http\Controllers\API_ExecutionDocumentsController::class, 'documents']);
         Route::get('/journeys/{journey}/execution/orders/{executionOrder}/documents/{document}/download', [\App\Http\Controllers\API_ExecutionDocumentsController::class, 'download']);

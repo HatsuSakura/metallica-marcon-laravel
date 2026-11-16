@@ -42,6 +42,16 @@ class ContainerBalance
         return ['groups' => array_values($groups), 'has_shortage' => collect($groups)->contains(fn ($group) => ! $group['missing'] && $group['quantity'] < 0)];
     }
 
+    public function assertAvailable(array $departureOrders, Collection $executions): void
+    {
+        foreach ($this->calculate($departureOrders, $executions)['groups'] as $group) {
+            abort_if($group['missing'] && $group['delivered_quantity'] > 0, 422,
+                "Disponibilità di {$group['type']} non determinabile: verifica i vuoti prima di confermare la consegna.");
+            abort_if(!$group['missing'] && $group['quantity'] < 0, 422,
+                "Non puoi consegnare più {$group['type']} dei vuoti disponibili: dotazione {$group['initial_quantity']}, totale consegnato richiesto {$group['delivered_quantity']}. Riduci la consegna.");
+        }
+    }
+
     private function key(array $holder, mixed $sourceId, ?int $executionId = null): string
     {
         if (($holder['holder_id'] ?? null) !== null) {

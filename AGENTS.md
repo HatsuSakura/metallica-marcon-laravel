@@ -11,6 +11,8 @@ the task; preserve the deterministic domain and validated-JSON NLP boundaries.
 
 ## Implementation and UI conventions
 
+Follow [DESIGN.md](DESIGN.md), the approved app-wide UX/UI convention. Use the current DaisyUI 4 / Tailwind 3 / Laravel 11 stack; apply the convention incrementally through shared components. The menu bar is an explicit exception: clean icon controls without visible circles/borders. Phone-call buttons are always success green. Save/confirm actions are success filled; discard/cancel actions are error outline; irreversible-delete confirmations are error filled. Opening edit/add functions stays primary outline.
+
 Keep changes organic and modular: implement shared application behavior in
 shared layouts/components, not page-name conditionals or duplicated per-page
 patches. In particular, application navigation and responsive headers belong
@@ -41,7 +43,8 @@ Privilegiare il poco consumo di spazio verticale, collocando le azioni sulla
 stessa riga del contenuto quando rimane leggibile. I pulsanti con sola icona
 devono essere riconoscibili anche senza hover: usare forme e bordi visibili
 (per esempio `btn-circle btn-outline`), non `btn-ghost` come unica indicazione
-di interattività. Mantenere un'area di tocco adeguata e un nome accessibile.
+di interattività, fatta eccezione per la barra menu comune (icone pulite
+senza cerchi/bordi, con target e focus accessibili). Mantenere un'area di tocco adeguata e un nome accessibile.
 
 I messaggi di esito devono descrivere l'operazione per l'utente, includendo
 identificativi utili come il CER quando disponibili. Non spiegare nel feedback

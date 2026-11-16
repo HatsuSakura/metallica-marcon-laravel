@@ -40,7 +40,7 @@ class ExecutionProjection
         $originalOrder = collect($baseline['orders'] ?? [])->firstWhere('id', $execution->source_order_id);
         $order->setAttribute('original_plan', $originalOrder ? ['items' => $originalOrder['items'], 'holders' => $originalOrder['holders']] : null);
         $originalItems = collect($baseline['orders'] ?? [])->flatMap(fn ($o) => $o['items'] ?? [])->keyBy('id');
-        $order->setAttribute('removed_items', $execution->items->where('removed', true)->map(fn ($i) => ['id' => $i->id, 'description' => $i->data['description'] ?? '', 'cer_code' => $i->data['cer_code']['code'] ?? ''])->values()->all());
+        $order->setAttribute('removed_items', $execution->items->where('removed', true)->where('hidden_from_driver', false)->map(fn ($i) => ['id' => $i->id, 'description' => $i->data['description'] ?? '', 'cer_code' => $i->data['cer_code']['code'] ?? ''])->values()->all());
         foreach (['documents_base_path', 'documents_status', 'documents_version', 'documents_generated_at', 'documents_error', 'documents_input_hash', 'documents_requested_hash', 'documents_generation_started_at'] as $field) {
             $order->setAttribute($field, $execution->getRawOriginal($field));
         }

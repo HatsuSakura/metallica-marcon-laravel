@@ -1,0 +1,15 @@
+
+> build
+> vite build
+
+vite v5.4.2 building for production...
+transforming...
+✓ 1361 modules transformed.
+rendering chunks...
+computing gzip size...
+public/build/manifest.json                            0.51 kB │ gzip:     0.21 kB
+public/build/assets/theme-overrides-Ci1LHUKh.css      0.37 kB │ gzip:     0.16 kB
+public/build/assets/app-fjrpHLCM.css                 47.04 kB │ gzip:     8.99 kB
+public/build/assets/tailwind-CcdTV2UK.css           170.38 kB │ gzip:    24.89 kB
+public/build/assets/app-Ckp6Srdb.js               3,292.40 kB │ gzip: 1,062.46 kB
+✓ built in 8.03s

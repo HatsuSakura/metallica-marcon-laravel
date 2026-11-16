@@ -56,7 +56,10 @@ class JourneyContainerBalanceTest extends JourneyExecutionTestCase
         $balance = $this->balance();
         $this->assertSame(0, collect($balance['groups'])->firstWhere('holder_id', 2)['quantity']);
         $new = JourneyOrderExecution::find(1)->holders()->whereNull('source_order_holder_id')->first();
-        $this->command('update_holder', ['holder_id' => $new->id, 'actual_delivered' => 1]);
+        $this->conflict(fn () => $this->command('update_holder', ['holder_id' => $new->id, 'actual_delivered' => 1]), 422);
+        $this->assertNull($new->fresh()->actual_delivered);
+        // Legacy inconsistencies remain visible rather than being silently clamped.
+        DB::table('journey_execution_holders')->where('id', $new->id)->update(['actual_delivered' => 1]);
         $balance = $this->balance();
         $this->assertSame(-1, collect($balance['groups'])->firstWhere('holder_id', 2)['quantity']);
         $this->assertTrue($balance['has_shortage']);

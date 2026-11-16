@@ -1,0 +1,124 @@
+
+   PASS  Tests\Feature\DriverDashboardTest
+  ✓ italian day scope order progress and active outside day              0.17s  
+  ✓ daylight saving day includes 25 hours                                0.02s  
+  ✓ invalid date is rejected                                             0.02s  
+
+   PASS  Tests\Feature\DriverJourneyNavigationTest
+  ✓ old index redirects to dashboard and preserves a valid selected dat… 0.11s  
+  ✓ history and management share the workspace with distinct readonly m… 0.03s  
+  ✓ other drivers cannot open the journey                                0.03s  
+  ✓ guest cannot reach retired index                                     0.02s  
+
+   PASS  Tests\Feature\DriverUatFollowupTest
+  ✓ removed material can be restored with allocations but hidden materi… 0.29s  
+  ✓ restore enforces revision pending order and driver scope             0.12s  
+  ✓ driver edits only effective deliveries and zero survives completion  0.29s  
+  ✓ header preference is per journey authorized and does not change doc… 0.18s  
+  ✓ email change invalidates verification and sends only to new address… 0.15s  
+  ✓ changed address accepts manual resend and rejects other driver       0.08s  
+  ✓ unchanged planning save preserves stop ids revision and documents e… 0.10s  
+  ✓ real planning change invalidates documents without resetting busine… 0.13s  
+  ✓ stale generation does not permanently block saving or a new attempt  0.15s  
+  ✓ planning edit during generation is rejected and stale document job…  0.11s  
+
+   PASS  Tests\Feature\JourneyContainerBalanceTest
+  ✓ residual uses departure totals even if current delivery plan change… 0.45s  
+  ✓ actual corrections and skipped stops leave physical stock coherent   0.18s  
+  ✓ new types do not create stock and negative balances are not clamped  0.16s  
+  ✓ zero and missing completed actuals remain distinct                   0.17s  
+  ✓ delivery command response and reload expose updated residuals        0.19s  
+
+   PASS  Tests\Feature\JourneyConvoyBoundaryTest
+  ✓ logistics can change planned convoy before departure                 0.24s  
+  ✓ started convoy cannot be changed through execution api even with nu… 0.19s  
+  ✓ domain command also protects convoy and still allows notes           0.17s  
+
+   PASS  Tests\Feature\JourneyExecutionMaterialsTest
+  ✓ driver adds a new cer and updates existing item only in execution    0.34s  
+  ✓ new material keeps explicit actual zero and completed order require… 0.18s  
+
+   PASS  Tests\Feature\JourneyExecutionTest
+  ✓ departure is atomic idempotent and freezes aggregate                 0.19s  
+  ✓ skip releases order immediately and old execution survives replanni… 0.12s  
+  ✓ revision conflict rolls back and double commitment is rejected       0.12s  
+  ✓ previous and original restore are new events without history loss    0.17s  
+  ✓ pickup and delivery are independent and partial stop cannot release  0.15s  
+  ✓ document hash has both triggers and reprint is read only             0.19s  
+  ✓ missing documents prevent partial departure and legacy is not rebas… 0.08s  
+  ✓ real document generation preserves state and uses execution quantit… 1.03s  
+  ✓ source model writes are blocked after departure even outside http    0.10s  
+  ✓ http authorization revision history and planning boundary            0.19s  
+  ✓ finish requires all stops and reopen preserves baseline              0.14s  
+  ✓ warehouse records reference execution and cannot change planned ite… 0.13s  
+  ✓ new material stop reorder and noop share the same protocol           0.17s  
+  ✓ archived customer keeps its company name in stop details             0.06s  
+  ✓ unchanged values do not create revisions or invalidate documents     0.13s  
+  ✓ driver cannot record warehouse events                                0.11s  
+  ✓ restoring cer and holder recovers their original metadata            0.13s  
+
+   PASS  Tests\Feature\JourneyHistoryVisibilityTest
+  ✓ history is reserved for logistics developer and admin roles          0.65s  
+
+   PASS  Tests\Feature\JourneyItemCargoLocationTest
+  ✓ planned item allocation precedes order default and capacity has no…  0.08s  
+  ✓ location is saved per item and restored without changing the order…  0.19s  
+  ✓ capacity items remain unselected until the driver chooses            0.16s  
+  ✓ driver selection is returned immediately and persisted on reload     0.17s  
+  ✓ api prevents nonexistent trailer and records driver selection        0.13s  
+
+   PASS  Tests\Feature\JourneyRestorationTest
+  ✓ preview exposes saved values and merges coincident targets           0.27s  
+  ✓ undo previous restoration restores value and reenables undo stack    0.17s  
+  ✓ undo original restoration does not erase or replay cancelled histor… 0.14s  
+  ✓ stale or arbitrary events cannot be undone                           0.14s  
+  ✓ added and removed items have explicit safe previews                  0.14s  
+  ✓ zero is not confused with unregistered actuals                       0.15s  
+  ✓ http response supplies undo and keeps every operation audited        0.19s  
+
+   PASS  Tests\Feature\JourneySiteNotesTest
+  ✓ assigned driver updates only live notes with actor and diff without… 0.32s  
+  ✓ conflicting edits keep the first save and preserve notes from other… 0.17s  
+  ✓ only assigned driver or control roles can edit sedes belonging to t… 0.13s  
+  ✓ before departure after finish and released sites are not editable    0.14s  
+  ✓ validation deleted sites and history visibility                      0.16s  
+
+   PASS  Tests\Feature\JourneySplitAndChecklistTest
+  ✓ split is two allocations of one item and preserves original plan     0.27s  
+  ✓ invalid totals and locations do not partially write                  0.14s  
+  ✓ checklist is persistent and independent of stop completion and quan… 0.22s  
+  ✓ quantity changes require reconciliation instead of silently rebalan… 0.22s  
+  ✓ cargo restore and undo keep the split consistent                     0.18s  
+  ✓ split uses actual total and rejects bulk single container or missin… 0.16s  
+  ✓ driver api commands enforce scope revision and roundtrip the checkl… 0.18s  
+
+   PASS  Tests\Feature\JourneyStartReorderTest
+  ✓ driver cannot reorder the plan and start returns everything needed…  0.31s  
+  ✓ blocked start keeps the original plan and does not enable reorder    0.06s  
+  ✓ another driver cannot start or reorder this journey                  0.05s  
+
+   PASS  Tests\Feature\JourneyStopReopeningTest
+  ✓ reopening returns current focus preserving actuals and first start   0.22s  
+  ✓ recompletion does not duplicate orders items deliveries or reservat… 0.10s  
+  ✓ receipt and reassignment have visible block reasons and no side eff… 0.14s  
+  ✓ multi order reopening is atomic when one order is blocked            0.12s  
+  ✓ ended journey reopens without recapturing baseline but closed journ… 0.11s  
+  ✓ http reopening is persistent and rejects other drivers and stale re… 0.15s  
+  ✓ reopening is disabled if driver has started another journey          0.13s  
+  ✓ archived source does not allow reopening but keeps execution readab… 0.12s  
+
+   PASS  Tests\Feature\MoveDriverJourneysToTodayTest
+  ✓ preview apply timezone duration scope and idempotence                0.28s  
+  ✓ environment and explicit scope are required                          0.02s  
+
+   PASS  Tests\Feature\SiteContactsTest
+  ✓ create update and fixed category values                              0.07s  
+  ✓ invalid categories and contact data are rejected without writes      0.05s  
+  ✓ category is required for creation and update of uncategorized conta… 0.07s  
+  ✓ update cannot move or edit a contact of another site                 0.06s  
+  ✓ permission matrix for creation and editing                           0.08s  
+  ✓ active driver phonebook updates without changing the baseline or ex… 0.13s  
+
+  Tests:    88 passed (609 assertions)
+  Duration: 14.75s
+

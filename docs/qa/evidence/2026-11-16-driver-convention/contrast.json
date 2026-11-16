@@ -1,0 +1,46 @@
+[
+  {
+    "theme": "lighttheme",
+    "saveContrast": 7.808543455709837,
+    "cancelContrast": 6.4700447145121895,
+    "confirmContrast": 5.007517060683108,
+    "fieldContrast": 17.73971700407407,
+    "fieldBorderContrast": 3.40631360566598,
+    "nativeScheme": "light",
+    "errorBorderPreserved": true,
+    "actual": [
+      185,
+      28,
+      28,
+      1
+    ],
+    "expected": [
+      185,
+      28,
+      28,
+      1
+    ]
+  },
+  {
+    "theme": "darktheme",
+    "saveContrast": 5.3767959415837785,
+    "cancelContrast": 6.413155644503334,
+    "confirmContrast": 8.019649340860942,
+    "fieldContrast": 16.119468339438853,
+    "fieldBorderContrast": 4.861828681572581,
+    "nativeScheme": "dark",
+    "errorBorderPreserved": true,
+    "actual": [
+      248,
+      113,
+      113,
+      1
+    ],
+    "expected": [
+      248,
+      113,
+      113,
+      1
+    ]
+  }
+]

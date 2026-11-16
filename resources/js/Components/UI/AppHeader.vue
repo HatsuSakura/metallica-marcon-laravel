@@ -1,20 +1,20 @@
 <template>
     <header class="fixed top-0 z-50 h-16 w-full border-b border-base-300 bg-base-100 shadow-sm">
         <nav class="mx-auto flex h-full w-full min-w-0 items-center gap-1 px-2 sm:gap-3 sm:px-4" aria-label="Navigazione principale">
-            <button type="button" class="btn btn-circle btn-ghost min-h-12 shrink-0" aria-label="Apri menu di navigazione" aria-controls="application-navigation" :aria-expanded="menuOpen" @click="$emit('toggle-menu')">
+            <button type="button" class="btn btn-square btn-ghost min-h-12 shrink-0" aria-label="Apri menu di navigazione" aria-controls="application-navigation" :aria-expanded="menuOpen" @click="$emit('toggle-menu')">
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" class="h-6 w-6 stroke-current"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
             <Link :href="user ? route('dashboard') : route('login')" class="min-w-0 flex-1 truncate text-base font-semibold sm:text-xl">Metallica Marcon</Link>
-            <button type="button" class="btn btn-circle btn-ghost min-h-12 shrink-0" :aria-label="darkTheme ? 'Attiva tema chiaro' : 'Attiva tema scuro'" :aria-pressed="darkTheme" @click="$emit('toggle-theme', !darkTheme)">
+            <button type="button" class="btn btn-square btn-ghost min-h-12 shrink-0" :aria-label="darkTheme ? 'Attiva tema chiaro' : 'Attiva tema scuro'" :aria-pressed="darkTheme" @click="$emit('toggle-theme', !darkTheme)">
                 <font-awesome-icon :icon="['fas', darkTheme ? 'moon' : 'sun']" class="h-5 w-5" aria-hidden="true" />
             </button>
             <template v-if="user">
-                <Link :href="route('notification.index')" class="btn btn-circle btn-ghost relative min-h-12 shrink-0" :aria-label="notificationsCount ? `Notifiche: ${notificationsCount} non lette` : 'Notifiche'">
+                <Link :href="route('notification.index')" class="btn btn-square btn-ghost relative min-h-12 shrink-0" :aria-label="notificationsCount ? `Notifiche: ${notificationsCount} non lette` : 'Notifiche'">
                     <font-awesome-icon :icon="['fas', 'bell']" class="h-5 w-5" aria-hidden="true" />
                     <span v-if="notificationsCount" class="badge badge-error badge-xs absolute right-0 top-0" aria-hidden="true">{{ notificationsCount }}</span>
                 </Link>
                 <details ref="accountMenu" class="dropdown dropdown-end shrink-0" @keydown.esc="closeAccountMenu">
-                    <summary class="btn btn-ghost min-h-12 list-none px-3" aria-label="Menu account">
+                    <summary class="btn btn-ghost h-12 w-12 min-h-12 list-none p-0 md:w-auto md:gap-2 md:px-3" aria-label="Menu account">
                         <font-awesome-icon :icon="['fas', 'user']" class="h-5 w-5" aria-hidden="true" />
                         <span class="hidden max-w-48 truncate md:inline">{{ user.name }} {{ user.surname }}</span>
                     </summary>

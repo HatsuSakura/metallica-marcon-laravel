@@ -234,21 +234,22 @@
       stops: [],
     })
     
-    const updateJourney = () => {
+    const buildJourneyPayload = () => {
+      const payload = {...form.data()}
       // Before submitting, format the date correctly
-      form.planned_start_at = formatServerDateTime(form.planned_start_at);
-      form.planned_end_at   = formatServerDateTime(form.planned_end_at);
+      payload.planned_start_at = formatServerDateTime(payload.planned_start_at);
+      payload.planned_end_at   = formatServerDateTime(payload.planned_end_at);
       // Map each list to only send IDs
-      form.orders_truck    = listMotrice.value.map(order => order.id);
-      form.orders_trailer  = listRimorchio.value.map(order => order.id);
-      form.orders_fulfill = listRiempimento.value.map(order => order.id);
-      form.compartments = {
-        truck: form.orders_truck,
-        trailer: form.orders_trailer,
-        fulfill: form.orders_fulfill,
+      payload.orders_truck    = listMotrice.value.map(order => order.id);
+      payload.orders_trailer  = listRimorchio.value.map(order => order.id);
+      payload.orders_fulfill = listRiempimento.value.map(order => order.id);
+      payload.compartments = {
+        truck: payload.orders_truck,
+        trailer: payload.orders_trailer,
+        fulfill: payload.orders_fulfill,
       }
 
-      form.stops = orderedStopsForSubmit.value.map(s => ({
+      payload.stops = orderedStopsForSubmit.value.map(s => ({
         kind: s.kind,
         customer_id: s.kind === 'customer' ? (s.customer_id ?? null) : null,
         customer_visit_index: s.kind === 'customer' ? (s.customer_visit_index ?? 1) : null,
@@ -263,6 +264,16 @@
         orders: s.orders ?? [],
       }))
 
+      delete payload.compartments
+      return payload
+    }
+    const savedJourneyPayload = ref(null)
+    const documentsBusy = ref(true)
+    const journeyDirty = computed(() => savedJourneyPayload.value !== null && JSON.stringify(buildJourneyPayload()) !== savedJourneyPayload.value)
+    const saveDisabled = computed(() => form.processing || documentsBusy.value || !journeyDirty.value)
+    const updateJourney = () => {
+      if (saveDisabled.value) return
+      form.transform(() => buildJourneyPayload())
       form.put(route('journey.update', { journey: props.journey.id }), {
         onError: (errors) => {
           const keys = Object.keys(errors || {})
@@ -737,8 +748,10 @@ const hydrateFromJourney = () => {
 }
 
 // Set up event listeners on mount and clean up on unmount
-onMounted(() => {
+onMounted(async () => {
   hydrateFromJourney()
+  await nextTick()
+  savedJourneyPayload.value = JSON.stringify(buildJourneyPayload())
 
   eventBus.on('setOrderToTruckList', handleSetToTruck);
   eventBus.on('setOrderToTrailerList', handleSetToTrailer);
@@ -1136,6 +1149,8 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
           <JourneyDocumentGenerationPanel
             :journey-id="props.journey.id"
             :selected-orders="selectedJourneyOrders"
+            :disabled="journeyDirty || form.processing"
+            @busy="documentsBusy = $event"
           />
 
         </div>
@@ -1167,6 +1182,7 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
             :ordini-carico-riempimento="ordiniCaricoRiempimento"
             :stops-by-key="stopsByKey"
             :submit-label="'Salva viaggio'"
+            :submit-disabled="saveDisabled"
             @dragging="isDraggingStops = $event"
             @open-stops-manager="openStopsDrawer"
           />

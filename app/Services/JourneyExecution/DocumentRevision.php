@@ -42,7 +42,7 @@ class DocumentRevision
     {
         $result = [];
         foreach ($data as $key => $value) {
-            if (is_string($key) && (str_starts_with($key, 'documents_') || in_array($key, ['created_at', 'updated_at', 'deleted_at']))) {
+            if (is_string($key) && (str_starts_with($key, 'documents_') || in_array($key, ['created_at', 'updated_at', 'deleted_at', 'header_open_on_entry', 'hidden_from_driver']))) {
                 continue;
             }
             $result[$key] = is_array($value) ? $this->canonical($value) : $value;

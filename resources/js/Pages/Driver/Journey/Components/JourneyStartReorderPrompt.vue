@@ -5,12 +5,13 @@
         <p>Avviando ora, verrà registrato l’inizio effettivo del viaggio.</p>
         <p v-if="error" role="alert" class="text-error">{{ error }}</p>
         <div class="grid grid-cols-2 gap-2">
-            <button type="button" class="btn btn-outline min-h-12" :disabled="busy" @click="$emit('cancel')">Annulla</button>
-            <button type="button" class="btn btn-primary h-auto min-h-12 whitespace-normal px-2 py-2" :disabled="busy" @click="$emit('confirm')">{{ busy ? 'Avvio…' : 'Avvia e riordina' }}</button>
+            <AppAction type="button" :disabled="busy" @click="$emit('cancel')" variant="cancel">Annulla</AppAction>
+            <AppAction type="button" class="whitespace-normal px-2 py-2" :disabled="busy" @click="$emit('confirm')" variant="confirm">{{ busy ? 'Avvio…' : 'Avvia e riordina' }}</AppAction>
         </div>
     </section>
 </template>
 <script setup>
+import AppAction from '@/Components/UI/AppAction.vue'
 defineProps({busy:Boolean,error:String})
 defineEmits(['confirm','cancel'])
 </script>

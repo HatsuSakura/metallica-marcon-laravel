@@ -42,3 +42,15 @@ test('confirmation explicitly records departure and shows blocked-start errors',
     const busy=await renderToString(createSSRApp(Prompt,{busy:true}))
     assert.equal((busy.match(/ disabled/g)||[]).length,2)
 })
+test('stop cards expose editable site notes before contacts and keep readonly history protected',async()=>{
+    const contactSite={...site,internal_contacts:[{id:1,name:'Mario',surname:'Referente',mobile:'3331234567'}]}
+    const stop={id:1,kind:'customer',status:'in_progress',sequence:1,orders:[order(1,contactSite)]}
+    const html=await renderToString(createSSRApp(Stops,{stops:[stop],currentStopId:1,readOnly:false}))
+    assert.match(html,/Sbarra nuova:/)
+    assert.match(html,/Mario/)
+    assert.ok(html.indexOf('Sbarra nuova:')<html.indexOf('Mario'))
+    assert.match(html,/aria-label="Modifica note della sede"/)
+    const readonly=await renderToString(createSSRApp(Stops,{stops:[stop],readOnly:true}))
+    assert.match(readonly,/Sbarra nuova:/)
+    assert.doesNotMatch(readonly,/aria-label="Modifica note della sede"/)
+})

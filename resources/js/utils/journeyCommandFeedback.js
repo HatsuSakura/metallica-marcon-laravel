@@ -10,7 +10,11 @@ export const materialCommandMessage = (operation, input, updatedJourney, previou
     } else {
         item = orders.flatMap(order=>order.items || []).find(item=>String(item.id) === String(input.item_id))
     }
-    const code = item?.cer_code?.code?.toString().trim()
+    item ??= ordersIn(previousJourney).flatMap(order => [...(order.items || []), ...(order.removed_items || [])]).find(row => String(row.id) === String(input.item_id))
+    const code = (typeof item?.cer_code === 'string' ? item.cer_code : item?.cer_code?.code)?.toString().trim()
     const material = code ? `Materiale CER ${code}` : 'Materiale'
+    if (operation === 'remove_item') return `${material} rimosso. Puoi ripristinarlo dalla lista dei materiali rimossi.`
+    if (operation === 'restore_item') return `${material} ripristinato.`
+    if (operation === 'hide_removed_item') return `${material} eliminato dalla lista.`
     return operation === 'add_item' ? `${material} aggiunto correttamente all’ordine.` : `${material} modificato correttamente.`
 }

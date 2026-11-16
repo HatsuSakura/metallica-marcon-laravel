@@ -160,9 +160,22 @@ class JourneyExecutionService
                     $item->removed = true;
                     $item->save();
                     break;
+                case 'restore_item':
+                    $item = $this->item($j, $input['item_id']);
+                    abort_unless($item->removed && !$item->hidden_from_driver, 422, 'Il materiale non è disponibile per il ripristino.');
+                    abort_unless(app(ItemLoad::class)->valid($item), 422, 'La suddivisione del materiale non è più valida.');
+                    $item->removed = false;
+                    $item->save();
+                    break;
+                case 'hide_removed_item':
+                    $item = $this->item($j, $input['item_id']);
+                    abort_unless($item->removed, 422, 'Puoi nascondere soltanto un materiale rimosso.');
+                    $item->hidden_from_driver = true;
+                    $item->save();
+                    break;
                 case 'add_holder':
                     $e = $this->orderExecution($j, $input['execution_order_id']);
-                    JourneyExecutionHolder::create(['order_execution_id' => $e->id, 'data' => $this->holderData($input)]);
+                    JourneyExecutionHolder::create(['order_execution_id' => $e->id, 'data' => $this->holderData($input)] + Arr::only($input, ['actual_delivered']));
                     break;
                 case 'update_holder':
                     $holder = JourneyExecutionHolder::whereIn('order_execution_id', $j->orderExecutions()->where('status', 'pending')->select('id'))->findOrFail($input['holder_id']);
@@ -207,6 +220,10 @@ class JourneyExecutionService
                     DB::table('journeys')->where('id', $j->id)->update(['status' => 'eseguito', 'actual_end_at' => now()]);
                     break;
                 default: abort(422, 'Operazione esecutiva non supportata.');
+            }
+            if (in_array($operation, ['add_holder', 'update_holder', 'complete', 'finish'], true)) {
+                // Same journey lock as all execution commands: concurrent deliveries cannot overspend stock.
+                app(ContainerBalance::class)->assertAvailable($j->baseline->data['orders'], $j->orderExecutions()->with('holders')->get());
             }
             if (in_array($operation, ['update_item', 'remove_item', 'restore_original', 'restore_previous', 'undo_restore'], true)) {
                 $this->invalidateLoadChecks($j, $before);
@@ -413,7 +430,7 @@ class JourneyExecutionService
         return ['journey' => Arr::only($j->getAttributes(), ['status', 'actual_end_at']) + ['execution_data' => $j->execution_data ?? []],
             'stops' => DB::table('journey_stops')->where('journey_id', $j->id)->orderBy('id')->get()->keyBy('id')->map(fn ($s) => Arr::except((array) $s, ['created_at', 'updated_at']))->all(),
             'orders' => $j->orderExecutions()->get()->keyBy('id')->map(fn ($e) => ['status' => $e->status, 'data' => $e->data])->all(),
-            'items' => JourneyExecutionItem::whereIn('order_execution_id', $j->orderExecutions()->select('id'))->with(['orderExecution', 'allocations'])->get()->keyBy('id')->map(fn ($i) => ['is_loaded' => (bool) $i->is_loaded, 'allocations' => $i->allocations->mapWithKeys(fn ($allocation) => [$allocation->cargo_location => $allocation->containers])->all(), 'data' => app(ItemCargoLocation::class)->data($j, $i), 'actual_containers' => $i->actual_containers, 'actual_weight_kg' => $i->actual_weight_kg, 'removed' => $i->removed])->all(),
+            'items' => JourneyExecutionItem::whereIn('order_execution_id', $j->orderExecutions()->select('id'))->with(['orderExecution', 'allocations'])->get()->keyBy('id')->map(fn ($i) => ['is_loaded' => (bool) $i->is_loaded, 'allocations' => $i->allocations->mapWithKeys(fn ($allocation) => [$allocation->cargo_location => $allocation->containers])->all(), 'data' => app(ItemCargoLocation::class)->data($j, $i), 'actual_containers' => $i->actual_containers, 'actual_weight_kg' => $i->actual_weight_kg, 'removed' => $i->removed, 'hidden_from_driver' => (bool) $i->hidden_from_driver])->all(),
             'holders' => JourneyExecutionHolder::whereIn('order_execution_id', $j->orderExecutions()->select('id'))->get()->keyBy('id')->map(fn ($h) => ['data' => $h->data, 'actual_delivered' => $h->actual_delivered])->all()];
     }
 

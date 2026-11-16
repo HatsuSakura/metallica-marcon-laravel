@@ -1,0 +1,992 @@
+[
+  {
+    "view": "dashboard",
+    "theme": "lighttheme",
+    "width": 390,
+    "scrollWidth": 390,
+    "errors": [],
+    "buttons": [
+      {
+        "label": "Apri menu di navigazione",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Attiva tema scuro",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Notifiche",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost relative min-h-12 shrink-0"
+      },
+      {
+        "label": "Oggi",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 shrink-0"
+      },
+      {
+        "label": "←",
+        "height": 48,
+        "class": "btn btn-square min-h-12"
+      },
+      {
+        "label": "→",
+        "height": 48,
+        "class": "btn btn-square min-h-12"
+      },
+      {
+        "label": "Riprendi viaggio",
+        "height": 48,
+        "class": "btn min-h-12 w-full mt-2 btn-primary"
+      },
+      {
+        "label": "Apri viaggio",
+        "height": 48,
+        "class": "btn min-h-12 w-full mt-2 btn-outline"
+      }
+    ],
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
+  },
+  {
+    "view": "dashboard",
+    "theme": "darktheme",
+    "width": 390,
+    "scrollWidth": 390,
+    "errors": [],
+    "buttons": [
+      {
+        "label": "Apri menu di navigazione",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Attiva tema scuro",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Notifiche",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost relative min-h-12 shrink-0"
+      },
+      {
+        "label": "Oggi",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 shrink-0"
+      },
+      {
+        "label": "←",
+        "height": 48,
+        "class": "btn btn-square min-h-12"
+      },
+      {
+        "label": "→",
+        "height": 48,
+        "class": "btn btn-square min-h-12"
+      },
+      {
+        "label": "Riprendi viaggio",
+        "height": 48,
+        "class": "btn min-h-12 w-full mt-2 btn-primary"
+      },
+      {
+        "label": "Apri viaggio",
+        "height": 48,
+        "class": "btn min-h-12 w-full mt-2 btn-outline"
+      }
+    ],
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
+  },
+  {
+    "view": "dashboard",
+    "theme": "lighttheme",
+    "width": 768,
+    "scrollWidth": 768,
+    "errors": [],
+    "buttons": [
+      {
+        "label": "Apri menu di navigazione",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Attiva tema scuro",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Notifiche",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost relative min-h-12 shrink-0"
+      },
+      {
+        "label": "Oggi",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 shrink-0"
+      },
+      {
+        "label": "←",
+        "height": 48,
+        "class": "btn btn-square min-h-12"
+      },
+      {
+        "label": "→",
+        "height": 48,
+        "class": "btn btn-square min-h-12"
+      },
+      {
+        "label": "Riprendi viaggio",
+        "height": 48,
+        "class": "btn min-h-12 w-full mt-2 btn-primary"
+      },
+      {
+        "label": "Apri viaggio",
+        "height": 48,
+        "class": "btn min-h-12 w-full mt-2 btn-outline"
+      }
+    ],
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
+  },
+  {
+    "view": "dashboard",
+    "theme": "darktheme",
+    "width": 768,
+    "scrollWidth": 768,
+    "errors": [],
+    "buttons": [
+      {
+        "label": "Apri menu di navigazione",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Attiva tema scuro",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Notifiche",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost relative min-h-12 shrink-0"
+      },
+      {
+        "label": "Oggi",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 shrink-0"
+      },
+      {
+        "label": "←",
+        "height": 48,
+        "class": "btn btn-square min-h-12"
+      },
+      {
+        "label": "→",
+        "height": 48,
+        "class": "btn btn-square min-h-12"
+      },
+      {
+        "label": "Riprendi viaggio",
+        "height": 48,
+        "class": "btn min-h-12 w-full mt-2 btn-primary"
+      },
+      {
+        "label": "Apri viaggio",
+        "height": 48,
+        "class": "btn min-h-12 w-full mt-2 btn-outline"
+      }
+    ],
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
+  },
+  {
+    "view": "dashboard",
+    "theme": "lighttheme",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "errors": [],
+    "buttons": [
+      {
+        "label": "Apri menu di navigazione",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Attiva tema scuro",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Notifiche",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost relative min-h-12 shrink-0"
+      },
+      {
+        "label": "Oggi",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 shrink-0"
+      },
+      {
+        "label": "←",
+        "height": 48,
+        "class": "btn btn-square min-h-12"
+      },
+      {
+        "label": "→",
+        "height": 48,
+        "class": "btn btn-square min-h-12"
+      },
+      {
+        "label": "Riprendi viaggio",
+        "height": 48,
+        "class": "btn min-h-12 w-full mt-2 btn-primary"
+      },
+      {
+        "label": "Apri viaggio",
+        "height": 48,
+        "class": "btn min-h-12 w-full mt-2 btn-outline"
+      }
+    ],
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
+  },
+  {
+    "view": "dashboard",
+    "theme": "darktheme",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "errors": [],
+    "buttons": [
+      {
+        "label": "Apri menu di navigazione",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Attiva tema scuro",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Notifiche",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost relative min-h-12 shrink-0"
+      },
+      {
+        "label": "Oggi",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 shrink-0"
+      },
+      {
+        "label": "←",
+        "height": 48,
+        "class": "btn btn-square min-h-12"
+      },
+      {
+        "label": "→",
+        "height": 48,
+        "class": "btn btn-square min-h-12"
+      },
+      {
+        "label": "Riprendi viaggio",
+        "height": 48,
+        "class": "btn min-h-12 w-full mt-2 btn-primary"
+      },
+      {
+        "label": "Apri viaggio",
+        "height": 48,
+        "class": "btn min-h-12 w-full mt-2 btn-outline"
+      }
+    ],
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
+  },
+  {
+    "view": "workspace",
+    "theme": "lighttheme",
+    "width": 390,
+    "scrollWidth": 390,
+    "errors": [],
+    "buttons": [
+      {
+        "label": "Apri menu di navigazione",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Attiva tema chiaro",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Notifiche",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost relative min-h-12 shrink-0"
+      },
+      {
+        "label": "Torna ai viaggi",
+        "height": 48,
+        "class": "btn btn-square btn-outline min-h-12 shrink-0"
+      },
+      {
+        "label": "+ Aggiungi",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 px-3"
+      },
+      {
+        "label": "Riordina",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 px-3"
+      },
+      {
+        "label": "Tappa correnteCliente di esempio",
+        "height": 88,
+        "class": "block min-h-12 w-full rounded-xl p-3 text-left hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      },
+      {
+        "label": "Modifica note della sede",
+        "height": 42,
+        "class": "btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]"
+      },
+      {
+        "label": "Chiama Referente di esempio, Cell.: 3330000000",
+        "height": 42,
+        "class": "btn btn-success btn-square btn-sm h-[42px] min-h-[42px] w-[42px] min-w-[42px] shrink-0"
+      },
+      {
+        "label": "Salta",
+        "height": 48,
+        "class": "btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "Completa",
+        "height": 48,
+        "class": "btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "PianificataSosta di esempio",
+        "height": 84,
+        "class": "block min-h-12 w-full rounded-xl p-3 text-left hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      },
+      {
+        "label": "Modifica note della sede",
+        "height": 42,
+        "class": "btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]"
+      },
+      {
+        "label": "Chiama Referente di esempio, Cell.: 3330000000",
+        "height": 42,
+        "class": "btn btn-success btn-square btn-sm h-[42px] min-h-[42px] w-[42px] min-w-[42px] shrink-0"
+      },
+      {
+        "label": "Aggiungi materiale / CER",
+        "height": 48,
+        "class": "btn btn-primary min-h-12 w-full sm:w-auto"
+      },
+      {
+        "label": "Motrice",
+        "height": 42,
+        "class": "btn btn-square h-[42px] min-h-[42px] w-[42px] min-w-[42px] p-0 btn-outline"
+      },
+      {
+        "label": "Rimorchio",
+        "height": 42,
+        "class": "btn btn-square h-[42px] min-h-[42px] w-[42px] min-w-[42px] p-0 btn-outline"
+      },
+      {
+        "label": "Modifica materiale CER 170405 · Materiale di esempio",
+        "height": 48,
+        "class": "btn btn-circle btn-outline min-h-12 min-w-12"
+      },
+      {
+        "label": "Modifica contenitori in consegna",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 mt-2"
+      },
+      {
+        "label": "Salta",
+        "height": 48,
+        "class": "btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "Completa",
+        "height": 48,
+        "class": "btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      }
+    ],
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
+  },
+  {
+    "view": "workspace",
+    "theme": "darktheme",
+    "width": 390,
+    "scrollWidth": 390,
+    "errors": [],
+    "buttons": [
+      {
+        "label": "Apri menu di navigazione",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Attiva tema chiaro",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Notifiche",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost relative min-h-12 shrink-0"
+      },
+      {
+        "label": "Torna ai viaggi",
+        "height": 48,
+        "class": "btn btn-square btn-outline min-h-12 shrink-0"
+      },
+      {
+        "label": "+ Aggiungi",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 px-3"
+      },
+      {
+        "label": "Riordina",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 px-3"
+      },
+      {
+        "label": "Tappa correnteCliente di esempio",
+        "height": 88,
+        "class": "block min-h-12 w-full rounded-xl p-3 text-left hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      },
+      {
+        "label": "Modifica note della sede",
+        "height": 42,
+        "class": "btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]"
+      },
+      {
+        "label": "Chiama Referente di esempio, Cell.: 3330000000",
+        "height": 42,
+        "class": "btn btn-success btn-square btn-sm h-[42px] min-h-[42px] w-[42px] min-w-[42px] shrink-0"
+      },
+      {
+        "label": "Salta",
+        "height": 48,
+        "class": "btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "Completa",
+        "height": 48,
+        "class": "btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "PianificataSosta di esempio",
+        "height": 84,
+        "class": "block min-h-12 w-full rounded-xl p-3 text-left hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      },
+      {
+        "label": "Modifica note della sede",
+        "height": 42,
+        "class": "btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]"
+      },
+      {
+        "label": "Chiama Referente di esempio, Cell.: 3330000000",
+        "height": 42,
+        "class": "btn btn-success btn-square btn-sm h-[42px] min-h-[42px] w-[42px] min-w-[42px] shrink-0"
+      },
+      {
+        "label": "Aggiungi materiale / CER",
+        "height": 48,
+        "class": "btn btn-primary min-h-12 w-full sm:w-auto"
+      },
+      {
+        "label": "Motrice",
+        "height": 42,
+        "class": "btn btn-square h-[42px] min-h-[42px] w-[42px] min-w-[42px] p-0 btn-outline"
+      },
+      {
+        "label": "Rimorchio",
+        "height": 42,
+        "class": "btn btn-square h-[42px] min-h-[42px] w-[42px] min-w-[42px] p-0 btn-outline"
+      },
+      {
+        "label": "Modifica materiale CER 170405 · Materiale di esempio",
+        "height": 48,
+        "class": "btn btn-circle btn-outline min-h-12 min-w-12"
+      },
+      {
+        "label": "Modifica contenitori in consegna",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 mt-2"
+      },
+      {
+        "label": "Salta",
+        "height": 48,
+        "class": "btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "Completa",
+        "height": 48,
+        "class": "btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      }
+    ],
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
+  },
+  {
+    "view": "workspace",
+    "theme": "lighttheme",
+    "width": 768,
+    "scrollWidth": 768,
+    "errors": [],
+    "buttons": [
+      {
+        "label": "Apri menu di navigazione",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Attiva tema chiaro",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Notifiche",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost relative min-h-12 shrink-0"
+      },
+      {
+        "label": "Torna ai viaggi",
+        "height": 48,
+        "class": "btn btn-square btn-outline min-h-12 shrink-0"
+      },
+      {
+        "label": "+ Aggiungi",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 px-3"
+      },
+      {
+        "label": "Riordina",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 px-3"
+      },
+      {
+        "label": "Tappa correnteCliente di esempio",
+        "height": 88,
+        "class": "block min-h-12 w-full rounded-xl p-3 text-left hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      },
+      {
+        "label": "Modifica note della sede",
+        "height": 42,
+        "class": "btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]"
+      },
+      {
+        "label": "Chiama Referente di esempio, Cell.: 3330000000",
+        "height": 42,
+        "class": "btn btn-success btn-square btn-sm h-[42px] min-h-[42px] w-[42px] min-w-[42px] shrink-0"
+      },
+      {
+        "label": "Salta",
+        "height": 48,
+        "class": "btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "Completa",
+        "height": 48,
+        "class": "btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "PianificataSosta di esempio",
+        "height": 84,
+        "class": "block min-h-12 w-full rounded-xl p-3 text-left hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      },
+      {
+        "label": "Modifica note della sede",
+        "height": 42,
+        "class": "btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]"
+      },
+      {
+        "label": "Chiama Referente di esempio, Cell.: 3330000000",
+        "height": 42,
+        "class": "btn btn-success btn-square btn-sm h-[42px] min-h-[42px] w-[42px] min-w-[42px] shrink-0"
+      },
+      {
+        "label": "Aggiungi materiale / CER",
+        "height": 48,
+        "class": "btn btn-primary min-h-12 w-full sm:w-auto"
+      },
+      {
+        "label": "Motrice",
+        "height": 42,
+        "class": "btn btn-square h-[42px] min-h-[42px] w-[42px] min-w-[42px] p-0 btn-outline"
+      },
+      {
+        "label": "Rimorchio",
+        "height": 42,
+        "class": "btn btn-square h-[42px] min-h-[42px] w-[42px] min-w-[42px] p-0 btn-outline"
+      },
+      {
+        "label": "Modifica materiale CER 170405 · Materiale di esempio",
+        "height": 48,
+        "class": "btn btn-circle btn-outline min-h-12 min-w-12"
+      },
+      {
+        "label": "Modifica contenitori in consegna",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 mt-2"
+      },
+      {
+        "label": "Salta",
+        "height": 48,
+        "class": "btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "Completa",
+        "height": 48,
+        "class": "btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      }
+    ],
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
+  },
+  {
+    "view": "workspace",
+    "theme": "darktheme",
+    "width": 768,
+    "scrollWidth": 768,
+    "errors": [],
+    "buttons": [
+      {
+        "label": "Apri menu di navigazione",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Attiva tema chiaro",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Notifiche",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost relative min-h-12 shrink-0"
+      },
+      {
+        "label": "Torna ai viaggi",
+        "height": 48,
+        "class": "btn btn-square btn-outline min-h-12 shrink-0"
+      },
+      {
+        "label": "+ Aggiungi",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 px-3"
+      },
+      {
+        "label": "Riordina",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 px-3"
+      },
+      {
+        "label": "Tappa correnteCliente di esempio",
+        "height": 88,
+        "class": "block min-h-12 w-full rounded-xl p-3 text-left hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      },
+      {
+        "label": "Modifica note della sede",
+        "height": 42,
+        "class": "btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]"
+      },
+      {
+        "label": "Chiama Referente di esempio, Cell.: 3330000000",
+        "height": 42,
+        "class": "btn btn-success btn-square btn-sm h-[42px] min-h-[42px] w-[42px] min-w-[42px] shrink-0"
+      },
+      {
+        "label": "Salta",
+        "height": 48,
+        "class": "btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "Completa",
+        "height": 48,
+        "class": "btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "PianificataSosta di esempio",
+        "height": 84,
+        "class": "block min-h-12 w-full rounded-xl p-3 text-left hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      },
+      {
+        "label": "Modifica note della sede",
+        "height": 42,
+        "class": "btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]"
+      },
+      {
+        "label": "Chiama Referente di esempio, Cell.: 3330000000",
+        "height": 42,
+        "class": "btn btn-success btn-square btn-sm h-[42px] min-h-[42px] w-[42px] min-w-[42px] shrink-0"
+      },
+      {
+        "label": "Aggiungi materiale / CER",
+        "height": 48,
+        "class": "btn btn-primary min-h-12 w-full sm:w-auto"
+      },
+      {
+        "label": "Motrice",
+        "height": 42,
+        "class": "btn btn-square h-[42px] min-h-[42px] w-[42px] min-w-[42px] p-0 btn-outline"
+      },
+      {
+        "label": "Rimorchio",
+        "height": 42,
+        "class": "btn btn-square h-[42px] min-h-[42px] w-[42px] min-w-[42px] p-0 btn-outline"
+      },
+      {
+        "label": "Modifica materiale CER 170405 · Materiale di esempio",
+        "height": 48,
+        "class": "btn btn-circle btn-outline min-h-12 min-w-12"
+      },
+      {
+        "label": "Modifica contenitori in consegna",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 mt-2"
+      },
+      {
+        "label": "Salta",
+        "height": 48,
+        "class": "btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "Completa",
+        "height": 48,
+        "class": "btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      }
+    ],
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
+  },
+  {
+    "view": "workspace",
+    "theme": "lighttheme",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "errors": [],
+    "buttons": [
+      {
+        "label": "Apri menu di navigazione",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Attiva tema chiaro",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Notifiche",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost relative min-h-12 shrink-0"
+      },
+      {
+        "label": "Torna ai viaggi",
+        "height": 48,
+        "class": "btn btn-square btn-outline min-h-12 shrink-0"
+      },
+      {
+        "label": "+ Aggiungi",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 px-3"
+      },
+      {
+        "label": "Riordina",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 px-3"
+      },
+      {
+        "label": "Tappa correnteCliente di esempio",
+        "height": 88,
+        "class": "block min-h-12 w-full rounded-xl p-3 text-left hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      },
+      {
+        "label": "Modifica note della sede",
+        "height": 42,
+        "class": "btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]"
+      },
+      {
+        "label": "Chiama Referente di esempio, Cell.: 3330000000",
+        "height": 42,
+        "class": "btn btn-success btn-square btn-sm h-[42px] min-h-[42px] w-[42px] min-w-[42px] shrink-0"
+      },
+      {
+        "label": "Salta",
+        "height": 48,
+        "class": "btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "Completa",
+        "height": 48,
+        "class": "btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "PianificataSosta di esempio",
+        "height": 84,
+        "class": "block min-h-12 w-full rounded-xl p-3 text-left hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      },
+      {
+        "label": "Modifica note della sede",
+        "height": 42,
+        "class": "btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]"
+      },
+      {
+        "label": "Chiama Referente di esempio, Cell.: 3330000000",
+        "height": 42,
+        "class": "btn btn-success btn-square btn-sm h-[42px] min-h-[42px] w-[42px] min-w-[42px] shrink-0"
+      },
+      {
+        "label": "Aggiungi materiale / CER",
+        "height": 48,
+        "class": "btn btn-primary min-h-12 w-full sm:w-auto"
+      },
+      {
+        "label": "Motrice",
+        "height": 42,
+        "class": "btn btn-square h-[42px] min-h-[42px] w-[42px] min-w-[42px] p-0 btn-outline"
+      },
+      {
+        "label": "Rimorchio",
+        "height": 42,
+        "class": "btn btn-square h-[42px] min-h-[42px] w-[42px] min-w-[42px] p-0 btn-outline"
+      },
+      {
+        "label": "Modifica materiale CER 170405 · Materiale di esempio",
+        "height": 48,
+        "class": "btn btn-circle btn-outline min-h-12 min-w-12"
+      },
+      {
+        "label": "Modifica contenitori in consegna",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 mt-2"
+      },
+      {
+        "label": "Salta",
+        "height": 48,
+        "class": "btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "Completa",
+        "height": 48,
+        "class": "btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      }
+    ],
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
+  },
+  {
+    "view": "workspace",
+    "theme": "darktheme",
+    "width": 1440,
+    "scrollWidth": 1440,
+    "errors": [],
+    "buttons": [
+      {
+        "label": "Apri menu di navigazione",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Attiva tema chiaro",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost min-h-12 shrink-0"
+      },
+      {
+        "label": "Notifiche",
+        "height": 48,
+        "class": "btn btn-circle btn-ghost relative min-h-12 shrink-0"
+      },
+      {
+        "label": "Torna ai viaggi",
+        "height": 48,
+        "class": "btn btn-square btn-outline min-h-12 shrink-0"
+      },
+      {
+        "label": "+ Aggiungi",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 px-3"
+      },
+      {
+        "label": "Riordina",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 px-3"
+      },
+      {
+        "label": "Tappa correnteCliente di esempio",
+        "height": 88,
+        "class": "block min-h-12 w-full rounded-xl p-3 text-left hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      },
+      {
+        "label": "Modifica note della sede",
+        "height": 42,
+        "class": "btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]"
+      },
+      {
+        "label": "Chiama Referente di esempio, Cell.: 3330000000",
+        "height": 42,
+        "class": "btn btn-success btn-square btn-sm h-[42px] min-h-[42px] w-[42px] min-w-[42px] shrink-0"
+      },
+      {
+        "label": "Salta",
+        "height": 48,
+        "class": "btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "Completa",
+        "height": 48,
+        "class": "btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "PianificataSosta di esempio",
+        "height": 84,
+        "class": "block min-h-12 w-full rounded-xl p-3 text-left hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+      },
+      {
+        "label": "Modifica note della sede",
+        "height": 42,
+        "class": "btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]"
+      },
+      {
+        "label": "Chiama Referente di esempio, Cell.: 3330000000",
+        "height": 42,
+        "class": "btn btn-success btn-square btn-sm h-[42px] min-h-[42px] w-[42px] min-w-[42px] shrink-0"
+      },
+      {
+        "label": "Aggiungi materiale / CER",
+        "height": 48,
+        "class": "btn btn-primary min-h-12 w-full sm:w-auto"
+      },
+      {
+        "label": "Motrice",
+        "height": 42,
+        "class": "btn btn-square h-[42px] min-h-[42px] w-[42px] min-w-[42px] p-0 btn-outline"
+      },
+      {
+        "label": "Rimorchio",
+        "height": 42,
+        "class": "btn btn-square h-[42px] min-h-[42px] w-[42px] min-w-[42px] p-0 btn-outline"
+      },
+      {
+        "label": "Modifica materiale CER 170405 · Materiale di esempio",
+        "height": 48,
+        "class": "btn btn-circle btn-outline min-h-12 min-w-12"
+      },
+      {
+        "label": "Modifica contenitori in consegna",
+        "height": 48,
+        "class": "btn btn-outline min-h-12 mt-2"
+      },
+      {
+        "label": "Salta",
+        "height": 48,
+        "class": "btn btn-outline h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      },
+      {
+        "label": "Completa",
+        "height": 48,
+        "class": "btn btn-success h-auto min-h-12 min-w-0 whitespace-normal px-2 py-3"
+      }
+    ],
+    "font": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\""
+  }
+]

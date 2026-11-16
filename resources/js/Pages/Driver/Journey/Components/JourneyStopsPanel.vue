@@ -3,8 +3,8 @@
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <h2 id="journey-stops-heading" class="text-lg font-semibold">Tappe</h2>
                     <div v-if="!readOnly || canStart" class="flex items-center gap-2">
-                        <button v-if="!readOnly" type="button" class="btn btn-outline min-h-12 px-3" :disabled="isLoading" :aria-expanded="addStopOpen" aria-controls="journey-add-stop-form" @click="addStopOpen = !addStopOpen">{{ addStopOpen ? 'Chiudi' : '+ Aggiungi' }}</button>
-                        <button v-if="!reorderEnabled && reorderableStops.length > 1" type="button" class="btn btn-outline min-h-12 px-3" :disabled="isLoading" @click="$emit('toggle-reorder')">Riordina</button>
+                        <button v-if="!readOnly" type="button" class="btn btn-primary btn-outline min-h-12 px-3" :disabled="isLoading" :aria-expanded="addStopOpen" aria-controls="journey-add-stop-form" @click="addStopOpen = !addStopOpen">{{ addStopOpen ? 'Chiudi' : '+ Aggiungi' }}</button>
+                        <button v-if="!reorderEnabled && reorderableStops.length > 1" type="button" class="btn btn-primary btn-outline min-h-12 px-3" :disabled="isLoading" @click="$emit('toggle-reorder')">Riordina</button>
                     </div>
                 </div>
                 <slot name="before-stops" />
@@ -29,7 +29,7 @@
                     <JourneyReorderActions :busy="isLoading" @cancel="$emit('toggle-reorder')" @save="$emit('save-reorder')" />
                 </div>
                 <div v-else class="space-y-2">
-                    <button v-if="finishedStops.length" type="button" class="btn btn-ghost min-h-12 w-full whitespace-normal" :aria-expanded="showFinished" :disabled="isLoading" @click="showFinished = !showFinished">{{ showFinished ? 'Nascondi' : 'Mostra' }} tappe concluse ({{ finishedStops.length }})</button>
+                    <button v-if="finishedStops.length" type="button" class="btn btn-outline min-h-12 h-auto w-full whitespace-normal py-3 text-base font-semibold" :aria-expanded="showFinished" :disabled="isLoading" @click="showFinished = !showFinished">{{ showFinished ? 'Nascondi' : 'Mostra' }} tappe concluse ({{ finishedStops.length }})</button>
                     <p v-if="!stops.length" class="text-sm opacity-70">Nessuna tappa disponibile.</p>
                     <p v-else-if="!remainingStops.length" class="text-sm opacity-70">Non ci sono altre tappe da svolgere.</p>
                     <article v-for="stop in visibleStops" :key="stop.id" class="min-w-0 rounded-xl bg-base-100 transition-colors" :class="[stop.id === currentStopId ? 'border-2 border-success bg-success/10' : 'border border-base-300', { 'ring-2 ring-primary': selectedStopId === stop.id && stop.id !== currentStopId }]">
@@ -38,8 +38,10 @@
                         <span class="mt-2 block break-words font-semibold" :class="{ 'text-lg': stop.id === currentStopId }">{{ stopTitle(stop) }}</span>
                         <span v-if="stopSubtitle(stop)" class="mt-1 block break-words text-sm opacity-70">{{ stopSubtitle(stop) }}</span>
                         </button>
+                        <JourneyStopSiteNotes :stop="stop" :id-prefix="`card-stop-${stop.id}`" :editable="!readOnly" :busy="isLoading" class="px-3 pb-3" @command="(operation, input, onSaved) => $emit('command', operation, input, onSaved)" />
                         <JourneyStopContacts v-if="isPending(stop)" :stop="stop" class="px-3 pb-3" />
                         <JourneyContainerMovements v-if="stop.kind !== 'technical' && !['skipped', 'cancelled'].includes(stop.status)" :orders="stopContainerOrders(stop)" :census="census" :completed="normalizeJourneyStopStatus(stop.status) === JOURNEY_STOP_STATUS.DONE" class="px-3 pb-2" />
+                        <slot name="stop-actions" :stop="stop" />
                     </article>
                 </div>
             </aside>
@@ -54,6 +56,7 @@ import { JOURNEY_STOP_STATUS, normalizeJourneyStopStatus } from '@/Constants/jou
 import { stopTitle, stopSubtitle } from './driverStopPresentation'
 import JourneyStatusBadge from '@/Components/UI/JourneyStatusBadge.vue'
 import JourneyStopContacts from './JourneyStopContacts.vue'
+import JourneyStopSiteNotes from './JourneyStopSiteNotes.vue'
 import JourneyContainerMovements from '@/Components/Journey/JourneyContainerMovements.vue'
 import { stopContainerOrders } from '@/utils/journeyContainers'
 

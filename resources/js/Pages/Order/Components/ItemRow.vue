@@ -33,9 +33,7 @@
         </template>
 
         <template v-else>
-          <div class="badge badge-lg" :class="getCerStyle(item.cer_code_id)">
-            {{ selectedCerCode?.code }}
-          </div>
+          <CerCodeBadge :code="selectedCerCode?.code" :dangerous="Number(selectedCerCode?.is_dangerous) === 1" :unassigned="!selectedCerCode?.code" />
           <div class="tooltip" data-tip="Cambia CER">
             <button type="button" class="btn btn-sm btn-ghost btn-circle" @click="startCerEdit">
               <font-awesome-icon :icon="['fas', 'arrows-turn-to-dots']" />
@@ -218,6 +216,7 @@
 </template>
 
 <script setup>
+import CerCodeBadge from '@/Components/UI/CerCodeBadge.vue';
 import { ref, watch, computed } from "vue";
 import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";

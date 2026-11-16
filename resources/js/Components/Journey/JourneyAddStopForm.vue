@@ -19,7 +19,7 @@
                 </template>
                 <label v-if="mode === 'technical'" class="form-control min-w-0">Attività<select v-model="stop.technical_action_id" required class="select select-bordered w-full min-w-0"><option disabled value="">Seleziona attività</option><option v-for="action in lookups.technicalActions" :key="action.id" :value="action.id">{{ action.label }}</option></select></label>
                 <label class="form-control min-w-0">Descrizione<input v-model="stop.description" class="input input-bordered w-full min-w-0" /></label><label class="form-control min-w-0">Indirizzo<input v-model="stop.address_text" class="input input-bordered w-full min-w-0" /></label>
-                <button class="btn btn-primary min-h-12" :disabled="busy">Aggiungi tappa</button>
+                <button class="btn btn-success min-h-12" :disabled="busy">Aggiungi tappa</button>
             </form>
 </template>
 <script setup>

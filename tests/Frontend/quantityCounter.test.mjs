@@ -21,7 +21,7 @@ test('counter distinguishes unrecorded from zero and supports integer entry and 
 })
 test('touch controls provide named buttons, numeric keyboard and correct disabled limits',async()=>{
     const zero=await renderToString(createSSRApp(Counter,{modelValue:0,label:'Contenitori',max:5}))
-    assert.match(zero,/h-\[42px\]/)
+    assert.match(zero,/h-12/)
     assert.match(zero,/<button[^>]*disabled[^>]*aria-label="Diminuisci contenitori"/)
     assert.match(zero,/inputmode="numeric"/)
     const max=await renderToString(createSSRApp(Counter,{modelValue:5,label:'Contenitori',max:5}))

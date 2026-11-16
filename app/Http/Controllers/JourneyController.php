@@ -595,6 +595,15 @@ private function applyOrdersToJourney(
                 abort(422, 'Il viaggio puo essere modificato solo quando e in stato creato.');
             }
 
+            $comparison = app(\App\Services\JourneyPlanning\PlanningInput::class);
+            if ($comparison->current($journey) === $comparison->normalize($validated)) {
+                return redirect()->route('journey.index')->with('success', 'Viaggio già aggiornato.');
+            }
+            $documents = app(OrderDocumentGenerationService::class);
+            foreach ($journey->orders()->lockForUpdate()->get() as $order) {
+                abort_if($order->documents_status === OrderDocumentsStatus::GENERATING && !$documents->isGeneratingStateStale($order), 409, 'Attendi il completamento della generazione documenti prima di modificare il viaggio.');
+            }
+
             $before = [
                 'planned_start_at' => optional($journey->planned_start_at)->toDateTimeString(),
                 'planned_end_at' => optional($journey->planned_end_at)->toDateTimeString(),
@@ -768,6 +777,11 @@ private function applyOrdersToJourney(
                 }
             }
 
+            $journey->increment('plan_version');
+            foreach ($journey->orders()->get() as $order) {
+                $documents->invalidateAfterReadyOrderEdit($order);
+            }
+
             return redirect()->route('journey.index')->with('success', 'Viaggio modificato con successo!');
         });
     }
@@ -860,6 +874,9 @@ public function documentsStatus(Journey $journey): \Illuminate\Http\JsonResponse
                 return $dangerousCer || $hasHpCode;
             });
 
+            $current = $documentsService->isCurrent($order);
+            $generationActive = $order->documents_status === OrderDocumentsStatus::GENERATING && !$documentsService->isGeneratingStateStale($order);
+
             return [
             'id' => $order->id,
             'legacy_code' => $order->legacy_code,
@@ -869,8 +886,9 @@ public function documentsStatus(Journey $journey): \Illuminate\Http\JsonResponse
             'documents_generated_at' => $order->documents_generated_at,
             'documents_error' => $order->documents_error,
             'documents_version' => (int) ($order->documents_version ?? 0),
-            'current' => $documentsService->isCurrent($order),
-            'can_generate' => !$documentsService->isCurrent($order),
+            'current' => $current,
+            'can_generate' => !$current && !$generationActive,
+            'generation_active' => $generationActive,
             'has_model_document' => $modelDocument !== null,
             'model_document_name' => $modelDocument['name'] ?? null,
             'has_adr_hp_document' => $adrHpDocument !== null,

@@ -1,0 +1,109 @@
+{
+  "date": "2026-11-13",
+  "source": "YouTrack MCP nativo",
+  "query": "project: GLE sort by: {issue id} desc",
+  "limit": 9,
+  "scope": "Solo GLE-127–135, non inventario completo del progetto",
+  "count": 9,
+  "issues": [
+    {
+      "id": "GLE-135",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-135",
+      "summary": "Rendere più visibile il comando delle tappe concluse",
+      "resolvedAt": null,
+      "customFields": {
+        "State": "In corso",
+        "Type": "Funzionalità",
+        "Assignee": "matteo.argenton"
+      }
+    },
+    {
+      "id": "GLE-134",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-134",
+      "summary": "Rendere riconoscibili i materiali pericolosi nella nuova UI autisti",
+      "resolvedAt": null,
+      "customFields": {
+        "State": "In corso",
+        "Type": "Funzionalità",
+        "Assignee": "matteo.argenton"
+      }
+    },
+    {
+      "id": "GLE-133",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-133",
+      "summary": "Configurare per singolo viaggio l’apertura iniziale della testata",
+      "resolvedAt": null,
+      "customFields": {
+        "State": "In corso",
+        "Type": "Funzionalità",
+        "Assignee": "matteo.argenton"
+      }
+    },
+    {
+      "id": "GLE-132",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-132",
+      "summary": "Consentire al driver di modificare soltanto le quantità effettivamente consegnate",
+      "resolvedAt": null,
+      "customFields": {
+        "State": "In corso",
+        "Type": "Funzionalità",
+        "Assignee": "matteo.argenton"
+      }
+    },
+    {
+      "id": "GLE-131",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-131",
+      "summary": "Proteggere salvataggio e generazione documenti del viaggio",
+      "resolvedAt": null,
+      "customFields": {
+        "State": "In corso",
+        "Type": "Funzionalità",
+        "Assignee": "matteo.argenton"
+      }
+    },
+    {
+      "id": "GLE-130",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-130",
+      "summary": "Evitare salvataggi e invalidazioni documentali quando il viaggio è invariato",
+      "resolvedAt": null,
+      "customFields": {
+        "State": "In corso",
+        "Type": "Funzionalità",
+        "Assignee": "matteo.argenton"
+      }
+    },
+    {
+      "id": "GLE-129",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-129",
+      "summary": "Mostrare Salta e Completa nella card tappa e in fondo al dettaglio",
+      "resolvedAt": null,
+      "customFields": {
+        "State": "In corso",
+        "Type": "Funzionalità",
+        "Assignee": "matteo.argenton"
+      }
+    },
+    {
+      "id": "GLE-128",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-128",
+      "summary": "Ripristinare i materiali rimossi e nasconderli dalla lista senza perdere lo storico",
+      "resolvedAt": null,
+      "customFields": {
+        "State": "In corso",
+        "Type": "Funzionalità",
+        "Assignee": "matteo.argenton"
+      }
+    },
+    {
+      "id": "GLE-127",
+      "url": "https://metallicamarcon.youtrack.cloud/issue/GLE-127",
+      "summary": "Verificare il nuovo indirizzo email e consentire il reinvio",
+      "resolvedAt": null,
+      "customFields": {
+        "State": "In corso",
+        "Type": "Funzionalità",
+        "Assignee": "matteo.argenton"
+      }
+    }
+  ]
+}

@@ -1,5 +1,13 @@
 # Documentazione Metallica Marcon
 
+- [Convenzione grafica applicata agli autisti — 2026-11-16](qa/2026-11-16-driver-convention.md): pulsanti condivisi, dashboard compatta, temi e verifiche; solo locale. Eccezioni PO: menu con icone pulite e chiamate verdi; Salva verde, Annulla rosso outline.
+
+- [Convenzione UX/UI approvata — 2026-11-16](../DESIGN.md): prima applicazione locale agli autisti e componenti comuni; prossime aree anagrafiche e poi Logistica. [Analisi iniziale](design/ux-ui-convention-proposal.md).
+
+- [GLE-132: limite dei vuoti consegnabili — 2026-11-16](qa/2026-11-16-delivery-capacity.md): redistribuzione fra clienti entro la dotazione del viaggio, blocco delle eccedenze e verifiche locali.
+
+- [Sviluppi post-UAT — 2026-11-13](qa/2026-11-13-driver-uat-followup.md): GLE-127–135 implementati e verificati localmente; evidenze, migrazione e scenari pronti per il successivo rilascio QA.
+
 **Stato corrente 2026-11-11:** [checkpoint UAT autisti](checkpoints/2026-11-11-driver-uat.md). Commit 89b2b22 in QA, GLE-116–126 tutte In corso via MCP, attesa UAT; GLE-122 con residui espliciti. Gli aggiornamenti sottostanti sono fotografie precedenti.
 
 

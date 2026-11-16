@@ -1,0 +1,36 @@
+{
+  "method": "Independent assessment B, Impeccable source detector",
+  "scans": [
+    {
+      "target": "resources/js/Pages/Dashboard/Driver.vue",
+      "exitCode": 0,
+      "findings": []
+    },
+    {
+      "target": "resources/js/Pages/Dashboard/Components/DriverJourneyCard.vue",
+      "exitCode": 0,
+      "findings": []
+    },
+    {
+      "target": "resources/js/Components/UI/AppHeader.vue",
+      "exitCode": 0,
+      "findings": []
+    },
+    {
+      "target": "resources/js/Pages/Driver/Journey/Workspace.vue",
+      "exitCode": 0,
+      "findings": []
+    },
+    {
+      "target": "resources/js/Components/Journey/JourneyExecutionOrderEditor.vue",
+      "exitCode": 0,
+      "findings": []
+    },
+    {
+      "target": "resources/js/Components/Journey/JourneySiteNotesEditor.vue",
+      "exitCode": 0,
+      "findings": []
+    }
+  ],
+  "limitation": "Non-HTML Vue scans use textual patterns. No DOM, contrast, focus or interaction compliance is certified."
+}

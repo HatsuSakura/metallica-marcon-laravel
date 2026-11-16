@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
+
 use App\Models\Journey;
 use App\Models\User;
 use App\Services\Driver\DriverExecutionLookups;
@@ -41,12 +43,21 @@ class API_JourneyExecutionController extends Controller
         return response()->json(['journey' => app(DriverJourneyReadModel::class)->load($j), 'executionLookups' => app(DriverExecutionLookups::class)->load($j)]);
     }
 
+    public function preferences(Request $request, Journey $journey)
+    {
+        Gate::authorize('update', $journey);
+        $data = $request->validate(['header_open_on_entry' => 'required|boolean']);
+        // Presentation preference: never mutate the planning or execution revisions.
+        DB::table('journeys')->where('id', $journey->id)->update($data);
+        return response()->json(['preferences' => ['header_open_on_entry' => (bool) $data['header_open_on_entry']]]);
+    }
+
     public function command(Request $request, Journey $journey, JourneyExecutionService $service)
     {
         Gate::authorize(in_array($request->input('operation'), ['warehouse_item', 'close'], true) ? 'warehouseManage' : 'update', $journey);
         $data = $request->validate([
             'revision' => ['required', 'integer', 'min:1'],
-            'operation' => ['required', Rule::in(['set_item_allocations', 'set_item_loaded', 'reorder', 'complete', 'skip', 'reopen', 'add_stop', 'update_journey', 'update_order', 'add_item', 'update_item', 'remove_item', 'add_holder', 'update_holder', 'restore_original', 'restore_previous', 'undo_restore', 'finish', 'warehouse_item', 'close'])],
+            'operation' => ['required', Rule::in(['set_item_allocations', 'set_item_loaded', 'reorder', 'complete', 'skip', 'reopen', 'add_stop', 'update_journey', 'update_order', 'add_item', 'update_item', 'remove_item', 'restore_item', 'hide_removed_item', 'add_holder', 'update_holder', 'restore_original', 'restore_previous', 'undo_restore', 'finish', 'warehouse_item', 'close'])],
             'input' => ['present', 'array'],
         ]);
         $operation = $data['operation'];
@@ -67,8 +78,8 @@ class API_JourneyExecutionController extends Controller
                 'holder_quantity' => 'nullable|integer|min:0', 'weight_declared' => 'nullable|numeric|min:0', 'description' => 'nullable|string|max:2000', 'is_bulk' => 'boolean',
                 'actual_containers' => 'nullable|integer|min:0', 'actual_weight_kg' => 'nullable|numeric|min:0', 'cargo_location' => ['sometimes', 'nullable', Rule::in(['vehicle', 'trailer'])],
                 'order_item_group_label' => 'nullable|string|max:120', 'warehouse_id' => 'nullable|integer|exists:warehouses,id'],
-            'remove_item' => ['item_id' => 'required|integer'],
-            'add_holder' => ['execution_order_id' => 'required|integer', 'holder_id' => 'required|integer|exists:holders,id', 'total_holders_count' => 'required|integer|min:0'],
+            'remove_item', 'restore_item', 'hide_removed_item' => ['item_id' => 'required|integer'],
+            'add_holder' => ['execution_order_id' => 'required|integer', 'holder_id' => 'required|integer|exists:holders,id', 'total_holders_count' => 'required|integer|min:0', 'actual_delivered' => 'nullable|integer|min:0'],
             'update_holder' => ['holder_id' => 'required|integer', 'total_holders_count' => 'sometimes|required|integer|min:0', 'actual_delivered' => 'nullable|integer|min:0'],
             'restore_original', 'restore_previous' => ['item_id' => 'required|integer', 'field' => 'required|string'],
             'warehouse_item' => ['item_id' => 'required|integer', 'warehouse_id' => 'required|integer|exists:warehouses,id',
@@ -80,6 +91,9 @@ class API_JourneyExecutionController extends Controller
         $messages = [];
         foreach (['vehicle_id', 'trailer_id', 'vehicle', 'trailer', 'vehicle_cargo_id', 'trailer_cargo_id'] as $field) {
             $messages[$field.'.missing'] = 'Il convoglio è fissato alla partenza: motrice e rimorchio non possono essere modificati durante il viaggio.';
+        }
+        if ($operation === 'update_holder' && $request->user()->role === \App\Enums\UserRole::DRIVER && !$request->user()->is_admin) {
+            $rules['total_holders_count'] = 'missing';
         }
         $input = validator($data['input'], $rules, $messages)->validate();
         if ($operation === 'add_stop' && $input['kind'] === 'customer' && empty($input['source_order_id'])) {

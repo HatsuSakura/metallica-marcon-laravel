@@ -4,10 +4,10 @@
             <h4 class="min-w-0 break-words font-medium">Note della sede<span v-if="showSiteName" class="font-normal"> · {{ site.name || site.address || 'Sede' }}</span></h4>
             <div v-if="editable" class="flex shrink-0 items-center gap-1">
                 <template v-if="editing">
-                    <button type="button" class="btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]" :disabled="busy" aria-label="Annulla modifica note della sede" title="Annulla" @click="editing = false"><font-awesome-icon :icon="['fas','xmark']" aria-hidden="true" /></button>
-                    <button type="submit" :form="formId" class="btn btn-circle btn-primary h-[42px] min-h-[42px] w-[42px]" :disabled="busy || !dirty" aria-label="Salva note della sede" title="Salva"><font-awesome-icon :icon="['fas','floppy-disk']" aria-hidden="true" /></button>
+                    <AppAction type="button" :disabled="busy" aria-label="Annulla modifica note della sede" title="Annulla" @click="editing = false" shape="circle" variant="cancel"><font-awesome-icon :icon="['fas','xmark']" aria-hidden="true" /></AppAction>
+                    <AppAction type="submit" :form="formId" :disabled="busy || !dirty" aria-label="Salva note della sede" title="Salva" shape="circle" variant="confirm"><font-awesome-icon :icon="['fas','floppy-disk']" aria-hidden="true" /></AppAction>
                 </template>
-                <button v-else type="button" class="btn btn-circle btn-outline h-[42px] min-h-[42px] w-[42px]" :disabled="busy" aria-label="Modifica note della sede" title="Modifica note della sede" @click="open"><font-awesome-icon :icon="['fas','pencil']" aria-hidden="true" /></button>
+                <AppAction v-else type="button" :disabled="busy" aria-label="Modifica note della sede" title="Modifica note della sede" @click="open" shape="circle" variant="function"><font-awesome-icon :icon="['fas','pencil']" aria-hidden="true" /></AppAction>
             </div>
         </div>
         <form v-if="editing && editable" :id="formId" @submit.prevent="save">
@@ -17,11 +17,12 @@
     </section>
 </template>
 <script setup>
+import AppAction from '@/Components/UI/AppAction.vue'
 import {computed,ref} from 'vue'
-const props = defineProps({site:{type:Object,required:true},editable:Boolean,busy:Boolean,showSiteName:Boolean})
+const props = defineProps({site:{type:Object,required:true},editable:Boolean,busy:Boolean,showSiteName:Boolean,idPrefix:{type:String,default:'journey'}})
 const emit = defineEmits(['command'])
 const editing = ref(false), draft = ref(''), original = ref(''), version = ref(null)
-const formId = computed(() => `journey-site-${props.site.id}-notes`)
+const formId = computed(() => `${props.idPrefix}-site-${props.site.id}-notes`)
 const dirty = computed(() => draft.value !== original.value)
 const open = () => {
     if (props.busy || !props.editable) return
