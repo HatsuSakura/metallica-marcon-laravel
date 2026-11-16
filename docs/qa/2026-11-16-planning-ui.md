@@ -1,6 +1,7 @@
 # Ordini e gestione viaggi — 2026-11-16
 
-Implementazione pronta per il rilascio QA da parte del responsabile prodotto.
+Implementazione committata e pubblicata su origin/main: `33a363ce3afdb73a9ac94a438085019fe88fdf45`.
+Deploy QA a cura del responsabile prodotto, non ancora confermato.
 DaisyUI 4 e Tailwind 3 conservati; nessun upgrade delle dipendenze. Pulsanti
 standard invariati, con eccezione esplicita a 32px per le azioni delle schede ordine.
 
@@ -41,9 +42,10 @@ Lo spostamento include gli ordini a riempimento e ricalcola il carico con gli
 avvisi di capacità esistenti. Verificato nel browser il trasferimento diretto,
 lo svuotamento della lista rimorchio e lo sblocco della configurazione.
 
-Richiesta di tracciamento a fine sessione: due GLE “Adeguamento UX/UI interfaccia”,
-una ordini e una viaggi, includendo tutte le modifiche. Creazione autorizzata
-dal responsabile prodotto dopo commit e push della sessione.
+Tracciamento creato via MCP dopo commit e push, su richiesta del responsabile prodotto:
+[Adeguamento UX/UI interfaccia ordini — GLE-137](https://metallicamarcon.youtrack.cloud/issue/GLE-137)
+e [viaggi — GLE-138](https://metallicamarcon.youtrack.cloud/issue/GLE-138).
+Entrambe In Progress, con implementazione, prove e checklist del collaudo QA.
 
 Elenco viaggi: cestino disabilitato per stato attivo (In corso), con motivo
 nel title e guardia sul callback di conferma. La protezione server esistente
