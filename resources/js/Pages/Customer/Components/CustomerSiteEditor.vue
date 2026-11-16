@@ -28,7 +28,7 @@
         <LocationPicker class="pt-2" :latitude="siteForm.latitude" :longitude="siteForm.longitude" :address="siteForm.address" :disabled="siteForm.processing" @position-change="moveMarker" />
         <p v-if="locationError" role="alert" class="text-sm text-error">{{ locationError }}</p>
         <label class="flex min-h-12 w-fit items-center gap-2 text-sm"><input v-model="siteForm.is_main" type="checkbox" class="toggle toggle-primary" :disabled="currentMain" />Sede principale</label>
-        <h4 class="border-t border-base-300 pt-3 font-semibold">Dotazioni e consulenza</h4>
+        <h4 class="pt-3 font-semibold">Dotazioni e consulenza</h4>
 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <SiteBooleanParameter
             title="Consulente ADR" positive-label="Presente" negative-label="Assente"

@@ -48,7 +48,7 @@
         </div>
         <div class="h-64 min-w-0 overflow-hidden rounded-xl border border-base-300"><SimpleMapWithMarker :site="props.site" :withInfoWindow="false" /></div>
     </div>
-    <h3 class="border-t border-base-300 pt-3 font-semibold">Dotazioni e consulenza</h3>
+    <h3 class="pt-3 font-semibold">Dotazioni e consulenza</h3>
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <SiteBooleanParameter title="Consulente ADR" icon-string="vial-circle-check" :boolean-value="!!props.site.has_adr_consultant" positive-label="Presente" negative-label="Assente" />
         <SiteBooleanParameter title="Muletto" icon-string="truck-ramp-box" :boolean-value="!!props.site.has_muletto" positive-label="Disponibile" negative-label="Non disponibile" />
