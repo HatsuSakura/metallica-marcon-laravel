@@ -1,6 +1,6 @@
 <template>
-    
-    <div class="bg-white text-gray-900 overflow-hidden shadow-sm sm:rounded-lg">
+
+    <div class="bg-base-100 text-base-content overflow-x-auto rounded-xl">
                 <DataTable
                     :data="props.customers"
                     :columns="columns"
@@ -21,7 +21,7 @@
 
 <script setup>
 
-const props = defineProps({ 
+const props = defineProps({
     customers: Object,
 })
 

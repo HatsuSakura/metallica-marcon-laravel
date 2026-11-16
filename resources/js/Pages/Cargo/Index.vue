@@ -1,22 +1,21 @@
 <template>
+<RegistryPage title="Cassoni">
+<template #actions><AppAction :as="Link" variant="function" :href="route('cargo.create')"><font-awesome-icon :icon="['fas', 'plus']" aria-hidden="true" />Nuovo cassone</AppAction></template>
+
+
+
 
 <section>
-<Link @click="closeDrawer" :href="route('cargo.create')" class="btn btn-primary mb-4">
-    Nuovo Cassone
-</Link>
-</section>
+    <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
 
-<section>
-    <div class="grid grid-cols-12 gap-2">
-
-    <Box v-for="cargo in props.cargos.data" class="col-span-6">
+    <Box padding="px-3 py-2 sm:px-4" v-for="cargo in props.cargos.data" :key="cargo.id" class="min-w-0 break-words">
         <div class="flex flex-row justify-between mb-2">
             <div>
                 <div class="font-medium text-lg">
                     {{ cargo.name }} <span v-if="!cargo.is_cargo"><font-awesome-icon :icon="['fas', 'truck']" />&nbsp;</span>
                     <span>[{{ cargo.total_count }}]</span>
                 </div>
-                <div class="text-gray-500">
+                <div class="text-base-content/75">
                     {{ cargo.description }}
                 </div>
                 <div>
@@ -27,11 +26,8 @@
                 <div>
                     Casse: {{ cargo.casse }}
                     | Spazi casse: {{ cargo.spazi_casse }}
-                    | Spazi bancali: {{ cargo.spazi_bancale }} 
+                    | Spazi bancali: {{ cargo.spazi_bancale }}
                 </div>
-            </div>
-            <div>
-                IMMAGINE
             </div>
         </div>
 
@@ -40,19 +36,12 @@
             :href="route('cargo.edit', {cargo: cargo.id} )"
             method="get"
             as="button"
-            class="btn btn-primary btn-circle"
-            >
+            class="btn btn-circle btn-primary btn-outline"
+             aria-label="Modifica cassone">
                 <font-awesome-icon :icon="['fas', 'pen']" class="text-xl"/>
             </Link>
 
-            <Link
-                :href="route('cargo.destroy', {cargo: cargo.id} )"
-                method="delete"
-                as="button"
-                class="btn btn-error btn-circle"
-            >
-                <font-awesome-icon :icon="['fas', 'trash-can']" class="text-xl"/>
-            </Link>
+            <RegistryDeleteAction :label="cargo.name" :busy="deleting === route('cargo.destroy', {cargo: cargo.id} )" @confirm="removeRecord(route('cargo.destroy', {cargo: cargo.id} ))" />
         </div>
     </Box>
     </div>
@@ -60,9 +49,21 @@
 
 
 
+
+<p v-if="!props.cargos.data.length" class="py-4">Nessun elemento da visualizzare.</p>
+<Pagination v-if="props.cargos.links?.length" :links="props.cargos.links" />
+</RegistryPage>
 </template>
 
 <script setup>
+import RegistryDeleteAction from '@/Components/Registry/RegistryDeleteAction.vue'
+import {useRegistryDelete} from '@/Composables/useRegistryDelete'
+const {deleting, removeRecord} = useRegistryDelete()
+
+import AppAction from '@/Components/UI/AppAction.vue'
+import Pagination from '@/Components/UI/Pagination.vue'
+import RegistryPage from '@/Components/Registry/RegistryPage.vue'
+
 import Box from '@/Components/UI/Box.vue';
 import { Link } from '@inertiajs/vue3';
 

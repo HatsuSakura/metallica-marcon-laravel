@@ -1,0 +1,426 @@
+{
+  "sizes": [
+    {
+      "width": 320,
+      "theme": "lighttheme",
+      "pageWidth": 320,
+      "rows": [
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        }
+      ]
+    },
+    {
+      "width": 320,
+      "theme": "darktheme",
+      "pageWidth": 320,
+      "rows": [
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "theme": "lighttheme",
+      "pageWidth": 390,
+      "rows": [
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "theme": "darktheme",
+      "pageWidth": 390,
+      "rows": [
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "theme": "lighttheme",
+      "pageWidth": 768,
+      "rows": [
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "theme": "darktheme",
+      "pageWidth": 768,
+      "rows": [
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        }
+      ]
+    },
+    {
+      "width": 1024,
+      "theme": "lighttheme",
+      "pageWidth": 1024,
+      "rows": [
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        }
+      ]
+    },
+    {
+      "width": 1024,
+      "theme": "darktheme",
+      "pageWidth": 1024,
+      "rows": [
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "theme": "lighttheme",
+      "pageWidth": 1440,
+      "rows": [
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "theme": "darktheme",
+      "pageWidth": 1440,
+      "rows": [
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        },
+        {
+          "fields": 4,
+          "buttonCount": 1,
+          "sameRow": true
+        }
+      ]
+    }
+  ],
+  "copy": "four fields copied to next day",
+  "cancel": "restores stored times; read mode shows Chiuso"
+}

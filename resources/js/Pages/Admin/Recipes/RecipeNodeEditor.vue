@@ -1,5 +1,6 @@
 <!-- resources/js/Pages/Admin/Recipes/RecipeNodeEditor.vue -->
 <script setup>
+import AppAction from '@/Components/UI/AppAction.vue'
 import { ref, onMounted, watch, computed, nextTick } from 'vue'
 import axios from 'axios'
 import { useStore } from 'vuex'
@@ -15,6 +16,11 @@ const store = useStore()
 
 /** Stato locale (buffer) */
 const roots = ref([])     // [{ id?, catalog_item_id, catalog_item:{id,name,type}, children:[] }]
+const busy = ref(false)
+const baseline = ref('[]')
+const savedRoots = ref([])
+const treeSnapshot = nodes => JSON.stringify((nodes || []).map(n => ({id:n.catalog_item_id ?? n.catalog_item?.id ?? null, unknown:!n.catalog_item_id ? (n._freeText || n._selected?.name || '') : ''})))
+const hasChanges = computed(() => treeSnapshot(roots.value) !== baseline.value)
 const dirty = ref(false)  // flag modifiche locali
 
 const catalogMap = computed(() => {
@@ -71,11 +77,15 @@ function hydrateSelectedFromCatalog() {
 onMounted(() => {
   roots.value = normalizeTree(props.nodes || [])
   dirty.value = false
+  baseline.value = treeSnapshot(roots.value)
+  savedRoots.value = deepClone(roots.value)
 })
 
 watch(() => props.nodes, (n) => {
   roots.value = normalizeTree(n || [])
   dirty.value = false
+  baseline.value = treeSnapshot(roots.value)
+  savedRoots.value = deepClone(roots.value)
 })
 
 
@@ -219,6 +229,7 @@ function onComboCommit(node, text) {
 
 
 async function saveAll() {
+  if (busy.value || !hasChanges.value) return
   // 1. Controllo nodi senza catalog_item_id
   const invalid = collectInvalid(roots.value)
 
@@ -238,20 +249,23 @@ async function saveAll() {
   }
 
   const payload = { nodes: serialize(roots.value) }
+  busy.value = true
   try {
   const res = await axios.put(route('recipes.nodes.sync', props.recipeId), payload)
   store.dispatch('flash/queueMessage', { type: 'success', text: 'Tutti gli elementi sono stati aggiornati' })
   dirty.value = false
+  baseline.value = treeSnapshot(roots.value)
+  savedRoots.value = deepClone(roots.value)
   } catch(e) {
-    store.dispatch('flash/queueMessage', { type: 'error', text: 'Errore durante il salvataggio' + (e?.response?.data?.message ? ': ' + e.response.data.message : '') })
+    store.dispatch('flash/queueMessage', { type: 'error', text: 'Salvataggio della ricetta non riuscito. Riprova.' })
     console.error(e)
     return
-  }
+  } finally { busy.value = false }
 }
 
 
 function resetAll() {
-  roots.value = deepClone(props.nodes || [])
+  roots.value = normalizeTree(savedRoots.value)
   hydrateSelectedFromCatalog()
   dirty.value = false
 }
@@ -309,20 +323,20 @@ function isUnknown(node) {
 </script>
 
 <template>
-  <div class="space-y-3">
+  <fieldset :disabled="busy" class="min-w-0 space-y-3">
 
     <ul class="bg-base-200 rounded-box p-2">
       <li v-if="!roots.length" class="opacity-70">
         Nessun nodo presente. Aggiungi un nodo root e seleziona materiale o componente.
       </li>
 
-      <li v-for="n in roots" 
-        :key="n.id" 
+      <li v-for="n in roots"
+        :key="n.id"
         class="mb-2"
         :class="isUnknown(n) ? 'border border-error bg-error/10' : 'border border-transparent'"
       >
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex-1">
+        <div class="flex min-w-0 flex-wrap items-center justify-between gap-2">
+          <div class="min-w-0 flex-1 basis-48">
             <AutocompleteCombo
               :ref="el => registerComboRef(n.id, el)"
               :items="catalog"
@@ -344,7 +358,7 @@ function isUnknown(node) {
           <!-- Importa figli dalla ricetta predefinita (solo per component) -->
           <button
             v-if="n.catalog_item?.type === 'component'"
-            class="btn btn-xs"
+            type="button" class="btn btn-outline min-h-12"
             @click="importDefaultChildren(n)"
           >
           Visualizza sub-componenti
@@ -353,7 +367,7 @@ function isUnknown(node) {
           <span v-if="isUnknown(n)" class="badge badge-error badge-outline">non in catalogo</span>
 
 
-          <button class="btn btn-xs btn-error" @click="deleteNode(n.id)">x</button>
+          <AppAction variant="remove" shape="circle" :disabled="busy" :aria-label="`Rimuovi ${n.catalog_item?.name || 'elemento'} dalla ricetta`" @click="deleteNode(n.id)"><font-awesome-icon :icon="['fas','trash-can']" aria-hidden="true" /></AppAction>
         </div>
 
         <!-- preview figli -->
@@ -368,19 +382,12 @@ function isUnknown(node) {
       </li>
     </ul>
 
-    <div class="flex items-center gap-2 mt-4">
-      <button class="btn btn-sm btn-primary" @click="addRoot">Aggiungi Elemento/Componente</button>
-      <button
-        class="btn btn-sm"
-        :class="dirty ? 'btn-success' : 'btn-disabled'"
-        :disabled="!dirty"
-        @click="saveAll"
-      >
-        Salva composizione ricetta
-      </button>
-      <button class="btn btn-sm" :disabled="!dirty" @click="resetAll">Annulla modifiche recenti</button>
+    <div class="flex flex-wrap items-center gap-2 mt-4">
+      <AppAction variant="function" :disabled="busy" @click="addRoot">Aggiungi elemento / componente</AppAction>
+      <AppAction variant="confirm" :busy="busy" :disabled="!hasChanges" @click="saveAll">Salva composizione ricetta</AppAction>
+      <AppAction variant="cancel" :disabled="busy || !hasChanges" @click="resetAll">Annulla modifiche</AppAction>
     </div>
 
 
-  </div>
+  </fieldset>
 </template>

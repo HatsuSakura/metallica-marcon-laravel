@@ -11,13 +11,13 @@
       <button class="btn btn-outline w-full" type="button" @click="runSingleSiteRiskRecalculation">
         Solo questa sede
       </button>
-      <button class="btn btn-primary w-full" type="button" @click="runCustomerRiskRecalculation">
+      <button class="btn btn-success min-h-12 w-full" type="button" @click="runCustomerRiskRecalculation">
         Tutte le sedi del cliente
       </button>
     </div>
 
     <div class="modal-action">
-      <button class="btn" type="button" @click="riskModal?.close()">Annulla</button>
+      <button class="btn btn-error btn-outline min-h-12" type="button" @click="riskModal?.close()">Annulla</button>
     </div>
   </div>
   <form method="dialog" class="modal-backdrop">
@@ -25,204 +25,37 @@
   </form>
 </dialog>
 
-    <input 
-        type="radio"
-        :name="calculatedName"
-        role="tab" 
-        class="tab whitespace-nowrap"
-        :aria-label="calculatedLabel"
-        :checked="props.counter === 0 ? true : false" 
-    />
-    <div role="tabpanel" class="tab-content border-base-300 rounded-box border-l-0 border-r-0 p-0 pb-8">
-
-        <!-- NAVBAR singola SCHEDA -->
-        <div class="navbar bg-base-100">
-            <div class="navbar-start">
-                <!-- DROPDOWN PER AZIONI RAPIDE -->
-                <!--
-                <div class="dropdown">
-                    <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h7" />
-                        </svg>
-                    </div>
-                    <ul tabindex="0"
-                        class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-                        <li>
-                            <Link :href="withdrawCreateUrl(props.site)">
-                            Nuovo Ritiro
-                            </Link>
-                        </li>
-                        <li><button type="button" @click="calculateRiskFactor(props.site)">Ricalcola Rischio</button></li>
-                        <li><a>Edit</a></li>
-                    </ul>
-                </div>
-                -->
-            </div>
-            <div class="navbar-center text-center">
-                <div class="flex flex-col">
-                    <div class="text-xl">Riepilogo sede {{ props.site.name }}</div>
-                    <div v-if="props.site.address" class="text-sm text-base-content/60">{{ props.site.address }}</div>
-                </div>
-                
-            </div>
-            <div class="navbar-end space-x-2">
-                <div class="tooltip" data-tip="Crea ordine">
-                    <Link :href="route('order.create', { site: props.site.id })" class="btn btn-circle btn-primary">
-                        <font-awesome-icon :icon="['fas', 'clipboard-list']" class="h-5 w-5" stroke="currentColor" />
-                    </Link>
-                </div>
-
-                <div class="tooltip" data-tip="Crea ritiro">
-                    <Link :href="withdrawCreateUrl(props.site)" class="btn btn-circle btn-secondary">
-                        <font-awesome-icon :icon="['fas', 'cart-plus']" class="h-5 w-5" stroke="currentColor" />
-                    </Link>
-                </div>
-                
-                <div class="tooltip" data-tip="Ricalcola rischio">
-                    <button type="button" @click="calculateRiskFactor(props.site)" class="btn btn-circle btn-warning">
-                        <font-awesome-icon :icon="['fas', 'square-root-variable']" class="h-5 w-5" stroke="currentColor" />
-                    </button>
-                </div>
-<!--
-                <div class="tooltip" data-tip="Impostazioni">
-                    <button class="btn btn-ghost btn-circle">
-                        <font-awesome-icon :icon="['fas', 'cog']" class="h-5 w-5" stroke="currentColor" />
-                    </button>
-                </div>
--->
-            </div>
+<div class="min-w-0 space-y-4 p-3 sm:p-4">
+<section class="space-y-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+            <h3 class="font-semibold">Dati della sede</h3>
+            <AppAction v-if="canManageContacts" variant="function" shape="circle" aria-label="Modifica dati sede" title="Modifica dati sede" @click="$emit('edit')"><font-awesome-icon :icon="['fas','pencil']" aria-hidden="true" /></AppAction>
+            <RegistryDeleteAction v-if="canDelete" :label="`sede ${props.site.name}`" :disabled="!!props.site.is_main" disabled-reason="Non puoi eliminare la sede principale" :busy="deleting === route('site.destroy', {site:props.site.id})" @confirm="removeRecord(route('site.destroy', {site:props.site.id}))" />
         </div>
-
-        <!-- SEZIONE 00 : info specifice SEDE-->
-        <section>
-            <form @submit.prevent="updateBooleanParametersForSite">
-                <div class="flex flex-row gap-4">
-                    <!-- DUE RIGHE DEI PARAMETRI-->
-                    <div class="flex flex-col gap-4 justify-stretch w-full">
-                        <!-- INTESTAZIONE : name, is_main, area, areas -->
-                        <div class="flex flex-row gap-2 justify-stretch w-full items-stretch mt-4">
-
-<!--
-                            <br/>AREAS: {{ props.areas }}
-                            <br/>SITE AREAS: {{ props.site.areas }}
-                            <br/>PREFERRED: {{ sitePreferredArea }}
--->
-
-                            <SiteHeadParameter
-                                :isEditable="isToggleEditable"
-                                :areas="props.areas"
-                                :is_main="Boolean(props.site.is_main)"
-                                :name="props.site.name"
-                                :preferred_area="sitePreferredArea"
-                                @update:is_main="form.is_main = $event"
-                                @update:name="form.name = $event"
-                                @update:preferred_area="form.preferred_area = $event"
-                            />
-
-
-                        <div class="flex flex-row gap-2 justify-stretch items-stretch w-1/2">
-                            <Box class="w-full">
-                                <template #header>Note Sede</template>
-                                <textarea
-                                    v-if="isToggleEditable"
-                                    v-model="form.notes"
-                                    class="textarea textarea-bordered w-full"
-                                    rows="3"
-                                    placeholder="Inserisci eventuali note operative sulla sede"
-                                />
-                                <div v-else-if="form.notes" class="whitespace-pre-line">
-                                    {{ form.notes }}
-                                </div>
-                                <div v-else class="opacity-70">
-                                    Nessuna nota sede
-                                </div>
-                            </Box>
-                        </div>
-
-                        </div>
-
-                        <!-- BOOLEAN PARAMETERS -->
-                        <div class="flex flex-row gap-4 justify-stretch w-full items-stretch mt-0">
-                            
-                            <SiteBooleanParameter
-                                title="Consulente ADR"
-                                :booleanValue = form.has_adr_consultant
-                                iconString="vial-circle-check"
-                                :isEditable="isToggleEditable"
-                                @update:booleanValue="form.has_adr_consultant = $event"
-                            />
-
-                            <SiteBooleanParameter
-                                title="Muletto"
-                                :booleanValue = form.has_muletto
-                                iconString="truck-ramp-box"
-                                :isEditable="isToggleEditable"
-                                @update:booleanValue="form.has_muletto = $event"
-                            />
-
-                            <SiteBooleanParameter
-                                title="Transpallet Elettrico"
-                                :booleanValue = form.has_electric_pallet_truck
-                                iconString="cart-flatbed"
-                                :isEditable="isToggleEditable"
-                                @update:booleanValue="form.has_electric_pallet_truck = $event"
-                            />
-
-                            <SiteBooleanParameter
-                                title="Transpallet Manuale"
-                                :booleanValue = "form.has_manual_pallet_truck"
-                                iconString="dolly"
-                                :isEditable="isToggleEditable"
-                                @update:booleanValue="form.has_manual_pallet_truck = $event"
-                            />
-
-                        </div>
-
-
-                    </div>
-                    <!-- PULSANTI EDIT/SAVE-->
-                    <div>
-                        <div class="flex flex-col justify-center h-full gap-4">
-                            <div v-if="!isToggleEditable">
-                                <button 
-                                    type="button" 
-                                    @click="toggleToggleEditable"
-                                    class="btn btn-primary btn-circle"
-                                >
-                                    <font-awesome-icon :icon="['fas', 'pencil']" class="text-2xl"/>
-                                </button>
-                            </div>
-                            <div v-else>
-                                <button 
-                                    type="button" 
-                                    @click="toggleToggleEditable"
-                                    class="btn btn-error btn-circle"
-                                >
-                                    <font-awesome-icon :icon="['fas', 'ban']" class="text-2xl"/>
-                                </button>
-                            </div>
-
-
-                            <div>
-                                <button 
-                                    type="submit"
-                                    class="btn btn-success btn-circle"
-                                    :disabled = "!isToggleEditable"
-                                >
-                                    <font-awesome-icon :icon="['fas', 'floppy-disk']" class="text-2xl"/>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </form>
-
-        </section>
-
+        <div class="ml-auto flex flex-wrap justify-end gap-2">
+            <AppAction :as="Link" variant="function" :href="route('order.create', {site:props.site.id})">Crea ordine</AppAction>
+            <AppAction :as="Link" variant="function" :href="withdrawCreateUrl(props.site)">Crea ritiro</AppAction>
+            <AppAction variant="function" @click="calculateRiskFactor(props.site)">Ricalcola rischio</AppAction>
+        </div>
+    </div>
+    <div class="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="min-w-0 space-y-3">
+    <div><h4 class="text-sm font-semibold">Indirizzo</h4><Address :address="props.site.address" class="text-sm" /></div>
+    <p class="text-sm">Area principale: <span class="font-medium">{{ props.site.areas?.find(area => area.pivot?.is_preferred)?.name || 'Non impostata' }}</span></p>
+    <div><h4 class="text-sm font-semibold">Note della sede</h4><p class="whitespace-pre-line break-words text-sm">{{ props.site.notes || 'Nessuna nota sede' }}</p></div>
+    <div v-if="props.site.other_machines"><h4 class="text-sm font-semibold">Altri macchinari</h4><p class="whitespace-pre-line break-words text-sm">{{ props.site.other_machines }}</p></div>
+        </div>
+        <div class="h-64 min-w-0 overflow-hidden rounded-xl border border-base-300"><SimpleMapWithMarker :site="props.site" :withInfoWindow="false" /></div>
+    </div>
+    <h3 class="border-t border-base-300 pt-3 font-semibold">Dotazioni e consulenza</h3>
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <SiteBooleanParameter title="Consulente ADR" icon-string="vial-circle-check" :boolean-value="!!props.site.has_adr_consultant" positive-label="Presente" negative-label="Assente" />
+        <SiteBooleanParameter title="Muletto" icon-string="truck-ramp-box" :boolean-value="!!props.site.has_muletto" positive-label="Disponibile" negative-label="Non disponibile" />
+        <SiteBooleanParameter title="Transpallet elettrico" icon-string="cart-flatbed" :boolean-value="!!props.site.has_electric_pallet_truck" positive-label="Disponibile" negative-label="Non disponibile" />
+        <SiteBooleanParameter title="Transpallet manuale" icon-string="dolly" :boolean-value="!!props.site.has_manual_pallet_truck" positive-label="Disponibile" negative-label="Non disponibile" />
+    </div>
+</section>
 
         <!-- SEZIONE 01 REFERENTI INTERNI -->
         <section class="py-4">
@@ -234,10 +67,10 @@
         <section class="flex flex-col-reverse md:grid md:grid-cols-12 gap-4 my-4">
 
             <!-- INDICATORI -->
-            <div class="col-span-2">
+            <div class="md:col-span-3">
                 <div class="flex flex-col items-center gap-4">
 
-                    <div class="w-full shadow-xl p-4 gap-2">
+                    <div class="w-full rounded-xl border border-base-300 p-3">
                         <h2 clasS="mb-2">Fattore Rischio</h2>
                         <div class="flex items-center justify-between gap-2">
                             <div class="text-4xl"><font-awesome-icon icon="triangle-exclamation" /></div>
@@ -245,7 +78,7 @@
                         </div>
                     </div>
 
-                    <div class="w-full shadow-xl p-4 gap-2">
+                    <div class="w-full rounded-xl border border-base-300 p-3">
                         <h2 clasS="mb-2">Prossimo Ritiro</h2>
                         <div class="flex items-center justify-between gap-2">
                             <div class="text-4xl"><font-awesome-icon icon="calendar-day" /></div>
@@ -257,7 +90,7 @@
                 </div>
             </div>
             <!-- RITIRI -->
-            <div class="col-span-6 md:col-span-6">
+            <div class="md:col-span-5">
                 <StoricoRitiri
                     :site = "props.site"
                     :withdraws="props.site.withdraws"
@@ -272,96 +105,45 @@
 
         </section>
 
-        <!-- SEZIONE 03 ORARI & MAPPA -->
-        <section class="flex flex-col-reverse md:grid md:grid-cols-12 gap-4 py-4">
-            <div class="col-span-6">
-                <EditableTimetable :site="props.site"/>
-            </div>
-
-            <!-- MAPPA -->
-            <div class="col-span-6">
-                <SimpleMapWithMarker :site="props.site" :withInfoWindow="false" />
-            </div>
+        <section class="border-t border-base-300 pt-4">
+            <EditableTimetable :site="props.site" />
         </section>
 
-    </div>
-
+</div>
 </template>
 
 <script setup>
+import Address from '@/Components/Address.vue'
+import RegistryDeleteAction from '@/Components/Registry/RegistryDeleteAction.vue'
+import {useRegistryDelete} from '@/Composables/useRegistryDelete'
+const {deleting, removeRecord} = useRegistryDelete()
+import AppAction from '@/Components/UI/AppAction.vue'
 
-import { Link, router, useForm } from '@inertiajs/vue3';
-import { computed, ref, nextTick } from 'vue';
+
+import { Link, router } from '@inertiajs/vue3';
+import { ref, nextTick } from 'vue';
 import { useStore } from 'vuex';
-import EmptyState from '@/Components/UI/EmptyState.vue';
 import EditableTimetable from './EditableTimetable.vue';
 import SimpleMapWithMarker from '@/Pages/Map/Components/SimpleMapWithMarker.vue';
 import StoricoRitiri from './StoricoRitiri.vue';
 import OrdiniInCorso from './OrdiniInCorso.vue';
 import SiteBooleanParameter from './SiteBooleanParameter.vue';
-import Box from '@/Components/UI/Box.vue';
 import axios from 'axios';
-import SiteHeadParameter from './SiteHeadParameter.vue';
 import SiteInternalContacts from '@/Components/SiteInternalContacts.vue';
 
 const props = defineProps({
     site: Object,
     contactRoles: {type:Array,default:()=>[]},
     canManageContacts: Boolean,
+    canDelete: Boolean,
     customerSitesCount: Number,
-    counter: Number,
     areas: Array,
     orders: Array,
 });
 
 const store = useStore();
 
-const isToggleEditable = ref(false);
-
-const toggleToggleEditable = () => {
-    isToggleEditable.value = !isToggleEditable.value;   
-}
-const setToggleEditableFalse = () => {
-    isToggleEditable.value = false;
-}
-
-const calculatedName = computed(
-    () => "tabs_" + props.site.customer_id,
-);
-
-const calculatedLabel = computed(
-    () => '' + props.site.name
-);
-
-const sitePreferredArea = ref(
-    props.site.areas && props.site.areas.length > 0
-        ? props.site.areas.find(area => area.pivot.is_preferred === 1)?.id
-        : ''
-) 
-const siteAllAreas = computed(() => areas.value);
-const siteAllAreasWithoutPreferred = ref( 
-    props.site.areas && props.site.areas.length > 0
-        ? props.site.areas.filter(area => area.pivot.is_preferred !== 1)
-        : []
-);
-
-const form = useForm({
-    name: props.site.name,
-    is_main: Boolean(props.site.is_main),
-    preferred_area: sitePreferredArea,
-    other_areas: siteAllAreasWithoutPreferred,
-    has_adr_consultant: Boolean(props.site.has_adr_consultant),
-    has_muletto: Boolean(props.site.has_muletto),
-    has_electric_pallet_truck: Boolean(props.site.has_electric_pallet_truck),
-    has_manual_pallet_truck: Boolean(props.site.has_manual_pallet_truck),
-    notes: props.site.notes ?? '',
-})
-    
-
-
-
-
-const emit = defineEmits(['siteUpdated'])
+const emit = defineEmits(['siteUpdated','edit'])
 const contactSaved = contact => {
     const contacts = [...(props.site.internal_contacts || [])]
     const index = contacts.findIndex(row => row.id === contact.id)
@@ -369,22 +151,6 @@ const contactSaved = contact => {
     else contacts[index] = contact
     emit('siteUpdated', {...props.site, internal_contacts: contacts})
 }
-function updateBooleanParametersForSite() {
-    console.log('Site che sto tentando di UPPARE',props.site)
-    axios.put(`/api/site/updateBooleans/${props.site.id}`, form )
-    //axios.put(`/api/site/updateBooleans/${props.site.id}?full=true`, form)
-        .then(response => {
-            setToggleEditableFalse();
-            store.dispatch('flash/queueMessage', { type: 'success', text: 'Sede aggiornata correttamente' });
-
-            emit('siteUpdated', JSON.parse(JSON.stringify(response.data.site) ) ); // The event name is 'siteUpdated'
-            console.log('Emitted siteUpdated with:', response.data.site);
-        })
-        .catch(error => {
-            console.error('Errore nel salvataggio: ', error);
-        });
-}
-
 const withdrawCreateUrl = (site) => route('withdraw.create', {
     site: site.id,
     customer: site.customer_id,

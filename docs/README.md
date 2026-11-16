@@ -1,5 +1,7 @@
 # Documentazione Metallica Marcon
 
+- [Anagrafiche: form e punti di modifica — 2026-11-16](qa/2026-11-16-registry-forms.md): struttura comune, editor sede unico e verifiche locali; revisione grafica di clienti/sedi e orari ancora da concordare.
+
 - [Convenzione grafica applicata agli autisti — 2026-11-16](qa/2026-11-16-driver-convention.md): pulsanti condivisi, dashboard compatta, temi e verifiche; solo locale. Eccezioni PO: menu con icone pulite e chiamate verdi; Salva verde, Annulla rosso outline.
 
 - [Convenzione UX/UI approvata — 2026-11-16](../DESIGN.md): prima applicazione locale agli autisti e componenti comuni; prossime aree anagrafiche e poi Logistica. [Analisi iniziale](design/ux-ui-convention-proposal.md).

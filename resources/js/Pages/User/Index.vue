@@ -1,23 +1,13 @@
 <template>
-    <div class="flex flex-row items-center justify-between mb-2">
-        <div class="font-medium text-lg">
-            Gestione UTENTI
-        </div>
-        <div>
-            <Link
-                class="btn btn-circle btn-primary" 
-                :href="route('user.create')"
-            >
-                <font-awesome-icon :icon="['fas', 'plus']" class="text-xl" />
-            </Link>
-        </div>
-    </div>
+<RegistryPage title="Utenti">
+
+    <template #actions><AppAction :as="Link" variant="function" :href="route('user.create')"><font-awesome-icon :icon="['fas','plus']" aria-hidden="true" />Nuovo utente</AppAction></template>
 <div class="flex flex-col gap-2">
     <div class="flex flex-wrap items-center gap-2 mb-2">
         <span class="text-sm opacity-70">Ordina per:</span>
         <Link
             :href="route('user.index', sortParams('name'))"
-            class="btn btn-sm"
+            class="btn btn-outline"
             :class="isSortedBy('name') ? 'btn-primary' : 'btn-outline'"
         >
             Nome
@@ -25,7 +15,7 @@
         </Link>
         <Link
             :href="route('user.index', sortParams('surname'))"
-            class="btn btn-sm"
+            class="btn btn-outline"
             :class="isSortedBy('surname') ? 'btn-primary' : 'btn-outline'"
         >
             Cognome
@@ -33,7 +23,7 @@
         </Link>
         <Link
             :href="route('user.index', sortParams('role'))"
-            class="btn btn-sm"
+            class="btn btn-outline"
             :class="isSortedBy('role') ? 'btn-primary' : 'btn-outline'"
         >
             Ruolo
@@ -41,55 +31,48 @@
         </Link>
     </div>
 
-    <Box v-for="user in props.users.data" :key="user.id" :class="{'border-dashed' : user.deleted_at}">
+    <Box padding="px-3 py-2 sm:px-4" v-for="user in props.users.data" :key="user.id" :class="{'border-dashed' : user.deleted_at}">
     <div class="flex flex-col md:flex-row gap-2 md:items-center justify-between">
-        <div :class="{'opacity-25' : user.deleted_at}">
-            <div v-if="user.deleted_at != null" class="text-xs font-bold uppercase border border-dashed p-1 border-green-300 text-green-500 dark:border-green-600 dark:text-green-600 inline-block rounded-md mb-2">cancellato</div>
-            <div class="flex flex-row items-center justify-start gap-2"> 
+        <div :class="{'opacity-75' : user.deleted_at}">
+            <div v-if="user.deleted_at != null" class="badge badge-neutral badge-outline mb-2">cancellato</div>
+            <div class="flex flex-wrap items-center justify-start gap-2">
                 <font-awesome-icon v-if="user.is_admin" :icon="['fas', 'user-tie']" class="text-xl" />
                 <span class="text-lg font-bold">{{ user.name }} {{ user.surname }}</span>
                 &nbsp;|&nbsp;<span class="text-lg">{{ user.role }}</span>
             </div>
-          
+
         </div>
 
         <section>
-            <div class="flex items-center gap-1">
-                <button v-if="user.role != 'warehouse_worker'" @click="resendVerification(user.id)" class="btn btn-ghost">
-                    Resend Verification Email
+            <div class="flex flex-wrap items-center gap-2">
+                <button v-if="user.role != 'warehouse_worker'" type="button" :disabled="!!pendingMail[user.id]" :aria-busy="pendingMail[user.id] === 'verification' || undefined" @click="resendVerification(user.id)" class="btn btn-primary btn-outline">
+                    Reinvia verifica email
                 </button>
 
-                <button v-if="user.role != 'warehouse_worker'" @click="sendPasswordReset(user.id)" class="btn btn-ghost">
-                    Reset Password
+                <button v-if="user.role != 'warehouse_worker'" type="button" :disabled="!!pendingMail[user.id]" :aria-busy="pendingMail[user.id] === 'password' || undefined" @click="sendPasswordReset(user.id)" class="btn btn-primary btn-outline">
+                    Invia reset password
                 </button>
-                <a 
-                    class="btn btn-circle btn-outline btn-primary" 
+                <a
+                    class="btn btn-circle btn-outline btn-primary"
                     :href="route('user.show', {user: user.id})"
-                >
+                 aria-label="Apri scheda utente">
                     <font-awesome-icon :icon="['fas', 'file-lines']" class="text-xl stroke-current" />
                 </a>
                  <!-- EDIT  -->
                 <Link
-                    class="btn btn-circle btn-outline" 
+                    class="btn btn-circle btn-primary btn-outline"
                     :href="route('user.edit', {user: user.id})"
-                >
+                 aria-label="Modifica utente">
                     <font-awesome-icon :icon="['fas', 'pencil']" class="text-xl stroke-current" />
                 </Link>
                  <!-- DELETE -->
-                <Link 
-                    v-if="!user.deleted_at"
-                    class="btn btn-circle btn-outline btn-error" 
-                    :href="route('user.destroy', {user: user.id})"
-                    as="button" method="delete"
-                >
-                <font-awesome-icon :icon="['fas', 'trash-can']" class="text-xl stroke-current" />
-                </Link>
-                <Link 
+                <RegistryDeleteAction v-if="!user.deleted_at" :label="[user.name, user.surname].filter(Boolean).join(' ')" :busy="deleting === route('user.destroy', {user: user.id})" @confirm="removeRecord(route('user.destroy', {user: user.id}))" />
+                <Link
                     v-else
-                    class="btn btn-circle btn-outline btn-success" 
+                    class="btn btn-circle btn-primary btn-outline"
                     :href="route('user.restore', {user: user.id})"
                     as="button" method="put"
-                >
+                 aria-label="Ripristina utente">
                     <font-awesome-icon :icon="['fas', 'trash-can-arrow-up']" class="text-xl stroke-current"  />
                 </Link>
 
@@ -106,10 +89,20 @@
     <Pagination :links="users.links" />
 </section>
 
+
+<p v-if="!props.users.data.length" class="py-4">Nessun utente da visualizzare.</p>
+</RegistryPage>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import RegistryDeleteAction from '@/Components/Registry/RegistryDeleteAction.vue'
+import {useRegistryDelete} from '@/Composables/useRegistryDelete'
+const {deleting, removeRecord} = useRegistryDelete()
+
+import RegistryPage from '@/Components/Registry/RegistryPage.vue'
+
+import AppAction from '@/Components/UI/AppAction.vue'
+import { computed, reactive } from 'vue';
 import Box from '@/Components/UI/Box.vue';
 import Pagination from '@/Components/UI/Pagination.vue';
 import { Link } from '@inertiajs/vue3';
@@ -137,27 +130,19 @@ const sortParams = (key) => {
     };
 };
 
-const resendVerification = (userId) => {
-    axios.post(`/api/user/resend-verification/${userId}`)
-        .then(response => {
-          console.log(response.data);
-          store.dispatch('flash/queueMessage', { type: response.data.type, text: response.data.message });
-        })
-        .catch(error => {
-          console.error(error);
-        });
-};
-
-const sendPasswordReset  = (userId) => {
-    axios.post(`/api/user/send-password-reset/${userId}`)
-        .then(response => {
-          console.log(response.data);
-          store.dispatch('flash/queueMessage', { type: response.data.type, text: response.data.message });
-        })
-        .catch(error => {
-          console.error(error);
-        });
-};
-
+const pendingMail = reactive({})
+const sendMail = async (userId, kind) => {
+    if (pendingMail[userId]) return
+    pendingMail[userId] = kind
+    try {
+        const endpoint = kind === 'verification' ? 'resend-verification' : 'send-password-reset'
+        const response = await axios.post(`/api/user/${endpoint}/${userId}`)
+        store.dispatch('flash/queueMessage', {type:response.data.type, text:response.data.message})
+    } catch {
+        store.dispatch('flash/queueMessage', {type:'error', text:'Invio email non riuscito. Riprova.'})
+    } finally { delete pendingMail[userId] }
+}
+const resendVerification = id => sendMail(id, 'verification')
+const sendPasswordReset = id => sendMail(id, 'password')
 
 </script>

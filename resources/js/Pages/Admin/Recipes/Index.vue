@@ -1,34 +1,19 @@
 <script setup>
-import { Link } from '@inertiajs/vue3'
-const props = defineProps({ recipes: Object })
+import {Link} from '@inertiajs/vue3'
+import RegistryPage from '@/Components/Registry/RegistryPage.vue'
+import AppAction from '@/Components/UI/AppAction.vue'
+import Pagination from '@/Components/UI/Pagination.vue'
+defineProps({recipes:Object})
 </script>
-
 <template>
-  <div class="p-6">
-    <div class="flex justify-between mb-4">
-      <h1 class="text-xl font-bold">Ricette</h1>
-      <Link class="btn btn-primary" :href="route('recipes.create')">+ Nuova</Link>
-    </div>
-
-    <table class="table w-full">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Versione</th>
-          <th class="text-right">Azioni</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="r in recipes.data" :key="r.id">
-          <td>{{ r.name }}</td>
-          <td>{{ r.version }}</td>
-          <td class="text-right">
-            <Link :href="route('recipes.edit', { recipe: r.id, from: 'recipes' })" class="btn btn-sm">
-              Modifica
-            </Link>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <RegistryPage title="Ricette">
+        <template #actions><AppAction :as="Link" variant="function" :href="route('recipes.create')"><font-awesome-icon :icon="['fas','plus']" aria-hidden="true" />Nuova ricetta</AppAction></template>
+        <div class="divide-y divide-base-300">
+            <article v-for="item in recipes.data" :key="item.id" class="flex min-w-0 flex-col justify-between gap-3 py-3 lg:flex-row lg:items-center">
+                <div class="min-w-0"><h2 class="break-words font-semibold">{{ item.name }}</h2><p class="text-sm">Versione {{ item.version }}</p></div><div class="flex flex-wrap items-center gap-2"><AppAction :as="Link" variant="function" :href="route('recipes.edit',{recipe:item.id,from:'recipes'})">Modifica</AppAction></div>
+            </article>
+        </div>
+        <p v-if="!recipes.data.length" class="py-4">Nessun elemento presente. Usa “Nuova ricetta” per aggiungerlo.</p>
+        <Pagination v-if="recipes.links?.length" :links="recipes.links" />
+    </RegistryPage>
 </template>

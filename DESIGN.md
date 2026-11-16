@@ -112,7 +112,37 @@ Mantenere la famiglia sans attuale: nessun font nuovo da scaricare.
 | Nome cliente, contenitore o elemento principale | `text-base font-semibold` |
 | Testo operativo, label e pulsanti | `text-sm` o base coerente con il componente |
 | Valori dei campi di inserimento | Almeno `text-base`; numeri quantitativi più evidenti |
-| Metadati secondari | `text-xs`, mai unico posto per istruzioni o dati critici |
+| Dati anagrafici e indirizzi nei riepiloghi | `text-sm leading-5` (14/20 px), valori `font-medium` |
+| Annotazioni accessorie | `text-xs`, mai unico posto per istruzioni o dati critici |
+
+Nelle liste anagrafiche la gerarchia è costante: nome/ragione sociale in
+`text-base font-semibold leading-6` (16/24 px), seguito da una riga logica di
+dati anagrafici e da una riga logica di indirizzo, entrambe a 14/20 px.
+Le righe sono gruppi semantici distinti, non interruzioni HTML forzate:
+i metadati si dispongono con flex-wrap, l’indirizzo va a capo naturalmente.
+Non comprimere il carattere al diminuire dello schermo e non troncare il nome.
+Le etichette restano regolari e i valori medium, senza rendere tutta la riga bold.
+
+I gruppi dati e indirizzo hanno un’icona informativa da 16 px (lista
+`list-ul` e segnaposto), allineata alla prima riga, con 8 px di distanza
+dal testo e `aria-hidden`: il contenuto testuale resta sufficiente.
+Nessun cerchio/bordo: queste icone non sono comandi. Il contenuto ha
+`min-w-0 flex-1`, le azioni `shrink-0`: su PC è il testo ad andare a capo,
+senza spingere un singolo pulsante sulla riga successiva; sotto il breakpoint
+lg le azioni passano come gruppo sotto il contenuto e possono disporsi su più
+righe solo quando richiesto dalla larghezza disponibile.
+
+Le card di riepilogo anagrafico usano 8 px di padding verticale e 12 px
+orizzontale (16 px da sm); tra contenuto e azioni 8 px. Il contenitore
+si compatta senza ridurre i target dei pulsanti da 48 px. Questo formato
+vale per le liste, mentre i moduli mantengono lo spazio necessario ai campi.
+Tra card consecutive della stessa lista: 8 px (`gap-2`).
+
+Nei moduli con indirizzo e coordinate mostrare una mappa di riscontro.
+L’indirizzo è il dato anagrafico; il marker può rappresentare l’ingresso o
+il punto operativo utile. La geocodifica aggiorna il marker, mentre il drag
+aggiorna solo le coordinate, senza riscrivere l’indirizzo. Un aiuto testuale
+esplicita questa distinzione. Usare il componente condiviso `LocationPicker`.
 
 Dati numerici allineati e tabulari. Etichette non tutte maiuscole. Usare titoli
 HTML secondo la gerarchia, non scegliere h4/h5 per la sola dimensione grafica.
@@ -203,6 +233,22 @@ Workspace, nello step successivo:
    di presentazione, senza mutazioni o autorizzazioni al loro interno.
 2. **Gestione anagrafiche:** prossima area da analizzare e uniformare, prima
    dei flussi Logistica. Una schermata alla volta, riusando la convenzione.
+   La fondazione tecnica locale è descritta nella [nota sui form anagrafici](docs/qa/2026-11-16-registry-forms.md):
+   campi cliente condivisi, un solo editor sede dalla scheda cliente, editor
+   distinti per referenti e orari. Su indicazione del PO la prossima fase
+   grafica, in particolare gli orari settimanali, richiede confronto prima
+   di ulteriori modifiche alla presentazione.
+   Il PO ha poi approvato la vista di lettura degli orari: tabella DaisyUI
+   compatta con gruppi Mattina/Pomeriggio e Apertura/Chiusura solo in testata;
+   `00:00` viene mostrato come «Chiuso». L’editor rimane uno stato separato.
+   In modifica usa la stessa tabella, con quattro input time e un comando
+   «Copia al successivo» sulla riga del giorno. Sui telefoni scorre la sola
+   tabella di modifica; Salva/Annulla restano esterni allo scorrimento.
+   Le sedi si selezionano con tabs sempre presenti, senza accordion, e la
+   sede principale è indicata da una casa con alternativa testuale accessibile.
+   Variante DaisyUI 4 `tabs-lifted`: la linguetta attiva si raccorda al bordo
+   del pannello senza spazio verticale né una seconda card interna. Scorre
+   orizzontalmente la sola barra delle linguette, non il contenuto della sede.
 3. **Logistica:** successivamente creazione ordini/viaggi e gestione ordini/viaggi.
 4. **Altre interfacce:** estensione progressiva e controllata dei componenti.
 5. **Refactoring futuro:** aggiornare la mappatura tecnica quando verranno

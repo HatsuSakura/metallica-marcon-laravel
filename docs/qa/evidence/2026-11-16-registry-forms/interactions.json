@@ -1,0 +1,9 @@
+[
+  "Edit: dirty/revert, unchanged submit blocked, duplicate submit blocked, saved baseline, validation focus/link",
+  "Delete: named dialog, cancel without mutation, single confirmed DELETE",
+  "Unified site editor: dirty/revert, cancel/remount, single PUT, main flag preserved",
+  "Map: address geocoding updates coordinates, marker drag updates only coordinates, PUT preserves address",
+  "New site starts empty after editing a previous site",
+  "Existing timetable: dirty/revert and cancel restore values; no new graphic design",
+  "Recipe: add/remove restores original composition and disables save"
+]

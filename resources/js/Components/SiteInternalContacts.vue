@@ -1,6 +1,6 @@
 <template>
     <div class="space-y-3">
-        <button v-if="editable" type="button" class="btn btn-primary min-h-12" @click="openEditor()">+ Aggiungi referente</button>
+        <button v-if="editable" type="button" class="btn btn-primary btn-outline min-h-12" @click="openEditor()">Aggiungi referente</button>
         <p v-if="message" role="status" class="text-sm text-success">{{ message }}</p>
         <div v-if="contacts?.length" class="space-y-2">
             <article v-for="contact in contacts" :key="contact.id" class="flex min-w-0 items-start justify-between gap-3 border-b border-base-300 py-2">
@@ -11,7 +11,7 @@
                         <p v-if="contact.mobile || contact.phone || contact.email">{{ contactDetails(contact).join(' | ') }}</p>
                     </div>
                 </div>
-                <button v-if="editable" type="button" class="btn btn-circle btn-outline min-h-12 min-w-12 shrink-0" :aria-label="`Modifica referente ${contact.name} ${contact.surname || ''}`" @click="openEditor(contact)"><font-awesome-icon :icon="['fas', 'pencil']" aria-hidden="true" /></button>
+                <button v-if="editable" type="button" class="btn btn-primary btn-circle btn-outline min-h-12 min-w-12 shrink-0" :aria-label="`Modifica referente ${contact.name} ${contact.surname || ''}`" @click="openEditor(contact)"><font-awesome-icon :icon="['fas', 'pencil']" aria-hidden="true" /></button>
             </article>
         </div>
         <p v-else class="opacity-70 text-sm">Nessun referente interno registrato.</p>
@@ -36,8 +36,8 @@
                         </label>
                     </div>
                     <div class="grid grid-cols-2 gap-2 pt-2">
-                        <button type="button" class="btn btn-outline min-h-12" :disabled="busy" @click="dialog.close()">Annulla</button>
-                        <button type="submit" class="btn btn-primary min-h-12" :disabled="busy">{{ busy ? 'Salvataggio…' : 'Salva' }}</button>
+                        <button type="button" class="btn btn-error btn-outline min-h-12" :disabled="busy" @click="dialog.close()">Annulla</button>
+                        <button type="submit" class="btn btn-success min-h-12" :disabled="busy || !changed">{{ busy ? 'Salvataggio…' : 'Salva' }}</button>
                     </div>
                 </form>
             </div>
@@ -45,7 +45,8 @@
     </div>
 </template>
 <script setup>
-import {reactive, ref} from 'vue'
+import {registrySnapshot} from '@/utils/registryFormState'
+import {computed, reactive, ref} from 'vue'
 import axios from 'axios'
 import {siteContactRole} from '@/utils/siteContactPresentation'
 const props = defineProps({contacts:{type:Array,default:()=>[]},siteId:Number,roles:{type:Array,default:()=>[]},editable:Boolean})
@@ -59,17 +60,20 @@ const fields = [
     {key:'mobile',label:'Cellulare',type:'tel',autocomplete:'off'},
     {key:'email',label:'Email',type:'email',autocomplete:'off'},
 ]
+const baseline = ref('')
 const draft = reactive({name:'',surname:'',phone:'',mobile:'',email:'',role:''})
+const changed = computed(() => !editingId.value || registrySnapshot(draft) !== baseline.value)
 const contactDetails = contact => [contact.mobile && `Cellulare: ${contact.mobile}`, contact.phone && `Telefono: ${contact.phone}`, contact.email].filter(Boolean)
 const roleLabel = value => props.roles.find(role => role.value === value)?.label || siteContactRole(value).label
 const openEditor = (contact = null) => {
     editingId.value = contact?.id ?? null
     for (const key of Object.keys(draft)) draft[key] = contact?.[key] ?? ''
+    baseline.value = registrySnapshot(draft)
     error.value = ''; errors.value = {}; message.value = ''
     dialog.value.showModal()
 }
 const save = async () => {
-    if (busy.value) return
+    if (busy.value || !changed.value) return
     busy.value = true; error.value = ''; errors.value = {}
     try {
         const base = `/api/sites/${props.siteId}/contacts`

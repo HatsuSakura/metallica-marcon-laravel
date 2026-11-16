@@ -1,41 +1,43 @@
 <template>
+<RegistryPage title="Nuovo utente">
+
 
     <div class="flex mb-4">
         <Link
             :href="route('user.index')"
             method="get"
             as="button"
-            class="btn btn-ghost"
+            class="btn btn-error btn-outline"
             >
             <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-2xl"/>
             Annulla e torna all'elenco utenti
         </Link>
     </div>
 
-    <form @submit.prevent="register">
-        <div class="flex flex-col gap-1 w-2/3 mx-auto">
+    <RegistryForm :form="form" v-slot="{canSubmit, busy}" @submit="register" >
+        <div class="flex flex-col gap-1 w-full max-w-4xl mx-auto">
             <div>
                 <label for="name" class="label">
                     Nome
-                    <span class="input-error" v-if="form.errors.name">{{ form.errors.name }}</span>
+                    <span class="input-error" v-if="form.errors.name" id="name-error" role="alert">{{ form.errors.name }}</span>
                 </label>
-                <input id="name" v-model="form.name" type="text" class="input" @change="setUserCode">
+                <input id="name" v-model="form.name" type="text" class="input" @change="setUserCode" :aria-invalid="!!form.errors.name" :aria-describedby="form.errors.name ? 'name-error' : undefined" name="name">
             </div>
 
             <div>
                 <label for="surname" class="label flex-1">
                     Cognome
-                    <span class="input-error" v-if="form.errors.surname">{{ form.errors.surname }}</span>
+                    <span class="input-error" v-if="form.errors.surname" id="surname-error" role="alert">{{ form.errors.surname }}</span>
                 </label>
-                <input id="surname" v-model="form.surname" type="text" class="input" @change="setUserCode">
+                <input id="surname" v-model="form.surname" type="text" class="input" @change="setUserCode" :aria-invalid="!!form.errors.surname" :aria-describedby="form.errors.surname ? 'surname-error' : undefined" name="surname">
             </div>
 
-            <div class="flex flex-row justify-between items-stretch">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                     <label class="label" for="role">
                         Ruolo
                     </label>
-                    <select v-model="form.role" class="select select-bordered" id="role" required  @change="setUserCode">
+                    <select v-model="form.role" class="select select-bordered" id="role" required  @change="setUserCode" :aria-invalid="!!form.errors.role" name="role">
                         <option v-for="role in props.roles" :key="role.key" :value="role.value">
                         {{ role.key }}
                         </option>
@@ -47,13 +49,13 @@
                     <label class="label">Operativo in</label>
                     <div class="flex flex-col gap-1">
                     <div v-for="warehouse in props.warehouses" :key="warehouse.id">
-                        <label class="inline-flex items-center">
+                        <label class="inline-flex min-h-12 items-center">
                         <input
                             type="checkbox"
                             v-model="form.warehouse_ids"
                             :value="warehouse.id"
                             class="checkbox mr-2"
-                        />
+                         :id="`registry-user-warehouse-${warehouse.id}`" :aria-invalid="!!form.errors.warehouse_ids" name="warehouse_ids"/>
                         <span>{{ warehouse.name }}</span>
                         </label>
                     </div>
@@ -64,59 +66,66 @@
                     <label class="label" for="is_crane_operator">
                         Operatore ragno
                     </label>
-                    <input v-model="form.is_crane_operator" id="is_crane_operator" type="checkbox" class="toggle" />
+                    <input v-model="form.is_crane_operator" id="is_crane_operator" type="checkbox" class="toggle"  :aria-invalid="!!form.errors.is_crane_operator" name="is_crane_operator"/>
                 </div>
 
                 <div>
                     <label for="user_code" class="label flex-1">
                         Codice Breve
-                        <span class="input-error" v-if="form.errors.user_code">{{ form.errors.user_code }}</span>
+                        <span class="input-error" v-if="form.errors.user_code" id="user_code-error" role="alert">{{ form.errors.user_code }}</span>
                     </label>
-                    <input id="user_code" v-model="form.user_code" type="text" class="input" disabled>
+                    <input id="user_code" v-model="form.user_code" type="text" class="input" disabled :aria-invalid="!!form.errors.user_code" :aria-describedby="form.errors.user_code ? 'user_code-error' : undefined" name="user_code">
                 </div>
 
                 <div v-if="user.is_admin && showEmailAndPassword">
-                    <label class="label" for="role">
+                    <label class="label" for="is_admin">
                         Admin
                     </label>
-                    <input v-model="form.is_admin" id="is_admin" type="checkbox" class="toggle" />
+                    <input v-model="form.is_admin" id="is_admin" type="checkbox" class="toggle"  :aria-invalid="!!form.errors.is_admin" name="is_admin"/>
                 </div>
             </div>
-            
+
             <div v-if="showEmailAndPassword">
                 <label for="email" class="label whitespace-nowrap">
                     E-mail
-                    <span class="input-error" v-if="form.errors.email">{{ form.errors.email }}</span>
+                    <span class="input-error" v-if="form.errors.email" id="email-error" role="alert">{{ form.errors.email }}</span>
                 </label>
-                <input id="email" v-model="form.email" type="text" class="input">
-                
+                <input id="email" v-model="form.email" type="text" class="input" :aria-invalid="!!form.errors.email" :aria-describedby="form.errors.email ? 'email-error' : undefined" name="email">
+
             </div>
-            
+
             <div v-if="showEmailAndPassword">
                 <label for="password" class="label whitespace-nowrap">
                     Password
-                    <span class="input-error" v-if="form.errors.password">{{ form.errors.password }}</span>
+                    <span class="input-error" v-if="form.errors.password" id="password-error" role="alert">{{ form.errors.password }}</span>
                 </label>
-                <input id="password" v-model="form.password" type="password" class="input">
+                <input id="password" v-model="form.password" type="password" class="input" :aria-invalid="!!form.errors.password" :aria-describedby="form.errors.password ? 'password-error' : undefined" name="password">
             </div>
 
             <div v-if="showEmailAndPassword">
                 <label for="password_confirmation" class="label whitespace-nowrap">Conferma Password</label>
-                <input id="password_confirmation" v-model="form.password_confirmation" type="password" class="input">
+                <input id="password_confirmation" v-model="form.password_confirmation" type="password" class="input" :aria-invalid="!!form.errors.password_confirmation" name="password_confirmation">
             </div>
 
             <div>
-                <button class="btn btn-primary w-full mt-4 text-lg" type="submit">
+                <Link :href="route('user.index')" class="btn btn-error btn-outline mr-2">Annulla</Link>
+<button class="btn w-full mt-4 text-lg btn-success" type="submit" :disabled="!canSubmit" :aria-busy="busy || undefined"><span v-if="busy" class="loading loading-spinner loading-sm" aria-hidden="true"></span>
                     <font-awesome-icon :icon="['fas', 'user-plus']" />
                     Crea Utente
                 </button>
             </div>
         </div>
-    </form>
-    
-    </template>
-    
+    </RegistryForm>
+
+
+</RegistryPage>
+</template>
+
     <script setup>
+import RegistryPage from '@/Components/Registry/RegistryPage.vue'
+
+import RegistryForm from '@/Components/Registry/RegistryForm.vue'
+
     import { computed, ref, watch, useAttrs, onMounted, onUnmounted } from 'vue'
     import {useForm, usePage, Link} from '@inertiajs/vue3'
     const props = defineProps({
@@ -142,7 +151,7 @@
     const showEmailAndPassword = computed(() =>
         !['warehouse_worker'].includes(form.role)
     )
-    
+
 
     const form = useForm({
         name: null,
@@ -156,7 +165,7 @@
         user_code: null,
         is_admin: false,
     })
-    
+
     const setUserCode = () => {
         if (form.name && form.surname && form.role){
             form.user_code = (form.name.substring(0, 1) + form.surname.substring(0, 1) + form.role.substring(0, 1)).toUpperCase()
@@ -178,5 +187,5 @@
         form.post(route('user.store'));
     }
     </script>
-    
+
 

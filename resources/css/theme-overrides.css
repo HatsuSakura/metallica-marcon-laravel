@@ -32,3 +32,8 @@
 @media (prefers-reduced-motion: reduce) {
   .btn, .input, .select, .textarea { transition: none; }
 }
+/* Neutral outline describes ordinary content, so use the readable content token. */
+.badge-neutral.badge-outline {
+    color: oklch(var(--bc));
+    border-color: oklch(var(--bc) / .5);
+}

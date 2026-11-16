@@ -1,5 +1,5 @@
 <template>
-    <component :is="as" :type="as === 'button' ? type : undefined" class="btn relative min-h-12 shrink-0" :class="[variants[variant], shapes[shape]]" :disabled="as === 'button' && (disabled || busy)" :aria-disabled="disabled || busy ? true : undefined" :aria-busy="busy || undefined" :aria-label="$attrs['aria-label'] || (busy ? 'Operazione in corso' : undefined)" @click.capture="guard">
+    <component :is="as" :type="as === 'button' ? type : undefined" class="btn relative min-h-12 shrink-0" :class="[variants[variant], shapes[shape], {'btn-disabled': as !== 'button' && (disabled || busy)}]" :disabled="as === 'button' ? (disabled || busy) : undefined" :aria-disabled="disabled || busy ? true : undefined" :aria-busy="busy || undefined" :aria-label="$attrs['aria-label'] || (busy ? 'Operazione in corso' : undefined)" @click.capture="guard">
         <template v-if="busy"><span class="invisible inline-flex items-center gap-2"><slot /></span><span class="loading loading-spinner loading-sm absolute" aria-hidden="true"></span></template>
         <slot v-else />
     </component>

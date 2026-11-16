@@ -28,6 +28,7 @@ test('link actions keep native link semantics and do not acquire a button type',
  assert.match(link,/<a /)
  assert.match(link,/href="#viaggi"/)
  assert.doesNotMatch(link,/type="button"/)
+ assert.doesNotMatch(link,/\sdisabled=/)
 })
 
 test('discard and delete use red with a distinct outline/filled treatment',async()=>{

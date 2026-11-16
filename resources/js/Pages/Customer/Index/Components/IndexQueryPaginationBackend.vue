@@ -1,30 +1,31 @@
 <template>
   <Box
+    padding="px-3 py-2 sm:px-4"
     v-for="customer in customersArr"
     :key="customer.id"
     :class="{ 'border-dashed': customer.deleted_at }"
   >
-    <div class="flex flex-col md:flex-row gap-2 md:items-center justify-between">
-      <div :class="{ 'opacity-25': customer.deleted_at }">
+    <div class="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-center">
+      <div class="min-w-0 flex-1 space-y-1" :class="{ 'opacity-75': customer.deleted_at }">
         <div
           v-if="customer.deleted_at"
-          class="text-xs font-bold uppercase border border-dashed p-1 border-green-300 text-green-500 dark:border-green-600 dark:text-green-600 inline-block rounded-md mb-2"
+          class="badge badge-neutral badge-outline mb-2"
         >
           cancellato
         </div>
 
         <div>
-          <span class="text-lg font-bold">
+          <h2 class="m-0 break-words text-base font-semibold leading-6">
             {{ customer.company_name }}
-          </span>
-          <CustomerSpace :customer="customer" :vat="true" />
+          </h2>
         </div>
-        <CustomerAddress :customer="customer" class="text-gray-500" />
+        <CustomerSpace :customer="customer" :vat="true" />
+        <CustomerAddress :customer="customer" class="text-sm leading-5" />
       </div>
 
-      <section>
-        <div class="flex items-center gap-1 text-gray-600">
-          <div class="flex items-center gap-1">
+      <section class="shrink-0" aria-label="Azioni cliente">
+        <div class="flex flex-wrap items-center gap-2 text-base-content lg:flex-nowrap">
+          <div class="flex flex-wrap items-center gap-2 lg:flex-nowrap">
             <span
               v-if="customer.can && customer.can.createOrder"
               class="badge badge-outline"
@@ -36,9 +37,9 @@
             <div class="tooltip" data-tip="Crea ordine">
               <button
                 v-if="customer.can && customer.can.createOrder"
-                class="btn btn-circle btn-primary"
+                class="btn btn-circle btn-primary btn-outline"
                 type="button"
-                @click="onCreateOrderClick(customer)"
+                aria-label="Crea ordine" @click="onCreateOrderClick(customer)"
               >
                 <font-awesome-icon :icon="['fas', 'clipboard-list']" class="h-5 w-5 stroke-current" />
               </button>
@@ -46,9 +47,9 @@
 
             <div class="tooltip" data-tip="Crea ritiro">
               <button
-                class="btn btn-circle btn-secondary"
+                class="btn btn-circle btn-primary btn-outline"
                 type="button"
-                @click="onCreateWithdrawClick(customer)"
+                aria-label="Crea ritiro" @click="onCreateWithdrawClick(customer)"
               >
                 <font-awesome-icon :icon="['fas', 'cart-plus']" class="h-5 w-5 stroke-current" />
               </button>
@@ -59,7 +60,7 @@
             <a
               class="btn btn-circle btn-outline btn-primary"
               :href="route('customer.show', { customer: customer.id })"
-            >
+             aria-label="Apri scheda cliente">
               <font-awesome-icon :icon="['fas', 'file-lines']" class="h-5 w-5 stroke-current" />
             </a>
           </div>
@@ -67,34 +68,26 @@
 
           <div class="tooltip" data-tip="Modifica cliente">
             <Link
-              class="btn btn-circle btn-outline"
+              class="btn btn-circle btn-primary btn-outline"
               :href="route('customer.edit', { customer: customer.id })"
-            >
+             aria-label="Modifica cliente">
               <font-awesome-icon :icon="['fas', 'pencil']" class="h-5 w-5 stroke-current" />
             </Link>
           </div>
 
           <div v-if="!customer.deleted_at" class="tooltip" data-tip="Elimina cliente">
-            <Link
-              
-              class="btn btn-circle btn-outline btn-error"
-              :href="route('customer.destroy', { customer: customer.id })"
-              as="button"
-              method="delete"
-            >
-              <font-awesome-icon :icon="['fas', 'trash-can']" class="h-5 w-5 stroke-current" />
-            </Link>
+            <RegistryDeleteAction :label="customer.company_name" :busy="deleting === route('customer.destroy', {customer:customer.id})" @confirm="removeRecord(route('customer.destroy', {customer:customer.id}))" />
           </div>
           <div v-else class="tooltip" data-tip="Ripristina cliente">
           <Link
-            class="btn btn-circle btn-outline btn-success"
+            class="btn btn-circle btn-outline btn-primary"
             :href="route('customer.restore', { customer: customer.id })"
             as="button"
             method="put"
-          >
+           aria-label="Ripristina cliente">
             <font-awesome-icon :icon="['fas', 'trash-can-arrow-up']" />
           </Link>
-          </div> 
+          </div>
 
         </div>
       </section>
@@ -123,7 +116,7 @@
       </div>
 
       <div class="modal-action">
-        <button class="btn" type="button" @click="siteModal?.close()">Annulla</button>
+        <button class="btn btn-error btn-outline" type="button" @click="siteModal?.close()">Annulla</button>
       </div>
     </div>
 
@@ -134,6 +127,10 @@
 </template>
 
 <script setup>
+import RegistryDeleteAction from '@/Components/Registry/RegistryDeleteAction.vue'
+import {useRegistryDelete} from '@/Composables/useRegistryDelete'
+const {deleting, removeRecord} = useRegistryDelete()
+
 import { ref, computed, nextTick } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
 import Box from '@/Components/UI/Box.vue'
@@ -141,7 +138,7 @@ import CustomerSpace from '@/Components/CustomerSpace.vue'
 import CustomerAddress from '@/Components/CustomerAddress.vue'
 
 const props = defineProps({
-  customers: { type: Object, required: true },
+  customers: { type: [Object, Array], required: true },
 })
 
 const customersArr = computed(() =>

@@ -1,165 +1,20 @@
 <template>
-
-<div class="flex mb-4">
-    <Link
-        :href="route('user.index')"
-        method="get"
-        as="button"
-        class="btn btn-ghost"
-        >
-        <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-2xl"/>
-        Torna all'elenco utenti
-    </Link>
-</div>
-
-
-
-<div>
-        <div class="flex flex-row gap-4 w-2/3 mx-auto">
-            <div class="flex flex-col gap-1 w-3/4">
-                <div class="flex flex-row gap-2">
-                    <div class="w-1/2">
-                        <label for="name" class="label">
-                            Nome
-                        </label>
-                        <div class="input">
-                            {{ props.user.name }}
-                        </div>
-                    </div>
-                    <div class="w-1/2">
-                        <label for="surname" class="label">
-                            Cognome
-                        </label>
-                        <div class="input">
-                            {{ props.user.surname }}
-                        </div>
-                    </div>
-                </div>
-
-                <div v-if="showEmailAndPassword">
-                    <label for="email" class="label whitespace-nowrap">
-                        E-mail
-                    </label>
-                    <input id="email" v-model="props.user.email" type="text" class="input">
-                </div>
-
-                <div class="flex flex-row justify-between content-stretch">
-                    <div>
-                        <label class="label" for="role">
-                            Ruolo
-                        </label>
-                        <div class="input">
-                            {{ props.user.role }}
-                        </div>
-                    </div>
-                    
-                    <!-- Warehouses (Multiple Choice) -->
-                    <div v-if="showWarehouseSelector">
-                        <label class="label" for="warehouse_ids">Operativo in</label>
-                        <div class="flex flex-col gap-1">
-                            <div v-for="warehouse in props.warehouses" :key="warehouse.id">
-                                <label class="inline-flex items-center">
-                                <!-- 
-                                    Use :checked to check if the warehouse id exists in the computed assignedWarehouseIds. 
-                                    The input is disabled so that it cannot be edited.
-                                -->
-                                <input
-                                    type="checkbox"
-                                    :value="warehouse.id"
-                                    :checked="assignedWarehouseIds.includes(warehouse.id)"
-                                    class="checkbox mr-2"
-                                    disabled
-                                />
-                                <span>{{ warehouse.name }}</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div v-if="showCraneOperator">
-                        <label class="label" for="role">
-                            Operatore ragno
-                        </label>
-                        <div class="input">
-                            {{ (Boolean(props.user.is_crane_operator))? 'SI' : 'NO' }}
-                        </div>
-                    </div>
-
-                    <div v-if="props.user.role === 'customer'">
-                        <label class="label" for="role">
-                            ID Customer collegato
-                        </label>
-                        <div class="input">
-                            {{ props.user.customer_id }}
-                        </div>
-                    </div>
-
-
-                    <div>
-                        <label for="user_code" class="label flex-1">
-                            Codice Breve
-                        </label>
-                        <div class="input">
-                            {{ props.user.user_code }}
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="label" for="role">
-                            Admin
-                        </label>
-                        <div class="input">
-                            {{ (Boolean(props.user.is_admin))? 'SI' : 'NO' }}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-row gap-2">
-                    <div class="w-1/3">
-                        <label for="name" class="label">
-                            System ID
-                        </label>
-                        <div class="input">
-                            {{ props.user.id }}
-                        </div>
-                    </div>
-                    <div class="w-1/3">
-                        <label for="surname" class="label">
-                            Creato
-                        </label>
-                        <div class="input">
-                            {{ dayjs(props.user.created_at).format('YYYY-MM-DD HH:mm:ss') }}
-                        </div>
-                    </div>
-                    <div class="w-1/3">
-                        <label for="surname" class="label">
-                            Ultima modifica
-                        </label>
-                        <div class="input">
-                            {{ dayjs(props.user.updated_at).format('YYYY-MM-DD HH:mm:ss') }}
-                        </div>
-                    </div>
-                </div>
-                
-            </div>
-
-            <div class="flex flex-col gap-1 w-1/4">
-                <div v-if="props.user.avatar">
-                    <img :src="props.user.avatar" class="rounded-full mx-auto" alt="Avatar non caricato" />
-                </div>
-                <EmptyState v-else>
-                    Nessun avatar disponibile
-                </EmptyState>
-            </div>
-
+    <RegistryPage title="Scheda utente">
+        <template #actions><AppAction :as="Link" :href="route('user.index')">Torna agli utenti</AppAction><AppAction :as="Link" variant="function" :href="route('user.edit', {user:props.user.id})">Modifica utente</AppAction></template>
+        <div class="flex flex-col gap-4 lg:flex-row">
+            <dl class="grid min-w-0 flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div v-for="field in details" :key="field.label" class="min-w-0"><dt class="text-sm font-semibold">{{ field.label }}</dt><dd class="mt-1 break-words">{{ field.value ?? '—' }}</dd></div>
+                <div v-if="showWarehouseSelector" class="sm:col-span-2"><dt class="text-sm font-semibold">Operativo in</dt><dd>{{ props.user.warehouses?.map(w => w.name).join(', ') || 'Nessun magazzino assegnato' }}</dd></div>
+            </dl>
+            <img v-if="props.user.avatar" :src="props.user.avatar" class="h-24 w-24 rounded-full object-cover" :alt="`Avatar di ${props.user.name}`" />
         </div>
-
-</div>
-
-
+    </RegistryPage>
 </template>
 
 <script setup>
+import AppAction from '@/Components/UI/AppAction.vue'
+import RegistryPage from '@/Components/Registry/RegistryPage.vue'
+
 import { computed } from 'vue';
 import Box from '@/Components/UI/Box.vue';
 import EmptyState from '@/Components/UI/EmptyState.vue';
@@ -188,8 +43,16 @@ const props = defineProps({
     )
 
     // Compute a simple array of warehouse IDs already assigned to the user.
-    const assignedWarehouseIds = computed(() => {
-        return props.user.warehouses.map(w => w.id);
-    });
+    const details = computed(() => [
+        {label:'Nome',value:props.user.name}, {label:'Cognome',value:props.user.surname},
+        ...(showEmailAndPassword.value ? [{label:'Email',value:props.user.email}] : []),
+        {label:'Ruolo',value:props.user.role}, {label:'Codice breve',value:props.user.user_code},
+        {label:'Amministratore',value:props.user.is_admin ? 'Sì' : 'No'},
+        ...(showCraneOperator.value ? [{label:'Operatore ragno',value:props.user.is_crane_operator ? 'Sì' : 'No'}] : []),
+        ...(props.user.role === 'customer' ? [{label:'ID cliente collegato',value:props.user.customer_id}] : []),
+        {label:'ID utente',value:props.user.id},
+        {label:'Creato',value:props.user.created_at ? dayjs(props.user.created_at).format('DD/MM/YYYY HH:mm') : '—'},
+        {label:'Ultima modifica',value:props.user.updated_at ? dayjs(props.user.updated_at).format('DD/MM/YYYY HH:mm') : '—'},
+    ]);
 </script>
 

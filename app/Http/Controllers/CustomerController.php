@@ -126,6 +126,8 @@ class CustomerController extends Controller
             'customer' => $customer,
             'siteContactRoles' => \App\Enums\InternalContactRole::options(),
             'siteContactPermissions' => $customer->sites->mapWithKeys(fn ($site) => [$site->id => Gate::allows('update', $site)]),
+            'canCreateSite' => Gate::allows('create', Site::class),
+            'siteDeletePermissions' => $customer->sites->mapWithKeys(fn ($site) => [$site->id => Gate::allows('delete', $site)]),
             'areas' => $areas,
             'audits' => auth()->user()?->is_admin ? AuditTrailPresenter::forCustomer($customer, 100) : [],
             'orders_by_site' => fn () => Order::query()

@@ -1,42 +1,22 @@
 <script setup>
-import { Link, usePage } from '@inertiajs/vue3'
-
-const props = defineProps({ items: Object })
+import {Link} from '@inertiajs/vue3'
+import RegistryPage from '@/Components/Registry/RegistryPage.vue'
+import AppAction from '@/Components/UI/AppAction.vue'
+import Pagination from '@/Components/UI/Pagination.vue'
+import RegistryDeleteAction from '@/Components/Registry/RegistryDeleteAction.vue'
+import {useRegistryDelete} from '@/Composables/useRegistryDelete'
+const {deleting, removeRecord} = useRegistryDelete()
+defineProps({items:Object})
 </script>
-
 <template>
-  <div class="p-6">
-    <div class="flex justify-between mb-4">
-      <h1 class="text-xl font-bold">Catalogo Materiali / Componenti</h1>
-      <Link class="btn btn-primary" :href="route('catalog-items.create')">+ Nuovo</Link>
-    </div>
-
-    <table class="table w-full">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Tipo</th>
-          <th>Ricetta</th>
-          <th class="text-right">Azioni</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item in items.data" :key="item.id">
-          <td>{{ item.name }}</td>
-          <td>
-            <span class="badge" :class="item.type === 'material' ? 'badge-success' : 'badge-info'">
-              {{ item.type }}
-            </span>
-          </td>
-          <td class="text-right">
-              <Link v-if="item.type==='component'" class="btn btn-xs" :href="route('catalog-items.recipe.edit', { item: item.id, from: 'catalog' })">Gestisci ricetta</Link>
-          </td>
-          <td class="text-right">
-            <Link class="btn btn-xs btn-outline" :href="route('catalog-items.edit', item.id)">Modifica</Link>
-            <Link class="btn btn-xs btn-error ml-2" :href="route('catalog-items.destroy', item.id)" method="delete" as="button" preserve-scroll>Elimina</Link>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <RegistryPage title="Materiali e componenti">
+        <template #actions><AppAction :as="Link" variant="function" :href="route('catalog-items.create')"><font-awesome-icon :icon="['fas','plus']" aria-hidden="true" />Nuovo elemento</AppAction></template>
+        <div class="divide-y divide-base-300">
+            <article v-for="item in items.data" :key="item.id" class="flex min-w-0 flex-col justify-between gap-3 py-3 lg:flex-row lg:items-center">
+                <div class="min-w-0"><h2 class="break-words font-semibold">{{ item.name }}</h2><span class="badge badge-neutral badge-outline">{{ item.type === 'material' ? 'Materiale' : 'Componente' }}</span></div><div class="flex flex-wrap items-center gap-2"><AppAction v-if="item.type === 'component'" :as="Link" variant="function" :href="route('catalog-items.recipe.edit', {item:item.id,from:'catalog'})">Gestisci ricetta</AppAction><AppAction :as="Link" variant="function" :href="route('catalog-items.edit',item.id)">Modifica</AppAction><RegistryDeleteAction :label="item.name" :busy="deleting === route('catalog-items.destroy',item.id)" @confirm="removeRecord(route('catalog-items.destroy',item.id))" /></div>
+            </article>
+        </div>
+        <p v-if="!items.data.length" class="py-4">Nessun elemento presente. Usa “Nuovo elemento” per aggiungerlo.</p>
+        <Pagination v-if="items.links?.length" :links="items.links" />
+    </RegistryPage>
 </template>

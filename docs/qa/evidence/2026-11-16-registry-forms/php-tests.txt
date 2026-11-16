@@ -1,0 +1,12 @@
+
+   PASS  Tests\Feature\SiteContactsTest
+  ✓ create update and fixed category values                              0.20s  
+  ✓ invalid categories and contact data are rejected without writes      0.05s  
+  ✓ category is required for creation and update of uncategorized conta… 0.06s  
+  ✓ update cannot move or edit a contact of another site                 0.05s  
+  ✓ permission matrix for creation and editing                           0.07s  
+  ✓ active driver phonebook updates without changing the baseline or ex… 0.13s  
+
+  Tests:    6 passed (52 assertions)
+  Duration: 0.61s
+

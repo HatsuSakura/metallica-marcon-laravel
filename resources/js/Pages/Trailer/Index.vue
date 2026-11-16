@@ -1,22 +1,21 @@
 <template>
+<RegistryPage title="Rimorchi">
+<template #actions><AppAction :as="Link" variant="function" :href="route('trailer.create')"><font-awesome-icon :icon="['fas', 'plus']" aria-hidden="true" />Nuovo rimorchio</AppAction></template>
+
+
+
 
 <section>
-<Link @click="closeDrawer" :href="route('trailer.create')" class="btn btn-primary mb-4">
-    Nuovo Rimorchio
-</Link>
-</section>
 
-<section>
-    
-    <div class="grid grid-cols-12 gap-2">
+    <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
 
-    <Box v-for="trailer in props.trailers.data" class="col-span-6">
+    <Box padding="px-3 py-2 sm:px-4" v-for="trailer in props.trailers.data" :key="trailer.id" class="min-w-0 break-words">
         <div class="flex flex-row justify-between mb-2">
             <div>
                 <div class="font-medium text-lg">
                     {{ trailer.name }} | {{ trailer.plate }}
                 </div>
-                <div class="text-gray-500">
+                <div class="text-base-content/75">
                     {{ trailer.description }}
                 </div>
 
@@ -30,10 +29,7 @@
                     <span v-if="trailer.is_front_cargo" class="font-medium">Lato Motrice </span>
                     <span v-else  class="font-medium">Lato posteriore</span>
                 <br/>
-            
-            </div>
-            <div>
-                IMMAGINE
+
             </div>
         </div>
 
@@ -42,19 +38,12 @@
             :href="route('trailer.edit', {trailer: trailer.id} )"
             method="get"
             as="button"
-            class="btn btn-primary btn-circle"
-            >
+            class="btn btn-circle btn-primary btn-outline"
+             aria-label="Modifica rimorchio">
                 <font-awesome-icon :icon="['fas', 'pen']" class="text-xl"/>
             </Link>
 
-            <Link
-                :href="route('trailer.destroy', {trailer: trailer.id} )"
-                method="delete"
-                as="button"
-                class="btn btn-error btn-circle"
-            >
-                <font-awesome-icon :icon="['fas', 'trash-can']" class="text-xl"/>
-            </Link>
+            <RegistryDeleteAction :label="trailer.name" :busy="deleting === route('trailer.destroy', {trailer: trailer.id} )" @confirm="removeRecord(route('trailer.destroy', {trailer: trailer.id} ))" />
         </div>
     </Box>
 
@@ -64,9 +53,21 @@
 
 
 
+
+<p v-if="!props.trailers.data.length" class="py-4">Nessun elemento da visualizzare.</p>
+<Pagination v-if="props.trailers.links?.length" :links="props.trailers.links" />
+</RegistryPage>
 </template>
 
 <script setup>
+import RegistryDeleteAction from '@/Components/Registry/RegistryDeleteAction.vue'
+import {useRegistryDelete} from '@/Composables/useRegistryDelete'
+const {deleting, removeRecord} = useRegistryDelete()
+
+import AppAction from '@/Components/UI/AppAction.vue'
+import Pagination from '@/Components/UI/Pagination.vue'
+import RegistryPage from '@/Components/Registry/RegistryPage.vue'
+
 import Box from '@/Components/UI/Box.vue';
 import { Link } from '@inertiajs/vue3';
 
