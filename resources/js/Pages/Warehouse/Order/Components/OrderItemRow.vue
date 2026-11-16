@@ -344,7 +344,7 @@ import { useStore } from 'vuex'
 import Box from '@/Components/UI/Box.vue'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import { ref, reactive, computed, watch, nextTick } from 'vue'
-import VueDatePicker from '@vuepic/vue-datepicker';
+import VueDatePicker from '@/Components/UI/AppDateTimePicker.vue';
 import '@vuepic/vue-datepicker/dist/main.css';
 import dayjs from 'dayjs'
 import ImageUploader   from '@/Pages/Warehouse/Order/Components/ImageUploader.vue'

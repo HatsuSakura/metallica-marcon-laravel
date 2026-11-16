@@ -255,12 +255,11 @@ onBeforeUnmount(() => {
         </div>
 
         <div v-else class="overflow-x-auto">
-          <table class="table table-sm">
+          <table class="document-status-table table table-sm">
             <thead>
               <tr>
                 <th>Ordine</th>
                 <th>Cliente</th>
-                <th>Ordine</th>
                 <th>Documenti</th>
                 <th>Download</th>
                 <th>Azione</th>
@@ -268,9 +267,8 @@ onBeforeUnmount(() => {
             </thead>
             <tbody>
               <tr v-for="order in filteredServerOrders" :key="order.id">
-                <td>#{{ order.id }} ({{ order.legacy_code || 'N/D' }})</td>
-                <td>{{ order.customer_name || '-' }}</td>
-                <td><span class="badge" :class="readinessBadgeClass(order.status)">{{ order.status }}</span></td>
+                <td><div class="space-y-1"><div>#{{ order.id }} ({{ order.legacy_code || 'N/D' }})</div><div><span class="badge" :class="readinessBadgeClass(order.status)">{{ order.status }}</span></div></div></td>
+                <td class="document-customer">{{ order.customer_name || '-' }}</td>
                 <td>
                   <span class="badge" :class="order.current ? 'badge-success' : documentsBadgeClass(order.documents_status === 'generated' ? 'not_generated' : order.documents_status)">{{ !order.current && order.documents_status === 'generated' ? 'Da aggiornare' : order.documents_status }}</span>
                       <div class="text-xs opacity-70 whitespace-nowrap">
@@ -326,3 +324,10 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.document-status-table.table { width:100%; min-width:46rem; }
+.document-status-table.table th, .document-status-table.table td { white-space:nowrap; overflow-wrap:normal; }
+.document-status-table.table td.document-customer { white-space:normal; min-width:12rem; max-width:20rem; overflow-wrap:break-word; }
+.document-status-table.table .badge, .document-status-table.table .btn { white-space:nowrap; min-width:max-content; }
+</style>

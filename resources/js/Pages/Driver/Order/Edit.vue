@@ -38,7 +38,7 @@
                 
               <div class="flex items-center">
                 <span class="font-medium">Data Richiesta: &nbsp;</span>  
-                <VueDatePicker v-model="form.requested_at" format="dd/MM/yyyy, HH:mm"></VueDatePicker> 
+                <AppDateTimePicker v-model="form.requested_at" format="dd/MM/yyyy, HH:mm"></AppDateTimePicker>
               </div>
 
               <div class="flex items-center ">
@@ -178,14 +178,14 @@
                 <div class="mt-2 flex flex-row justify-between align-middle gap-4">
                   <div class="flex w-full">
                     <label for="expected_withdraw_at" class="label w-64">Data presunta ritiro</label>
-                    <VueDatePicker 
+                    <AppDateTimePicker
                       id="expected_withdraw_at" 
                       v-model="form.expected_withdraw_at" 
                       format="dd/MM/yyyy, HH:mm" 
                       auto-apply 
                       :enableTimePicker="true"
                       @update:model-value="manageExpectedDate()">
-                    </VueDatePicker> 
+                    </AppDateTimePicker>
                     <div class="input-error" v-if="form.errors.expected_withdraw_at">
                       {{ form.errors.expected_withdraw_at }}
                     </div>
@@ -340,6 +340,8 @@ import { groupOrderItems } from '@/utils/orderItemGroups';
 	    import { Link, useForm, usePage } from '@inertiajs/vue3'
 	    import dayjs from 'dayjs';
 	    import VueDatePicker from '@vuepic/vue-datepicker';
+import {floorToFiveMinutes} from '@/utils/dateTimeProposal';
+import AppDateTimePicker from '@/Components/UI/AppDateTimePicker.vue';
 	    import { getIconForSite } from '@/Composables/getIconForSite';
 	    import { formatServerDateTime, parseServerDateTime } from '@/utils/serverDateTime';
     import { DataTable } from 'datatables.net-vue3';
@@ -424,7 +426,7 @@ const groupedItems = computed(() => groupOrderItems(form.items, props.cerList ||
     const form = useForm({
       id: props.order.id,
       is_urgent: Boolean(props.order.is_urgent),
-	      requested_at: parseServerDateTime(props.order.requested_at) ?? new Date(),
+	      requested_at: parseServerDateTime(props.order.requested_at) ?? floorToFiveMinutes(),
 	      expected_withdraw_at: normalizeDateOrFallback(props.order.expected_withdraw_at, null),
       logistics_user_id: props.order.logistics_user_id ? props.order.logistics_user_id : user ? user.value.id : null, // Fallback to null if user is not defined
       has_adr_consultant: currentSite.value?.has_adr_consultant ?? '',

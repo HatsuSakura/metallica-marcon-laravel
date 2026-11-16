@@ -1,5 +1,7 @@
 # Documentazione Metallica Marcon
 
+- [Date/ora e rifiniture viaggi — 2026-11-16](qa/2026-11-16-datetime-and-journey-refinements.md): datepicker comune, salva/resta/esci, documenti compatti e ordini aperti richiudibili.
+
 - [Ordini e gestione viaggi: convenzione UX/UI — 2026-11-16](qa/2026-11-16-planning-ui.md): componenti condivisi, dotazioni della sede, form responsive e verifiche locali.
 
 - [Gap analysis DaisyUI 5 / Tailwind 4 — 2026-11-16](design/2026-11-16-daisyui5-gap-analysis.md): inventario, dipendenze e piano proposto; nessun upgrade eseguito, pulsanti attuali conservati.

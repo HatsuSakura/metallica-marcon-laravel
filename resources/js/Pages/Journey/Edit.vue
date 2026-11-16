@@ -89,6 +89,7 @@ import JourneyPlanningActions from './Components/JourneyPlanningActions.vue'
     const listRiempimento  = ref([]);
     const listOrdini       = ref([]);
     const openOrderQuery = ref('')
+    const openOrdersExpanded = ref(true)
     const visibleOpenOrderIds = computed(() => new Set(listOrdini.value.filter(order => matchesCustomerName(order.customer?.company_name, openOrderQuery.value)).map(order => order.id)))
 
 
@@ -287,10 +288,15 @@ import JourneyPlanningActions from './Components/JourneyPlanningActions.vue'
     const documentsBusy = ref(true)
     const journeyDirty = computed(() => savedJourneyPayload.value !== null && JSON.stringify(buildJourneyPayload()) !== savedJourneyPayload.value)
     const saveDisabled = computed(() => form.processing || documentsBusy.value || !journeyDirty.value || !configurationReady.value)
-    const updateJourney = () => {
+    const updateJourney = (postAction = 'save_stay') => {
       if (saveDisabled.value) return
-      form.transform(() => buildJourneyPayload())
+      form.transform(() => ({...buildJourneyPayload(), post_action:postAction}))
       form.put(route('journey.update', { journey: props.journey.id }), {
+        onSuccess: async page => {
+          if (page?.props?.journey) hydrateFromJourney()
+          await nextTick()
+          savedJourneyPayload.value = JSON.stringify(buildJourneyPayload())
+        },
         onError: (errors) => {
           const keys = Object.keys(errors || {})
           if (keys.length) {
@@ -1027,7 +1033,8 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
 
           <!-- MASONRY ORDINI -->
           <div class="w-full mb-8 mt-4">
-          <OpenOrdersFilter v-model="openOrderQuery" />
+          <OpenOrdersFilter v-model="openOrderQuery" v-model:open="openOrdersExpanded" />
+            <div id="open-orders-list" v-show="openOrdersExpanded" role="region" aria-label="Ordini aperti">
             <p v-if="listOrdini.length && !visibleOpenOrderIds.size" class="py-2 text-sm" role="status">Nessun ordine aperto corrisponde alla ricerca.</p>
             <draggable :disabled="form.processing || !configurationReady"
               :list="listOrdini"
@@ -1050,6 +1057,7 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
                 </div>
               </template>
             </draggable>
+            </div>
           </div>
 
           <JourneyDocumentGenerationPanel
@@ -1064,6 +1072,7 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
         <!-- FLOATING INFO OBJECT -->
         <template #sidebar>
           <JourneySidebar
+            show-save-exit @save-exit="updateJourney('save_exit')"
             v-model:manualStopOrder="manualStopOrder"
             :form="form"
             :drivers="props.drivers"

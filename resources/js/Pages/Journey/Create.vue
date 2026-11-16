@@ -72,6 +72,7 @@ import JourneyPlanningActions from './Components/JourneyPlanningActions.vue'
     const listRiempimento  = ref([]);
     const listOrdini       = ref([...props.orders]);
     const openOrderQuery = ref('')
+    const openOrdersExpanded = ref(true)
     const visibleOpenOrderIds = computed(() => new Set(listOrdini.value.filter(order => matchesCustomerName(order.customer?.company_name, openOrderQuery.value)).map(order => order.id)))
 
 
@@ -475,7 +476,7 @@ const manageDate = () => {
   if (form.planned_start_at) {
         const startDate = dayjs(form.planned_start_at);
         const endDate = startDate.add(1, 'hour'); // Aggiunge un'ora di default
-        form.planned_end_at = endDate.toDate();
+        form.planned_end_at = endDate.format('YYYY-MM-DD HH:mm:ss');
   }
 }
 
@@ -932,7 +933,8 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
 
           <!-- MASONRY ORDINI -->
           <div class="w-full mb-8 mt-4">
-          <OpenOrdersFilter v-model="openOrderQuery" />
+          <OpenOrdersFilter v-model="openOrderQuery" v-model:open="openOrdersExpanded" />
+            <div id="open-orders-list" v-show="openOrdersExpanded" role="region" aria-label="Ordini aperti">
             <p v-if="listOrdini.length && !visibleOpenOrderIds.size" class="py-2 text-sm" role="status">Nessun ordine aperto corrisponde alla ricerca.</p>
             <draggable :disabled="form.processing || !configurationReady"
               :list="listOrdini"
@@ -955,6 +957,7 @@ function showCapacityAlerts(loadObj, labelCompartimento) {
                 </div>
               </template>
             </draggable>
+            </div>
           </div>
 
           <JourneyDocumentGenerationPanel

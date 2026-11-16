@@ -283,7 +283,7 @@
       import { useStore } from 'vuex';
       import { Link, useForm, usePage } from '@inertiajs/vue3'
       import dayjs from 'dayjs';
-      import VueDatePicker from '@vuepic/vue-datepicker';
+
       import { format } from 'date-fns';
       import { it } from 'date-fns/locale';
       import '@vuepic/vue-datepicker/dist/main.css';

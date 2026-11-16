@@ -239,6 +239,7 @@
 
     <script setup>
 import {siteOpeningHours} from '@/utils/siteOpeningHours';
+import {floorToFiveMinutes} from '@/utils/dateTimeProposal'
 import AppPage from '@/Components/UI/AppPage.vue';
 import AppAction from '@/Components/UI/AppAction.vue';
 import RegistryForm from '@/Components/Registry/RegistryForm.vue';
@@ -252,7 +253,7 @@ import { groupOrderItems } from '@/utils/orderItemGroups';
     import { createStore, useStore } from 'vuex';
     import { useForm, usePage } from '@inertiajs/vue3'
     import dayjs from 'dayjs';
-    import VueDatePicker from '@vuepic/vue-datepicker';
+    import VueDatePicker from '@/Components/UI/AppDateTimePicker.vue';
     import SiteInternalContacts from '@/Components/SiteInternalContacts.vue';
     import ItemRow from './Components/ItemRow.vue';
     import HolderRow from './Components/HolderRow.vue';
@@ -289,7 +290,7 @@ import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
     const customer = props.customer;
 
     const currentDate = computed(
-      () => new Date()
+      () => floorToFiveMinutes()
     )
 
 const totalItemsWeight = computed(() => {
@@ -348,7 +349,7 @@ const groupedItems = computed(() => groupOrderItems(form.items, props.cerList ||
           return;
         }
 
-        form.fixed_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at) ?? new Date();
+        form.fixed_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at) ?? floorToFiveMinutes();
         syncExpectedWithFixed();
       };
 

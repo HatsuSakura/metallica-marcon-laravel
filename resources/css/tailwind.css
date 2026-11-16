@@ -6951,6 +6951,12 @@ html:has(.drawer-toggle:checked){
           user-select: none;
 }
 
+.select-text{
+  -webkit-user-select: text;
+     -moz-user-select: text;
+          user-select: text;
+}
+
 .scroll-mt-16{
   scroll-margin-top: 4rem;
 }

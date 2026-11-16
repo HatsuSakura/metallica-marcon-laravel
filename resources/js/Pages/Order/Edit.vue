@@ -236,6 +236,7 @@
 
     <script setup>
 import {siteOpeningHours} from '@/utils/siteOpeningHours';
+import {floorToFiveMinutes} from '@/utils/dateTimeProposal'
 import AppPage from '@/Components/UI/AppPage.vue';
 import AppAction from '@/Components/UI/AppAction.vue';
 import RegistryForm from '@/Components/Registry/RegistryForm.vue';
@@ -249,7 +250,7 @@ import { groupOrderItems } from '@/utils/orderItemGroups';
     import { createStore, useStore } from 'vuex';
     import { useForm, usePage, router } from '@inertiajs/vue3'
 	    import dayjs from 'dayjs';
-	    import VueDatePicker from '@vuepic/vue-datepicker';
+	    import VueDatePicker from '@/Components/UI/AppDateTimePicker.vue';
 	    import SiteMezziDiSollevamento from './Components/SiteMezziDiSollevamento.vue';
 	    import SiteInternalContacts from '@/Components/SiteInternalContacts.vue';
 	import { formatServerDateTime, parseServerDateTime } from '@/utils/serverDateTime';
@@ -327,7 +328,7 @@ const groupedItems = computed(() => groupOrderItems(form.items, props.cerList ||
     const form = useForm({
 	      id: props.order.id,
 	      is_urgent: Boolean(props.order.is_urgent),
-	      requested_at: formatServerDateTime(parseServerDateTime(props.order.requested_at)) ?? formatServerDateTime(new Date()),
+	      requested_at: formatServerDateTime(parseServerDateTime(props.order.requested_at)) ?? formatServerDateTime(floorToFiveMinutes()),
 	      expected_withdraw_at: formatServerDateTime(parseServerDateTime(props.order.expected_withdraw_at)),
           fixed_withdraw_at: formatServerDateTime(parseServerDateTime(props.order.fixed_withdraw_at)),
 	      notes: props.order.notes ?? '',
@@ -393,7 +394,7 @@ const groupedItems = computed(() => groupOrderItems(form.items, props.cerList ||
           return;
         }
 
-	        form.fixed_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at) ?? formatServerDateTime(new Date());
+	        form.fixed_withdraw_at = normalizeDateOrNull(form.expected_withdraw_at) ?? formatServerDateTime(floorToFiveMinutes());
 	        syncExpectedWithFixed();
 	      };
 

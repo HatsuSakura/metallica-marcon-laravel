@@ -2,7 +2,7 @@
 import AppAction from '@/Components/UI/AppAction.vue'
 
 import { computed } from 'vue'
-import VueDatePicker from '@vuepic/vue-datepicker'
+import AppDateTimePicker from '@/Components/UI/AppDateTimePicker.vue'
 import Box from '@/Components/UI/Box.vue'
 import EmptyState from '@/Components/UI/EmptyState.vue'
 import OrderInfo from './OrderInfo.vue'
@@ -33,13 +33,14 @@ const props = defineProps({
   manualStopOrder: Array,
   stopsByKey: Object,
   submitDisabled: Boolean,
+  showSaveExit: Boolean,
   submitLabel: {
     type: String,
     default: 'Crea Viaggio',
   },
 })
 
-const emit = defineEmits(['update:manualStopOrder', 'dragging', 'open-stops-manager'])
+const emit = defineEmits(['update:manualStopOrder', 'dragging', 'open-stops-manager', 'save-exit'])
 
 const stopOrderModel = computed({
   get: () => props.manualStopOrder,
@@ -68,7 +69,7 @@ const stopOrderModel = computed({
 
       <div class="flex flex-row justify-between items-center gap-2 mb-1">
         <font-awesome-icon :icon="['fas', 'person-walking-arrow-right']" class="text-xl"/>
-        <VueDatePicker
+        <AppDateTimePicker
           v-model="form.planned_start_at" uid="planned_start_at" name="planned_start_at" :aria-labels="{input:'Partenza prevista'}"
           model-type="yyyy-MM-dd HH:mm:ss"
           locale="it"
@@ -76,13 +77,8 @@ const stopOrderModel = computed({
           required
           placeholder="Data Partenza"
           :range=false
-          time-picker-inline
-          auto-apply
-          minutes-increment="5"
-          minutes-grid-increment="5"
-          closeOnScroll="false"
-          @closed="manageDate"
-        ></VueDatePicker>
+          @update:model-value="manageDate"
+        ></AppDateTimePicker>
         <div class="input-error" v-if="form.errors.planned_start_at">
           {{ form.errors.planned_start_at }}
         </div>
@@ -90,7 +86,7 @@ const stopOrderModel = computed({
 
       <div class="flex flex-row justify-between items-center gap-2 mb-1">
         <font-awesome-icon :icon="['fas', 'person-walking-arrow-loop-left']" class="text-xl"/>
-        <VueDatePicker
+        <AppDateTimePicker
           v-model="form.planned_end_at" uid="planned_end_at" name="planned_end_at" :aria-labels="{input:'Ritorno previsto'}"
           model-type="yyyy-MM-dd HH:mm:ss"
           locale="it"
@@ -98,12 +94,7 @@ const stopOrderModel = computed({
           required
           placeholder="Data Ritorno"
           :range=false
-          time-picker-inline
-          auto-apply
-          minutes-increment="5"
-          minutes-grid-increment="5"
-          closeOnScroll="false"
-        ></VueDatePicker>
+        ></AppDateTimePicker>
         <div class="input-error" v-if="form.errors.planned_end_at">
           {{ form.errors.planned_end_at }}
         </div>
@@ -295,14 +286,17 @@ const stopOrderModel = computed({
         @open-manager="emit('open-stops-manager')"
       />
 
-      <div class="mb-2">
+      <div class="mb-2 flex flex-wrap gap-2">
         <AppAction
           type="submit"
           :disabled="submitDisabled || form.processing"
 
          variant="confirm">
-          <font-awesome-icon :icon="['fas', 'floppy-disk']" class="text-xl"/>
+          <font-awesome-icon :icon="['fas', 'floppy-disk']" class="text-lg" aria-hidden="true"/>
           {{ submitLabel }}
+        </AppAction>
+        <AppAction v-if="showSaveExit" variant="neutral" class="btn-success" :disabled="submitDisabled || form.processing" @click="emit('save-exit')">
+          <font-awesome-icon :icon="['fas', 'floppy-disk']" class="text-lg" aria-hidden="true" />Salva ed esci
         </AppAction>
       </div>
     </div>

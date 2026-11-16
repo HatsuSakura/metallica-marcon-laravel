@@ -540,6 +540,7 @@ private function applyOrdersToJourney(
         Gate::authorize('update', $journey);
 
         $validated = $request->validate([
+            'post_action' => ['nullable', Rule::in(['save_stay', 'save_exit'])],
             'planned_start_at'    => 'required|date',
             'planned_end_at'      => 'required|date',
             'notes'               => 'nullable|string',
@@ -601,7 +602,7 @@ private function applyOrdersToJourney(
 
             $comparison = app(\App\Services\JourneyPlanning\PlanningInput::class);
             if ($comparison->current($journey) === $comparison->normalize($validated)) {
-                return redirect()->route('journey.index')->with('success', 'Viaggio già aggiornato.');
+                return $this->redirectAfterJourneyUpdate($journey, $validated['post_action'] ?? 'save_exit', 'Viaggio già aggiornato.');
             }
             $documents = app(OrderDocumentGenerationService::class);
             foreach ($journey->orders()->lockForUpdate()->get() as $order) {
@@ -786,10 +787,18 @@ private function applyOrdersToJourney(
                 $documents->invalidateAfterReadyOrderEdit($order);
             }
 
-            return redirect()->route('journey.index')->with('success', 'Viaggio modificato con successo!');
+            return $this->redirectAfterJourneyUpdate($journey, $validated['post_action'] ?? 'save_exit', 'Viaggio modificato con successo!');
         });
     }
 
+
+    private function redirectAfterJourneyUpdate(Journey $journey, string $postAction, string $message): \Illuminate\Http\RedirectResponse
+    {
+        $response = $postAction === 'save_stay'
+            ? redirect()->route('journey.edit', ['journey' => $journey->id])
+            : redirect()->route('journey.index');
+        return $response->with('success', $message);
+    }
 
     /**
      * Remove the specified resource from storage.

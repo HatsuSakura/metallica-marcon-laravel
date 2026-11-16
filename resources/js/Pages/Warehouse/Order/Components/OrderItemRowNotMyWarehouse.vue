@@ -70,7 +70,7 @@ import EmptyState from '@/Components/UI/EmptyState.vue'
 import ImageUploader from '@/Pages/Warehouse/Order/Components/ImageUploader.vue'
 import { ref, reactive, computed, watch } from 'vue'
 import { Link } from '@inertiajs/vue3'
-import VueDatePicker from '@vuepic/vue-datepicker';
+
 import '@vuepic/vue-datepicker/dist/main.css';
 import dayjs from 'dayjs'
 import { Teleport } from 'vue'

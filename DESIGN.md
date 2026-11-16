@@ -271,6 +271,27 @@ Le eccezioni header/chiamata restano nei rispettivi componenti condivisi.
 
 ## Ordini e pianificazione viaggi
 
+### Selezione data e ora
+
+Usare `AppDateTimePicker` per tutti i campi data+ora attivi. Mantiene Vue
+Datepicker 10 e un flusso calendario → orario, con i soli comandi nativi a icona
+per passare tra le due viste. Ore/minuti devono essere evidenti. I minuti
+proposti sono arrotondati per difetto al multiplo di 5 (17:24 → 17:20), con
+secondi azzerati; frecce e griglia avanzano di 5 minuti. Le date già salvate
+non vengono modificate aprendo o annullando il selettore: l'arrotondamento
+rimane nella bozza fino alla conferma. I default creati dall'app devono usare
+la stessa funzione `floorToFiveMinutes`.
+
+Clic o Enter/Spazio su un valore già presente riaprono direttamente il picker.
+Annulla a sinistra (X, error outline), Conferma a destra (check, success outline),
+entrambi size sm/32px: è una conferma del campo, distinta dal salvataggio del
+form. Non aggiungere pulsanti testuali “1 Data / 2 Orario”. Mantenere nomi,
+formati del modello e semantica temporale dei consumatori. Stili del menu
+isolati tramite `app-datetime-menu`, funzionanti anche con teleport.
+
+I campi di sola data, sola ora (orari sede) e i filtri per giorno conservano
+il loro formato specifico: non introdurre una scelta dell'orario dove assente.
+
 La prima riga segue la regola `[back] titolo — [funzioni]`: collocare i comandi
 della pagina nello slot `actions`, evitando barre separate sotto il titolo.
 Il comando di ritorno occupa lo slot `back` di AppPage/RegistryPage, prima del
