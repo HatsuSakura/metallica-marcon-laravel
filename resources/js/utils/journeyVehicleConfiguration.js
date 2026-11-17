@@ -16,7 +16,7 @@ export function journeyVehicleConfiguration(form, vehicles, cargos, trailers) {
         else if (!trailer) issues.trailer_id = 'Seleziona un rimorchio valido.'
         if (!trailerCargo) issues.trailer_cargo_id = 'Seleziona il cassone del rimorchio.'
         else if (['Sponda','Furgone'].includes(trailerCargo.name)) issues.trailer_cargo_id = 'Cassone non compatibile con il rimorchio.'
-        else if (cargo && truthy(cargo.is_long) === truthy(trailerCargo.is_long)) issues.trailer_cargo_id = 'Il convoglio richiede un cassone lungo e uno corto.'
+        else if (cargo && truthy(cargo.is_long) && truthy(trailerCargo.is_long)) issues.trailer_cargo_id = 'Il convoglio non può avere due cassoni lunghi.'
     } else if (form.trailer_cargo_id) issues.trailer_cargo_id = 'Il cassone rimorchio richiede un rimorchio.'
     return {vehicle, cargo, trailer, trailerCargo, fixedName, trailerAllowed, issues, ready:Object.keys(issues).length === 0}
 }

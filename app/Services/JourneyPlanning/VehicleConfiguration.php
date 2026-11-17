@@ -25,7 +25,7 @@ class VehicleConfiguration
             elseif (!$trailer) $errors['trailer_id'] = 'Seleziona un rimorchio valido.';
             if (!$trailerCargo) $errors['trailer_cargo_id'] = 'Seleziona il cassone del rimorchio.';
             elseif (in_array($trailerCargo->name, ['Sponda', 'Furgone'], true)) $errors['trailer_cargo_id'] = 'Cassone non compatibile con il rimorchio.';
-            elseif ($cargo && $cargo->is_long === $trailerCargo->is_long) $errors['trailer_cargo_id'] = 'Il convoglio richiede un cassone lungo e uno corto.';
+            elseif ($cargo?->is_long && $trailerCargo->is_long) $errors['trailer_cargo_id'] = 'Il convoglio non può avere due cassoni lunghi.';
         } else {
             if (!empty($input['trailer_cargo_id'])) $errors['trailer_cargo_id'] = 'Il cassone rimorchio richiede un rimorchio.';
             if (!empty($input['orders_trailer']) || !empty($input['orders_fulfill'])) $errors['orders_trailer'] = 'Riassegna gli ordini del rimorchio e del riempimento prima di rimuoverlo.';

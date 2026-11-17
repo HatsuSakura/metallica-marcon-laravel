@@ -36,9 +36,9 @@ class JourneyVehicleConfigurationTest extends TestCase
         ]);
     }
 
-    public function test_valid_solo_and_long_short_combinations(): void
+    public function test_valid_solo_mixed_and_two_short_combinations(): void
     {
-        foreach ([[1,1,null,null],[4,2,null,null],[2,3,null,null],[3,4,null,null],[1,1,1,2],[1,2,1,1]] as $row) {
+        foreach ([[1,1,null,null],[4,2,null,null],[2,3,null,null],[3,4,null,null],[1,1,1,2],[1,2,1,1],[1,2,1,2]] as $row) {
             app(VehicleConfiguration::class)->validate(array_combine(['vehicle_id','vehicle_cargo_id','trailer_id','trailer_cargo_id'], $row));
             $this->addToAssertionCount(1);
         }
@@ -51,7 +51,6 @@ class JourneyVehicleConfigurationTest extends TestCase
             ['vehicle_id'=>99], ['vehicle_cargo_id'=>99],
             ['trailer_id'=>1], ['trailer_id'=>99,'trailer_cargo_id'=>2],
             ['trailer_id'=>1,'trailer_cargo_id'=>1],
-            ['vehicle_cargo_id'=>2,'trailer_id'=>1,'trailer_cargo_id'=>2],
             ['vehicle_id'=>2,'vehicle_cargo_id'=>3,'trailer_id'=>1,'trailer_cargo_id'=>1],
             ['vehicle_id'=>3,'vehicle_cargo_id'=>4,'trailer_id'=>1,'trailer_cargo_id'=>1],
             ['vehicle_id'=>4,'trailer_id'=>1,'trailer_cargo_id'=>2],

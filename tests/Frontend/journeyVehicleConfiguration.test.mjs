@@ -10,7 +10,7 @@ assert.equal(check({vehicle_id:2,vehicle_cargo_id:3}).ready,true)
 assert.equal(check({vehicle_id:3,vehicle_cargo_id:4}).ready,true)
 assert.equal(check({vehicle_id:2}).trailerAllowed,false)
 assert.equal(check({vehicle_id:3}).trailerAllowed,false)
-for (const [truck,trailer,ready] of [[1,2,true],[2,1,true],[1,1,false],[2,2,false]]) {
+for (const [truck,trailer,ready] of [[1,2,true],[2,1,true],[1,1,false],[2,2,true]]) {
     assert.equal(check({vehicle_id:1,vehicle_cargo_id:truck,trailer_id:1,trailer_cargo_id:trailer}).ready,ready)
 }
 assert.equal(check({vehicle_id:1,vehicle_cargo_id:1,trailer_id:1}).ready,false)
