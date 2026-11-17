@@ -1,13 +1,13 @@
 <template>
 
-    <section class="flex items-center gap-2 justify-between">
+    <section class="flex flex-wrap items-center gap-2 justify-between">
 
         <Link :href="route('logistic.home')" class="btn btn-ghost btn-sm">
             <font-awesome-icon :icon="['fas', 'arrow-left']" class="text-lg"/>
             Torna a Dashboard
         </Link>
 
-        <div>
+        <div class="flex min-w-0 flex-wrap items-center gap-2">
             <span>
                 Per creare un nuovo ordine 
                 <font-awesome-icon :icon="['fas', 'arrow-right']" class="text-lg"/>
@@ -22,25 +22,29 @@
     </section>
     
     <section>
-        <h2 class="text-xl font-semibold mb-3">Lista ordini</h2>
+        <form class="mb-3 flex flex-wrap items-center gap-3 pb-2" role="search" @submit.prevent="applyFilter">
+            <h2 class="text-xl font-semibold">Lista ordini</h2>
+            <label class="min-w-0 flex-1 basis-48 max-w-sm"><span class="sr-only">Filtra ordini per nome cliente</span><input v-model="customerSearch" type="search" class="input input-bordered w-full" placeholder="Filtra per Cliente" autocomplete="off" maxlength="200" /></label>
+            <span class="text-sm" aria-live="polite">{{ props.orders.total }} ordini</span>
+        </form>
 
         <div v-if="!props.orders?.data?.length" class="alert">
-            Nessun ordine disponibile.
+            {{ props.filters.customer ? 'Nessun ordine trovato per questo cliente.' : 'Nessun ordine disponibile.' }}
         </div>
         
         <div class="grid grid-cols-12 gap-2">
     
-        <Box v-for="order in props.orders.data" :key="order.id" class="col-span-6">
+        <Box v-for="order in props.orders.data" :key="order.id" class="col-span-12 min-w-0 md:col-span-6">
             <div class="flex flex-row justify-between mb-2">
                 <div>
                     <div class="font-medium">
                         Codice ordine: <span class="badge badge-outline">{{ order.legacy_code ?? 'N/D' }}</span>
                     </div>
-                    <div class="font-medium text-lg">
-                        {{ order.customer.company_name }}
+                    <div class="font-medium text-lg break-words">
+                        {{ order.customer?.company_name || 'Cliente non disponibile' }}
                     </div>
                     <div class="text-gray-500">
-                        Sede: {{ order.site.address }}
+                        Sede: {{ order.site?.address || 'non disponibile' }}
                     </div>
                     <div>
                         <font-awesome-icon :icon="['fas', 'gauge-simple-high']" class="text-2xl"/>
@@ -97,6 +101,7 @@
         </Box>
     
         </div>
+        <Pagination v-if="props.orders.links?.length && props.orders.last_page > 1" class="mt-4" :links="props.orders.links" />
     
     </section>
     
@@ -107,14 +112,26 @@
 <script setup>
 import Box from '@/Components/UI/Box.vue';
 import dayjs from 'dayjs';
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
+import {ref, watch, onBeforeUnmount} from 'vue';
+import Pagination from '@/Components/UI/Pagination.vue';
 import OrderSummaryItems from './Components/OrderSummaryItems.vue';
 import OrderSummaryHolders from './Components/OrderSummaryHolders.vue';
     
 const props = defineProps({
         orders : Object,
-        holders: Object,
+        holders: [Array,Object],
+        filters: {type:Object, default:()=>({})},
     })
+
+const customerSearch = ref(props.filters.customer ?? '')
+let searchTimer
+const applyFilter = () => {
+    clearTimeout(searchTimer)
+    router.get(route('order.index'), customerSearch.value.trim() ? {customer:customerSearch.value.trim()} : {}, {preserveState:true,preserveScroll:true,replace:true})
+}
+watch(customerSearch,()=>{clearTimeout(searchTimer);searchTimer=setTimeout(applyFilter,300)})
+onBeforeUnmount(()=>clearTimeout(searchTimer))
 
 const documentsStateLabel = (state) => {
     switch (state) {

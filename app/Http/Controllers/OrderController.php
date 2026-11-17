@@ -49,15 +49,12 @@ class OrderController extends Controller
 
     public function index(Request $request){
         Gate::authorize('viewAny', Order::class);
-
+        $filters = $request->validate(['customer' => ['nullable', 'string', 'max:200']]);
+        $customerSearch = trim($filters['customer'] ?? '');
         $query = Order::query()
-        //->alphabetic()
-        //->withCount('orders')
-        //->filter($filters)
-        ->with('site')
-        ->with('customer')
-        ->with('items')
-        ->with('holders')
+        ->with(['site', 'customer', 'items', 'holders'])
+        ->when($customerSearch !== '', fn ($query) => $query->whereIn('customer_id', app(\App\Support\CustomerNameSearch::class)->matchingIds($customerSearch)))
+        ->orderByDesc('created_at')->orderByDesc('id')
         ->paginate(25)
         ->withQueryString();
 
@@ -66,7 +63,7 @@ class OrderController extends Controller
         return inertia(
             'Order/Index',
             [
-                //'filters' => $filters,
+                'filters' => ['customer' => $customerSearch],
                 'orders' => $query,
                 'holders' => $holders,
             ]);
