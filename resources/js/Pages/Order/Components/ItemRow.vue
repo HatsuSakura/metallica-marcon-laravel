@@ -26,7 +26,7 @@
         </div>
         <div class="material-details">
             <label class="form-control min-w-0 material-description"><span class="label">Descrizione materiale</span><input v-model="item.description" :id="`order-item-${index}-description`" :name="`items.${index}.description`" type="text" class="input input-bordered" :class="guidanceClass('description')" /></label>
-            <label class="form-control min-w-0 material-hp"><span class="label">HP</span><input v-model="item.adr_hp" :id="`order-item-${index}-hp`" :name="`items.${index}.adr_hp`" :disabled="!is_selected_cer_dangerous" type="text" class="input input-bordered" :class="guidanceClass('adr_hp')" /></label>
+            <label class="form-control min-w-0 material-hp"><span class="label">HP</span><input v-model="item.adr_hp" :id="`order-item-${index}-hp`" :name="`items.${index}.adr_hp`" :disabled="!requiresHp" type="text" class="input input-bordered" :class="guidanceClass('adr_hp')" /></label>
             <label class="material-adr flex min-h-12 items-center gap-2 self-end text-sm"><span>ADR</span><input v-model="item.adr" :name="`items.${index}.adr`" type="checkbox" class="toggle toggle-primary" /></label>
         </div>
         <div v-if="!item.is_bulk && customSelectedHolder" class="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -63,7 +63,6 @@ const props = defineProps({
 
 const emit = defineEmits(['remove']);
 
-const is_selected_cer_dangerous = ref(false);
 const isEditingCer = ref(!item.value?.cer_code_id);
 const lastCerCodeBeforeEdit = ref(item.value?.cer_code_id ?? null);
 
@@ -78,7 +77,7 @@ const isBlank = (value) => value === null || value === undefined || `${value}`.t
 const isTruthy = (value) => value === true || value === 1 || value === '1';
 const isBulkSelected = computed(() => isTruthy(item.value?.is_bulk));
 const adrEnabled = computed(() => isTruthy(item.value?.adr));
-const requiresHp = computed(() => Boolean(selectedCerCode.value?.is_dangerous));
+const requiresHp = computed(() => isTruthy(selectedCerCode.value?.is_dangerous));
 const hasAdrFlag = computed(() =>
   isTruthy(item.value?.is_adr_total)
   || isTruthy(item.value?.has_adr_total_exemption)
@@ -143,15 +142,13 @@ watch(() => item.value.is_bulk, (isBulk) => {
 // === CER pericoloso / stile ===
 const getCerStyle = (cerId) => {
   if (!cerId){
-    is_selected_cer_dangerous.value = false;
     return "";
   }
   const cer = props.cerList.find((c) => Number(c.id) === Number(cerId));
-  is_selected_cer_dangerous.value = Boolean(cer?.is_dangerous);
   return Number(cer?.is_dangerous) === 1 ? "cer-selected-dangerous" : "cer-selected-normal";
 };
 
-watch(is_selected_cer_dangerous, (newVal) => {
+watch(requiresHp, (newVal) => {
   if (!newVal) {
     item.value.adr_hp = '';
   }

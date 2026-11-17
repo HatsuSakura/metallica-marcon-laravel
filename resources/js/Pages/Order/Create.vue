@@ -538,7 +538,7 @@ const removeItem = (index) => {
         if (isBlank(item.warehouse_id)) {
           errors[`${prefix}.warehouse_id`] = 'Magazzino obbligatorio.';
         }
-        if ((cer?.is_dangerous ?? false) && isBlank(item.adr_hp)) {
+        if (Number(cer?.is_dangerous) === 1 && isBlank(item.adr_hp)) {
           errors[`${prefix}.adr_hp`] = 'HP obbligatorio per CER pericoloso.';
         }
         if (adrActive) {
