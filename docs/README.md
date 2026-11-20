@@ -1,5 +1,7 @@
 # Documentazione Metallica Marcon
 
+- [API protette e token agenti — 2026-11-20](qa/2026-11-20-agent-api.md): contratto JSON v1, gestione solo developer, Swagger e rilascio Jarvis.
+
 - [Date/ora e rifiniture viaggi — 2026-11-16](qa/2026-11-16-datetime-and-journey-refinements.md): datepicker comune, salva/resta/esci, documenti compatti e ordini aperti richiudibili.
 
 - [Ordini e gestione viaggi: convenzione UX/UI — 2026-11-16](qa/2026-11-16-planning-ui.md): componenti condivisi, dotazioni della sede, form responsive e verifiche locali.

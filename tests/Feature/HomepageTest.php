@@ -2,16 +2,24 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Enums\UserRole;
+use App\Models\User;
+use Illuminate\Support\Facades\Schema;
+use Tests\Support\JourneyExecutionTestCase;
 
-class HomepageTest extends TestCase
+class HomepageTest extends JourneyExecutionTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        (require database_path('migrations/2024_10_09_115339_create_notifications_table.php'))->up();
+        Schema::table('users', fn ($t) => $t->string('password')->nullable());
+    }
+
     // This refreshes the database after each test
     // and rolls back any changes made during the test.
-    // use it only on a dedicated TEST database 
-    
+    // use it only on a dedicated TEST database
+
     // use RefreshDatabase;
 
     /**
@@ -48,7 +56,7 @@ class HomepageTest extends TestCase
             'password' => bcrypt('password!'),
             'role' => UserRole::DEVELOPER->value,
         ]);
- 
+
         $this->assertNotNull($user);
         $this->assertEquals('Automatico', $user->surname);
     }

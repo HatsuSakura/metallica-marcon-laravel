@@ -1,19 +1,26 @@
 <?php
+
 // app/Models/OrderItem.php
+
 namespace App\Models;
 
 use App\Enums\OrderItemStatus;
 use App\Models\Concerns\HasDomainAudit;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Model;
-use Mpociot\Versionable\VersionableTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
+use Mpociot\Versionable\VersionableTrait;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
 class OrderItem extends Model implements AuditableContract
 {
-    use HasFactory, SoftDeletes, VersionableTrait, HasDomainAudit;
+    use HasDomainAudit, HasFactory, SoftDeletes, VersionableTrait;
+
+    protected function getAuthUserId()
+    {
+        return auth()->user() instanceof User ? auth()->id() : null;
+    }
 
     protected $keepOldVersions = true; // Keep all versions of the model
 
@@ -25,7 +32,7 @@ class OrderItem extends Model implements AuditableContract
         'holder_id',
         'holder_quantity',
         'is_bulk',
-        'custom_l_cm','custom_w_cm','custom_h_cm',
+        'custom_l_cm', 'custom_w_cm', 'custom_h_cm',
         'description',
         'weight_declared',
         'weight_gross',
@@ -108,10 +115,11 @@ class OrderItem extends Model implements AuditableContract
 
     protected $appends = [
         'journey_cargo',
-        'warehouse_download'
+        'warehouse_download',
     ];
+
     // Serve solo per i calcoli di relazione interna ma non ha senso mostrarlo all'utente
-    protected $hidden  = ['journeyCargos'];
+    protected $hidden = ['journeyCargos'];
 
     protected $casts = [
         'has_exploded_children' => 'boolean',
@@ -140,9 +148,9 @@ class OrderItem extends Model implements AuditableContract
         'total_dirty_holders' => 'integer',
         'total_broken_holders' => 'integer',
         'selection_duration_minutes' => 'integer',
-        'custom_l_cm'   => 'decimal:2',
-        'custom_w_cm'   => 'decimal:2',
-        'custom_h_cm'   => 'decimal:2',
+        'custom_l_cm' => 'decimal:2',
+        'custom_w_cm' => 'decimal:2',
+        'custom_h_cm' => 'decimal:2',
         'status' => OrderItemStatus::class,
     ];
 
@@ -242,6 +250,7 @@ class OrderItem extends Model implements AuditableContract
         }
 
         $trimmed = trim((string) $value);
+
         return $trimmed === '' ? null : $trimmed;
     }
 
@@ -259,9 +268,9 @@ class OrderItem extends Model implements AuditableContract
         // 1) Se la relazione è già caricata, usa quella (veloce, no query extra)
         if ($this->relationLoaded('journeyCargos')) {
             $pivot = $this->getRelation('journeyCargos')
-                ->sortByDesc(fn($jc) => optional($jc->pivot)->updated_at)
+                ->sortByDesc(fn ($jc) => optional($jc->pivot)->updated_at)
                 ->first()?->pivot;
-                
+
             $wid = $pivot?->download_warehouse_id;
         } else {
             // 2) Altrimenti leggi la pivot "corrente" direttamente (1 query)
@@ -272,11 +281,13 @@ class OrderItem extends Model implements AuditableContract
 
         }
 
-        if (!$wid) return null;
+        if (! $wid) {
+            return null;
+        }
 
         // 3) Ritorna solo ciò che serve alla UI
         $wh = Warehouse::select('id', 'name')->find($wid);
-        if (!$wh) {
+        if (! $wh) {
             return null;
         }
 
@@ -285,8 +296,6 @@ class OrderItem extends Model implements AuditableContract
             'name' => $wh->name,
         ];
     }
-
-
 
     // Relationship to order
     public function order()
@@ -323,8 +332,8 @@ class OrderItem extends Model implements AuditableContract
     public function journeyCargos()
     {
         return $this->belongsToMany(JourneyCargo::class, 'journey_cargo_order_item')
-                    ->withPivot('is_double_load', 'download_warehouse_id')
-                    ->withTimestamps();
+            ->withPivot('is_double_load', 'download_warehouse_id')
+            ->withTimestamps();
     }
 
     public function loadCensusItems()
@@ -343,6 +352,7 @@ class OrderItem extends Model implements AuditableContract
         if ($this->relationLoaded('journeyCargos')) {
             return $this->getRelation('journeyCargos')->first(); // nessuna query extra
         }
+
         return $this->journeyCargos()->first(); // 1 query
     }
 
@@ -350,7 +360,7 @@ class OrderItem extends Model implements AuditableContract
     {
         return $this->hasMany(OrderItemImage::class);
     }
-    
+
     public function explosions()
     {
         return $this->hasMany(OrderItemExplosion::class);
@@ -366,5 +376,4 @@ class OrderItem extends Model implements AuditableContract
     {
         return $this->explosionsRoot()->with(['childrenRecursive', 'catalogItem']);
     }
-
 }

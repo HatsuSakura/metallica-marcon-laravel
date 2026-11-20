@@ -71,6 +71,7 @@
           <details close>
             <summary>Anagrafiche</summary>
             <ul>
+              <li v-if="currentUser && currentUser.role === 'developer'"><Link @click="closeDrawer" :href="route('dev.agents.index')">Agenti e token API</Link></li>
               <li v-if="currentUser && currentUser.is_admin">
                 <Link @click="closeDrawer" :href="route('user.index')">Utenti</Link>
               </li>

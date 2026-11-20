@@ -13,6 +13,11 @@ class OrderHolder extends Model implements AuditableContract
 {
     use HasFactory, SoftDeletes, VersionableTrait, HasDomainAudit;
 
+    protected function getAuthUserId()
+    {
+        return auth()->user() instanceof \App\Models\User ? auth()->id() : null;
+    }
+
     protected $keepOldVersions = true; // Keep all versions of the model
 
     protected $fillable = [

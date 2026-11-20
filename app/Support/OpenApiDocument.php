@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Support\AgentApi\OpenApi;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -18,7 +19,13 @@ class OpenApiDocument
             }
 
             foreach (array_diff($route->methods(), ['HEAD']) as $method) {
-                $paths['/'.$route->uri()][strtolower($method)] = $this->operation($route, $method);
+                $operation = $this->operation($route, $method);
+                if (str_starts_with($route->uri(), 'api/v1/')) {
+                    $agentOperation = app(OpenApi::class)->operation(str_replace('agent-api.', '', $route->getName()), $method);
+                    $agentOperation['parameters'] = array_merge($operation['parameters'], $agentOperation['parameters']);
+                    $operation = $agentOperation;
+                }
+                $paths['/'.$route->uri()][strtolower($method)] = $operation;
             }
         }
 
@@ -28,8 +35,8 @@ class OpenApiDocument
             'openapi' => '3.1.0',
             'info' => [
                 'title' => 'Metallica Marcon API',
-                'version' => '1.0.0',
-                'description' => 'Catalogo DEV delle API applicative. Le API usano la sessione Laravel, richiedono un utente verificato e applicano policy e gate specifici. Le operazioni mutative richiedono anche un token CSRF valido.',
+                'version' => '1.1.0',
+                'description' => 'Catalogo DEV: /api/v1 usa Bearer token agente e permessi granulari. Gli endpoint precedenti usano sessione Laravel, verifica email e CSRF per le mutazioni. La pagina di documentazione resta riservata agli utenti abilitati.',
             ],
             'servers' => [
                 ['url' => url('/'), 'description' => app()->environment('production') ? 'Produzione' : ucfirst(app()->environment())],
@@ -37,6 +44,7 @@ class OpenApiDocument
             'paths' => $paths,
             'components' => [
                 'securitySchemes' => [
+                    'agentBearer' => ['type' => 'http', 'scheme' => 'bearer', 'description' => 'Token generato da un developer in /dev/agents. Richiede agente attivo, scadenza valida e permessi specifici.'],
                     'sessionCookie' => [
                         'type' => 'apiKey',
                         'in' => 'cookie',
@@ -44,7 +52,7 @@ class OpenApiDocument
                         'description' => 'Sessione Laravel autenticata. Le richieste POST, PUT, PATCH e DELETE richiedono inoltre il token CSRF same-origin.',
                     ],
                 ],
-                'schemas' => [
+                'schemas' => array_merge(app(OpenApi::class)->schemas(), [
                     'ValidationErrors' => [
                         'type' => 'object',
                         'properties' => [
@@ -52,7 +60,7 @@ class OpenApiDocument
                             'errors' => ['type' => 'object', 'additionalProperties' => ['type' => 'array', 'items' => ['type' => 'string']]],
                         ],
                     ],
-                ],
+                ]),
             ],
         ];
     }
