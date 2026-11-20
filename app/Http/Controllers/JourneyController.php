@@ -2,28 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Cargo;
-use App\Models\Order;
-use App\Models\Holder;
-use App\Enums\UserRole;
-use App\Models\Journey;
-use App\Models\JourneyStopAction;
-use App\Models\Trailer;
-use App\Models\Vehicle;
-use App\Models\Warehouse;
+use App\Enums\JourneyStatus;
 use App\Enums\OrderDocumentsStatus;
 use App\Enums\OrderStatus;
-use App\Enums\JourneyStatus;
-use Illuminate\Http\Request;
-use App\Enums\OrdersTruckLocation;
-use App\Models\JourneyStop;
-use App\Models\JourneyStopOrder;
-use App\Support\Audit\AuditTrailPresenter;
+use App\Enums\UserRole;
+use App\Models\Cargo;
+use App\Models\Holder;
+use App\Models\Journey;
+use App\Models\JourneyStopAction;
+use App\Models\Order;
+use App\Models\Trailer;
+use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\Warehouse;
+use App\Services\JourneyExecution\ExecutionProjection;
 use App\Services\OrderDocumentGenerationService;
+use App\Services\Planning\JourneyWriter;
+use App\Support\Audit\AuditTrailPresenter;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
@@ -31,15 +30,15 @@ class JourneyController extends Controller
 {
     private function buildAuditTrail(Journey $journey): array
     {
-        if (!optional(auth()->user())->is_admin) {
+        if (! optional(auth()->user())->is_admin) {
             return [];
         }
 
         return AuditTrailPresenter::forModel($journey);
     }
 
-
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         Gate::authorize('viewAny', Journey::class);
 
         $activeTab = $request->query('tab', 'tutti');
@@ -102,7 +101,6 @@ class JourneyController extends Controller
             ->paginate(25, ['*'], 'closed_page')
             ->appends($request->query());
 
-
         return inertia(
             'Journey/Index',
             [
@@ -154,11 +152,13 @@ class JourneyController extends Controller
 
     public function show(Journey $journey)
     {
-        if ($journey->baseline()->exists()) return redirect()->route('journey.execution', ['journey' => $journey->id]);
+        if ($journey->baseline()->exists()) {
+            return redirect()->route('journey.execution', ['journey' => $journey->id]);
+        }
         Gate::authorize('view', $journey);
 
         $returnTo = request()->query('return_to');
-        if (!is_string($returnTo) || trim($returnTo) === '') {
+        if (! is_string($returnTo) || trim($returnTo) === '') {
             $returnTo = url()->previous();
         }
 
@@ -166,7 +166,7 @@ class JourneyController extends Controller
         $isSafeReturnTo = Str::startsWith($returnTo, '/')
             || ($appUrl !== '' && Str::startsWith($returnTo, $appUrl));
 
-        if (!$isSafeReturnTo) {
+        if (! $isSafeReturnTo) {
             $returnTo = route('journey.index');
         }
 
@@ -198,7 +198,7 @@ class JourneyController extends Controller
         foreach ($journey->stops as $stop) {
             foreach ($stop->stopOrders as $stopOrder) {
                 $order = $stopOrder->order;
-                if (!$order) {
+                if (! $order) {
                     continue;
                 }
 
@@ -218,8 +218,6 @@ class JourneyController extends Controller
         );
     }
 
-
-
     /**
      * Show the form for creating a new resource.
      */
@@ -232,7 +230,7 @@ class JourneyController extends Controller
         $trailers = Trailer::all();
         $cargos = Cargo::all();
         $holders = Holder::all();
-        $drivers = User::where('role', UserRole::DRIVER->value )->get();
+        $drivers = User::where('role', UserRole::DRIVER->value)->get();
         $warehouses = Warehouse::all();
         $journeyStopActions = JourneyStopAction::query()
             ->where('is_active', true)
@@ -249,233 +247,39 @@ class JourneyController extends Controller
                 'site',
                 'items',
                 'items.cerCode:id,code,is_dangerous',
-                'items.holder:id,name,volume,is_custom'
+                'items.holder:id,name,volume,is_custom',
             ])
             ->get();
 
-        return inertia('Journey/Create', 
-        [
-            'vehicles' => $vehicles,
-            'trailers' => $trailers,
-            'cargos' => $cargos,
-            'holders' => $holders,
-            'journeyStopActions' => $journeyStopActions,
-            'drivers' => $drivers,
-            'warehouses' => $warehouses,
-            'orders' => $orders,
-        ]);
+        return inertia('Journey/Create',
+            [
+                'vehicles' => $vehicles,
+                'trailers' => $trailers,
+                'cargos' => $cargos,
+                'holders' => $holders,
+                'journeyStopActions' => $journeyStopActions,
+                'drivers' => $drivers,
+                'warehouses' => $warehouses,
+                'orders' => $orders,
+            ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-public function store(Request $request)
-{
-    Gate::authorize('create', Journey::class);
+    public function store(Request $request)
+    {
+        Gate::authorize('create', Journey::class);
+        $journey = app(JourneyWriter::class)->create($request->all());
 
-    $validated = $request->validate([
-        'planned_start_at'    => 'required|date',
-        'planned_end_at'      => 'required|date',
-        'notes'               => 'nullable|string',
-        'vehicle_id'  => 'required|integer',
-        'trailer_id'  => 'nullable|integer',
-        'vehicle_cargo_id'  => 'required|integer',
-        'trailer_cargo_id'  => 'nullable|integer',
-        'driver_id'   => 'required',
-        'logistics_user_id' => 'nullable',
-
-        'orders_truck'    => 'nullable|array',
-        'orders_truck.*'  => 'integer|exists:orders,id',
-
-        'orders_trailer'  => 'nullable|array',
-        'orders_trailer.*'=> 'integer|exists:orders,id',
-
-        'orders_fulfill' => 'nullable|array',
-        'orders_fulfill.*'=> 'integer|exists:orders,id',
-
-        // NEW (opzionale per retrocompatibilità)
-        'stops' => 'nullable|array',
-
-        'stops.*.kind' => ['required_with:stops', Rule::in(['customer', 'technical'])],
-        'stops.*.sequence' => 'required_with:stops|integer|min:1',
-        'stops.*.planned_sequence' => 'nullable|integer|min:1',
-
-        // customer stop
-        'stops.*.customer_id' => 'nullable|integer|exists:customers,id',
-        'stops.*.customer_visit_index' => 'nullable|integer|min:1',
-
-        // technical stop
-        'stops.*.technical_action_id' => 'nullable|integer|exists:journey_stop_actions,id',
-        'stops.*.location_lat' => 'nullable|numeric',
-        'stops.*.location_lng' => 'nullable|numeric',
-        'stops.*.description' => 'nullable|string',
-        'stops.*.address_text' => 'nullable|string',
-
-        // orders inside stop (required only for customer stops)
-        'stops.*.orders' => 'nullable|array',
-            'stops.*.orders.*' => 'integer|exists:orders,id',
-        ]);
-
-        app(\App\Services\JourneyPlanning\VehicleConfiguration::class)->validate($validated);
-
-        return DB::transaction(function () use ($validated) {
-
-        // 1) Create Journey (come prima)
-        $journey = Journey::create([
-            'planned_start_at' => $validated['planned_start_at'],
-            'planned_end_at' => $validated['planned_end_at'],
-            'notes' => $validated['notes'] ?? null,
-            'vehicle_id' => $validated['vehicle_id'],
-            'trailer_id' => $validated['trailer_id'] ?? null,
-            'vehicle_cargo_id' => $validated['vehicle_cargo_id'],
-            'trailer_cargo_id' => $validated['trailer_cargo_id'] ?? null,
-            'driver_id' => $validated['driver_id'],
-            'logistics_user_id' => $validated['logistics_user_id'] ?? null,
-            'status' => JourneyStatus::STATUS_CREATED->value,
-            // status / plan_version se presenti nel model, altrimenti default DB
-        ]);
-
-        // 2) Helper: selezione ordini complessiva (compartments)
-        $idsTruck = $validated['orders_truck'] ?? [];
-        $idsTrailer = $validated['orders_trailer'] ?? [];
-        $idsFulfill = $validated['orders_fulfill'] ?? [];
-
-        $allSelectedIds = array_values(array_unique(array_merge($idsTruck, $idsTrailer, $idsFulfill)));
-
-        // 3) Update Orders (come prima, ma DRY)
-        $this->applyOrdersToJourney($journey, $idsTruck, OrdersTruckLocation::TRUCK_MOTRICE->value);
-        $this->applyOrdersToJourney($journey, $idsTrailer, OrdersTruckLocation::TRUCK_RIMORCHIO->value);
-        $this->applyOrdersToJourney($journey, $idsFulfill, OrdersTruckLocation::TRUCK_RIEMPIMENTO->value);
-
-        // 4) Create Stops if provided
-        if (!empty($validated['stops'])) {
-
-            // Cache ordini selezionati (serve per validare customer_id)
-            $ordersById = Order::query()
-                ->whereIn('id', $allSelectedIds)
-                ->get(['id', 'customer_id'])
-                ->keyBy('id');
-
-            // Valida che gli ordini dentro stops siano un subset degli ordini selezionati
-            $stopOrderIdsFlat = [];
-            foreach ($validated['stops'] as $s) {
-                foreach (($s['orders'] ?? []) as $oid) $stopOrderIdsFlat[] = (int)$oid;
-            }
-            $stopOrderIdsFlat = array_values(array_unique($stopOrderIdsFlat));
-
-            // (a) niente ordini “estranei”
-            $diff = array_diff($stopOrderIdsFlat, $allSelectedIds);
-            if (!empty($diff)) {
-                abort(422, 'Gli stop contengono ordini non selezionati nel viaggio: ' . implode(',', $diff));
-            }
-
-            // (b) nessun ordine duplicato in 2 stop diversi
-            // (a DB ci pensa con uniq (journey_id, order_id), ma meglio dare errore user-friendly)
-            $seen = [];
-            foreach ($validated['stops'] as $s) {
-                foreach (($s['orders'] ?? []) as $oid) {
-                    $oid = (int)$oid;
-                    if (isset($seen[$oid])) {
-                        abort(422, "Ordine {$oid} assegnato a più tappe.");
-                    }
-                    $seen[$oid] = true;
-                }
-            }
-
-            // Crea gli stop in ordine di sequence (per stabilità)
-            $stopsSorted = $validated['stops'];
-            usort($stopsSorted, fn($a, $b) => ($a['sequence'] ?? 0) <=> ($b['sequence'] ?? 0));
-
-            foreach ($stopsSorted as $stopPayload) {
-                $kind = $stopPayload['kind'];
-
-                // vincoli minimi coerenti col kind
-                if ($kind === 'customer') {
-                    if (empty($stopPayload['customer_id'])) abort(422, 'Stop customer senza customer_id');
-                }
-                if ($kind === 'technical') {
-                    if (empty($stopPayload['technical_action_id'])) abort(422, 'Stop technical senza technical_action_id');
-                }
-
-                $stop = JourneyStop::create([
-                    'journey_id' => $journey->id,
-                    'kind' => $kind,
-                    'customer_id' => $stopPayload['customer_id'] ?? null,
-                    'customer_visit_index' => $stopPayload['customer_visit_index'] ?? null,
-                    'technical_action_id' => $stopPayload['technical_action_id'] ?? null,
-                    'description' => $stopPayload['description'] ?? null,
-                    'location_lat' => $stopPayload['location_lat'] ?? null,
-                    'location_lng' => $stopPayload['location_lng'] ?? null,
-
-                    'sequence' => $stopPayload['sequence'],
-                    'planned_sequence' => $stopPayload['planned_sequence'] ?? $stopPayload['sequence'],
-                    'status' => $stopPayload['status'] ?? 'planned',
-                    'address_text' => $stopPayload['address_text'] ?? null,
-                    'notes' => $stopPayload['notes'] ?? null,
-                ]);
-
-                // Associa ordini
-                foreach (($stopPayload['orders'] ?? []) as $orderId) {
-                    $orderId = (int)$orderId;
-
-                    // extra check: ordine deve appartenere al customer dello stop (solo per stop customer)
-                    if ($kind === 'customer') {
-                        $o = $ordersById->get($orderId);
-                        if (!$o) abort(422, "Ordine {$orderId} non trovato tra quelli selezionati.");
-                        if ((int)$o->customer_id !== (int)$stop->customer_id) {
-                            abort(422, "Ordine {$orderId} non appartiene al customer dello stop (customer_id mismatch).");
-                        }
-                    }
-
-                    JourneyStopOrder::create([
-                        'journey_id' => $journey->id,
-                        'journey_stop_id' => $stop->id,
-                        'order_id' => $orderId,
-                    ]);
-                }
-            }
-        }
-
-        // redirect nuova o legacy: per ora manteniamo legacy
-            return redirect()
-                ->route('journey.edit', ['journey' => $journey->id])
-                ->with('success', 'Viaggio inserito con successo! Genera ora i documenti ordini dal pannello Journey.');
-    });
-}
-
-/**
- * DRY helper: applica journey + cargo_location + status agli ordini selezionati.
- */
-private function applyOrdersToJourney(
-    Journey $journey,
-    array $orderIds,
-    string $truckLocation
-): void
-{
-    if (empty($orderIds)) return;
-
-    $orders = Order::whereIn('id', $orderIds)->get();
-
-    foreach ($orders as $order) {
-        $alreadyInJourney = (int) $order->journey_id === (int) $journey->id;
-        $order->cargo_location = $truckLocation;
-        $order->journey_id = $journey->id;
-
-        if (!$alreadyInJourney) {
-            $this->invalidateOrderReadyState($order);
-        }
-
-        $order->save();
+        return redirect()->route('journey.edit', $journey)->with('success', 'Viaggio inserito con successo! Genera ora i documenti ordini dal pannello Journey.');
     }
-}
 
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Journey $journey)
     {
-        if ($journey->baseline()->exists()) return redirect()->route('journey.execution', ['journey' => $journey->id]);
+        if ($journey->baseline()->exists()) {
+            return redirect()->route('journey.execution', ['journey' => $journey->id]);
+        }
         Gate::authorize('update', $journey);
 
         $vehicles = Vehicle::all();
@@ -538,265 +342,17 @@ private function applyOrdersToJourney(
     public function update(Request $request, Journey $journey)
     {
         Gate::authorize('update', $journey);
+        $journey = app(JourneyWriter::class)->update($journey, $request->all());
 
-        $validated = $request->validate([
-            'post_action' => ['nullable', Rule::in(['save_stay', 'save_exit'])],
-            'planned_start_at'    => 'required|date',
-            'planned_end_at'      => 'required|date',
-            'notes'               => 'nullable|string',
-            'vehicle_id'  => 'required|integer',
-            'trailer_id'  => 'nullable|integer',
-            'vehicle_cargo_id'  => 'required|integer',
-            'trailer_cargo_id'  => 'nullable|integer',
-            'driver_id'   => 'required',
-            'logistics_user_id' => 'nullable',
-
-            'orders_truck'    => 'nullable|array',
-            'orders_truck.*'  => 'integer|exists:orders,id',
-
-            'orders_trailer'  => 'nullable|array',
-            'orders_trailer.*'=> 'integer|exists:orders,id',
-
-            'orders_fulfill' => 'nullable|array',
-            'orders_fulfill.*'=> 'integer|exists:orders,id',
-
-            'stops' => 'nullable|array',
-            'stops.*.kind' => ['required_with:stops', Rule::in(['customer', 'technical'])],
-            'stops.*.sequence' => 'required_with:stops|integer|min:1',
-            'stops.*.planned_sequence' => 'nullable|integer|min:1',
-            'stops.*.customer_id' => 'nullable|integer|exists:customers,id',
-            'stops.*.customer_visit_index' => 'nullable|integer|min:1',
-            'stops.*.technical_action_id' => 'nullable|integer|exists:journey_stop_actions,id',
-            'stops.*.location_lat' => 'nullable|numeric',
-            'stops.*.location_lng' => 'nullable|numeric',
-            'stops.*.description' => 'nullable|string',
-            'stops.*.address_text' => 'nullable|string',
-            'stops.*.orders' => 'nullable|array',
-            'stops.*.orders.*' => 'integer|exists:orders,id',
-        ]);
-
-        app(\App\Services\JourneyPlanning\VehicleConfiguration::class)->validate($validated);
-
-        return DB::transaction(function () use ($validated, $journey) {
-            $journey = Journey::query()
-                ->whereKey($journey->id)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-            $journeyStatusRaw = $journey->getRawOriginal('status');
-            if ($journeyStatusRaw === null || $journeyStatusRaw === '') {
-                $journeyStatusRaw = JourneyStatus::STATUS_CREATED->value;
-            }
-
-            try {
-                $journeyState = $journey->status instanceof JourneyStatus
-                    ? $journey->status
-                    : JourneyStatus::fromMixed($journeyStatusRaw);
-            } catch (\ValueError $e) {
-                $journeyState = JourneyStatus::STATUS_CREATED;
-            }
-
-            if ($journeyState !== JourneyStatus::STATUS_CREATED) {
-                abort(422, 'Il viaggio puo essere modificato solo quando e in stato creato.');
-            }
-
-            $comparison = app(\App\Services\JourneyPlanning\PlanningInput::class);
-            if ($comparison->current($journey) === $comparison->normalize($validated)) {
-                return $this->redirectAfterJourneyUpdate($journey, $validated['post_action'] ?? 'save_exit', 'Viaggio già aggiornato.');
-            }
-            $documents = app(OrderDocumentGenerationService::class);
-            foreach ($journey->orders()->lockForUpdate()->get() as $order) {
-                abort_if($order->documents_status === OrderDocumentsStatus::GENERATING && !$documents->isGeneratingStateStale($order), 409, 'Attendi il completamento della generazione documenti prima di modificare il viaggio.');
-            }
-
-            $before = [
-                'planned_start_at' => optional($journey->planned_start_at)->toDateTimeString(),
-                'planned_end_at' => optional($journey->planned_end_at)->toDateTimeString(),
-                'vehicle_id' => (int) $journey->vehicle_id,
-                'trailer_id' => $journey->trailer_id !== null ? (int) $journey->trailer_id : null,
-                'vehicle_cargo_id' => (int) $journey->vehicle_cargo_id,
-                'trailer_cargo_id' => $journey->trailer_cargo_id !== null ? (int) $journey->trailer_cargo_id : null,
-                'driver_id' => (int) $journey->driver_id,
-            ];
-
-            $journey->update([
-                'planned_start_at' => $validated['planned_start_at'],
-                'planned_end_at' => $validated['planned_end_at'],
-                'notes' => $validated['notes'] ?? null,
-                'vehicle_id' => $validated['vehicle_id'],
-                'trailer_id' => $validated['trailer_id'] ?? null,
-                'vehicle_cargo_id' => $validated['vehicle_cargo_id'],
-                'trailer_cargo_id' => $validated['trailer_cargo_id'] ?? null,
-                'driver_id' => $validated['driver_id'],
-                'logistics_user_id' => $validated['logistics_user_id'] ?? null,
-            ]);
-
-            $after = [
-                'planned_start_at' => optional($journey->planned_start_at)->toDateTimeString(),
-                'planned_end_at' => optional($journey->planned_end_at)->toDateTimeString(),
-                'vehicle_id' => (int) $journey->vehicle_id,
-                'trailer_id' => $journey->trailer_id !== null ? (int) $journey->trailer_id : null,
-                'vehicle_cargo_id' => (int) $journey->vehicle_cargo_id,
-                'trailer_cargo_id' => $journey->trailer_cargo_id !== null ? (int) $journey->trailer_cargo_id : null,
-                'driver_id' => (int) $journey->driver_id,
-            ];
-            $journeyExecutionContextChanged = $before !== $after;
-
-            $idsTruck = $validated['orders_truck'] ?? [];
-            $idsTrailer = $validated['orders_trailer'] ?? [];
-            $idsFulfill = $validated['orders_fulfill'] ?? [];
-
-            $overlapTruckTrailer = array_intersect($idsTruck, $idsTrailer);
-            $overlapTruckFulfill = array_intersect($idsTruck, $idsFulfill);
-            $overlapTrailerFulfill = array_intersect($idsTrailer, $idsFulfill);
-            if (!empty($overlapTruckTrailer) || !empty($overlapTruckFulfill) || !empty($overlapTrailerFulfill)) {
-                abort(422, 'Un ordine non puo essere assegnato a piu comparti.');
-            }
-
-            $allSelectedIds = array_values(array_unique(array_merge($idsTruck, $idsTrailer, $idsFulfill)));
-
-            $foreignAllocated = Order::query()
-                ->whereIn('id', $allSelectedIds)
-                ->whereNotNull('journey_id')
-                ->where('journey_id', '!=', $journey->id)
-                ->exists();
-            if ($foreignAllocated) {
-                abort(422, 'Alcuni ordini selezionati sono gia assegnati a un altro viaggio.');
-            }
-
-            $currentJourneyOrderIds = Order::query()
-                ->where('journey_id', $journey->id)
-                ->pluck('id')
-                ->all();
-
-            $toDetach = array_values(array_diff($currentJourneyOrderIds, $allSelectedIds));
-            if (!empty($toDetach)) {
-                $ordersToDetach = Order::query()->whereIn('id', $toDetach)->get();
-                foreach ($ordersToDetach as $orderToDetach) {
-                    $orderToDetach->update([
-                        'journey_id' => null,
-                        'cargo_location' => null,
-                        'status' => $this->statusAfterJourneyDetach($orderToDetach),
-                        'documents_status' => OrderDocumentsStatus::NOT_GENERATED->value,
-                        'documents_generated_at' => null,
-                        'documents_error' => null,
-                    ]);
-                }
-            }
-
-            $this->applyOrdersToJourney($journey, $idsTruck, OrdersTruckLocation::TRUCK_MOTRICE->value);
-            $this->applyOrdersToJourney($journey, $idsTrailer, OrdersTruckLocation::TRUCK_RIMORCHIO->value);
-            $this->applyOrdersToJourney($journey, $idsFulfill, OrdersTruckLocation::TRUCK_RIEMPIMENTO->value);
-
-            if ($journeyExecutionContextChanged) {
-                $ordersToInvalidate = Order::query()
-                    ->where('journey_id', $journey->id)
-                    ->get();
-
-                foreach ($ordersToInvalidate as $order) {
-                    $this->invalidateOrderReadyState($order);
-                    $order->save();
-                }
-            }
-
-            JourneyStopOrder::query()->where('journey_id', $journey->id)->delete();
-            JourneyStop::query()->where('journey_id', $journey->id)->delete();
-
-            if (!empty($validated['stops'])) {
-                $ordersById = Order::query()
-                    ->whereIn('id', $allSelectedIds)
-                    ->get(['id', 'customer_id'])
-                    ->keyBy('id');
-
-                $stopOrderIdsFlat = [];
-                foreach ($validated['stops'] as $s) {
-                    foreach (($s['orders'] ?? []) as $oid) {
-                        $stopOrderIdsFlat[] = (int) $oid;
-                    }
-                }
-                $stopOrderIdsFlat = array_values(array_unique($stopOrderIdsFlat));
-
-                $diff = array_diff($stopOrderIdsFlat, $allSelectedIds);
-                if (!empty($diff)) {
-                    abort(422, 'Gli stop contengono ordini non selezionati nel viaggio: ' . implode(',', $diff));
-                }
-
-                $seen = [];
-                foreach ($validated['stops'] as $s) {
-                    foreach (($s['orders'] ?? []) as $oid) {
-                        $oid = (int) $oid;
-                        if (isset($seen[$oid])) {
-                            abort(422, "Ordine {$oid} assegnato a piu tappe.");
-                        }
-                        $seen[$oid] = true;
-                    }
-                }
-
-                $stopsSorted = $validated['stops'];
-                usort($stopsSorted, fn($a, $b) => ($a['sequence'] ?? 0) <=> ($b['sequence'] ?? 0));
-
-                foreach ($stopsSorted as $stopPayload) {
-                    $kind = $stopPayload['kind'];
-                    if ($kind === 'customer' && empty($stopPayload['customer_id'])) {
-                        abort(422, 'Stop customer senza customer_id');
-                    }
-                    if ($kind === 'technical' && empty($stopPayload['technical_action_id'])) {
-                        abort(422, 'Stop technical senza technical_action_id');
-                    }
-
-                    $stop = JourneyStop::create([
-                        'journey_id' => $journey->id,
-                        'kind' => $kind,
-                        'customer_id' => $stopPayload['customer_id'] ?? null,
-                        'customer_visit_index' => $stopPayload['customer_visit_index'] ?? null,
-                        'technical_action_id' => $stopPayload['technical_action_id'] ?? null,
-                        'description' => $stopPayload['description'] ?? null,
-                        'location_lat' => $stopPayload['location_lat'] ?? null,
-                        'location_lng' => $stopPayload['location_lng'] ?? null,
-                        'sequence' => $stopPayload['sequence'],
-                        'planned_sequence' => $stopPayload['planned_sequence'] ?? $stopPayload['sequence'],
-                        'status' => $stopPayload['status'] ?? 'planned',
-                        'address_text' => $stopPayload['address_text'] ?? null,
-                        'notes' => $stopPayload['notes'] ?? null,
-                    ]);
-
-                    foreach (($stopPayload['orders'] ?? []) as $orderId) {
-                        $orderId = (int) $orderId;
-
-                        if ($kind === 'customer') {
-                            $o = $ordersById->get($orderId);
-                            if (!$o) {
-                                abort(422, "Ordine {$orderId} non trovato tra quelli selezionati.");
-                            }
-                            if ((int) $o->customer_id !== (int) $stop->customer_id) {
-                                abort(422, "Ordine {$orderId} non appartiene al customer dello stop (customer_id mismatch).");
-                            }
-                        }
-
-                        JourneyStopOrder::create([
-                            'journey_id' => $journey->id,
-                            'journey_stop_id' => $stop->id,
-                            'order_id' => $orderId,
-                        ]);
-                    }
-                }
-            }
-
-            $journey->increment('plan_version');
-            foreach ($journey->orders()->get() as $order) {
-                $documents->invalidateAfterReadyOrderEdit($order);
-            }
-
-            return $this->redirectAfterJourneyUpdate($journey, $validated['post_action'] ?? 'save_exit', 'Viaggio modificato con successo!');
-        });
+        return $this->redirectAfterJourneyUpdate($journey, $request->input('post_action', 'save_exit'), 'Viaggio modificato con successo!');
     }
 
-
-    private function redirectAfterJourneyUpdate(Journey $journey, string $postAction, string $message): \Illuminate\Http\RedirectResponse
+    private function redirectAfterJourneyUpdate(Journey $journey, string $postAction, string $message): RedirectResponse
     {
         $response = $postAction === 'save_stay'
             ? redirect()->route('journey.edit', ['journey' => $journey->id])
             : redirect()->route('journey.index');
+
         return $response->with('success', $message);
     }
 
@@ -806,7 +362,6 @@ private function applyOrdersToJourney(
     public function destroy(Journey $journey)
     {
         Gate::authorize('delete', $journey);
-
 
         // Retrieve all orders associated with the journey
         $orders = $journey->orders;
@@ -823,162 +378,159 @@ private function applyOrdersToJourney(
             ]);
         }
 
-
         $journey->deleteOrFail();
 
         return redirect()->back()->with('success', 'Viaggio cancellato con successo!');
     }
 
-    public function restore(Journey $journey){
+    public function restore(Journey $journey)
+    {
         $journey->restore();
+
         return redirect()->back()->with('success', 'Viaggio ripristinato con successo!');
     }
 
+    /*
+        CUSTOM actions for Journey life cycle
+    */
 
-/*
-    CUSTOM actions for Journey life cycle 
-*/
-
-
-private function statusAfterJourneyDetach(Order $order): string
-{
-    return OrderStatus::STATUS_CREATED->value;
-}
-
-private function invalidateOrderReadyState(Order $order): void
-{
-    app(OrderDocumentGenerationService::class)->invalidateAfterReadyOrderEdit($order);
-}
-
-public function documentsStatus(Journey $journey): \Illuminate\Http\JsonResponse
-{
-    Gate::authorize('view', $journey);
-
-    $documentsService = app(OrderDocumentGenerationService::class);
-
-    $orders = $journey->baseline()->exists()
-        ? $journey->orderExecutions()->with(['items','holders'])->get()->map(fn ($e) => app(\App\Services\JourneyExecution\ExecutionProjection::class)->order($e, $journey))
-        : Order::where('journey_id', $journey->id)->orderBy('id')->get();
-
-    $total = $orders->count();
-    $ready = $orders->filter(fn (Order $order) => $documentsService->isCurrent($order))->count();
-
-    return response()->json([
-        'journey_id' => $journey->id,
-        'summary' => [
-            'total' => $total,
-            'ready' => $ready,
-            'not_ready' => max(0, $total - $ready),
-            'all_ready' => $total > 0 && $ready === $total,
-        ],
-        'orders' => $orders->map(function (Order $order) use ($documentsService) {
-            $documents = $documentsService->listDocuments($order);
-            $modelDocument = collect($documents)->first(fn (array $document) => ($document['extension'] ?? null) === 'xlsx');
-            $adrHpDocument = collect($documents)->first(fn (array $document) => ($document['extension'] ?? null) === 'pdf');
-            $requiresAdrHp = $order->items->contains(function ($item): bool {
-                $adrEnabled = (bool) ($item->has_adr ?? $item->adr ?? false);
-                if ($adrEnabled) {
-                    return true;
-                }
-
-                $dangerousCer = (bool) ($item->cerCode?->is_dangerous ?? false);
-                $hasHpCode = trim((string) ($item->adr_hp ?? '')) !== '';
-
-                return $dangerousCer || $hasHpCode;
-            });
-
-            $current = $documentsService->isCurrent($order);
-            $generationActive = $order->documents_status === OrderDocumentsStatus::GENERATING && !$documentsService->isGeneratingStateStale($order);
-
-            return [
-            'id' => $order->id,
-            'legacy_code' => $order->legacy_code,
-            'customer_name' => $order->customer?->company_name,
-            'status' => OrderStatus::fromMixed($order->status)->value,
-            'documents_status' => OrderDocumentsStatus::fromMixed($order->documents_status)->value,
-            'documents_generated_at' => $order->documents_generated_at,
-            'documents_error' => $order->documents_error,
-            'documents_version' => (int) ($order->documents_version ?? 0),
-            'current' => $current,
-            'can_generate' => !$current && !$generationActive,
-            'generation_active' => $generationActive,
-            'has_model_document' => $modelDocument !== null,
-            'model_document_name' => $modelDocument['name'] ?? null,
-            'has_adr_hp_document' => $adrHpDocument !== null,
-            'adr_hp_document_name' => $adrHpDocument['name'] ?? null,
-            'requires_adr_hp_document' => $requiresAdrHp,
-        ];
-        })->values(),
-    ]);
-}
-
-public function generateDocuments(
-    Request $request,
-    Journey $journey,
-    OrderDocumentGenerationService $service
-): \Illuminate\Http\JsonResponse {
-    Gate::authorize('update', $journey);
-
-    $validated = $request->validate([
-        'order_ids' => ['nullable', 'array'],
-        'order_ids.*' => ['integer', 'exists:orders,id'],
-    ]);
-
-    $orderIds = array_values(array_unique(array_map('intval', $validated['order_ids'] ?? [])));
-    $query = Order::query()->where('journey_id', $journey->id);
-    if (!empty($orderIds)) {
-        $query->whereIn('id', $orderIds);
+    private function statusAfterJourneyDetach(Order $order): string
+    {
+        return OrderStatus::STATUS_CREATED->value;
     }
-    $orders = $journey->baseline()->exists()
-        ? $journey->orderExecutions()->where('status', '!=', 'released')
-            ->when($orderIds, fn ($q) => $q->whereIn('source_order_id', $orderIds))->get()
-            ->map(fn ($e) => app(\App\Services\JourneyExecution\ExecutionProjection::class)->order($e, $journey))
-        : $query->get();
 
-    if ($orders->isEmpty()) {
+    private function invalidateOrderReadyState(Order $order): void
+    {
+        app(OrderDocumentGenerationService::class)->invalidateAfterReadyOrderEdit($order);
+    }
+
+    public function documentsStatus(Journey $journey): JsonResponse
+    {
+        Gate::authorize('view', $journey);
+
+        $documentsService = app(OrderDocumentGenerationService::class);
+
+        $orders = $journey->baseline()->exists()
+            ? $journey->orderExecutions()->with(['items', 'holders'])->get()->map(fn ($e) => app(ExecutionProjection::class)->order($e, $journey))
+            : Order::where('journey_id', $journey->id)->orderBy('id')->get();
+
+        $total = $orders->count();
+        $ready = $orders->filter(fn (Order $order) => $documentsService->isCurrent($order))->count();
+
         return response()->json([
-            'type' => 'warning',
-            'message' => 'Nessun ordine trovato nel journey selezionato.',
-        ], 422);
+            'journey_id' => $journey->id,
+            'summary' => [
+                'total' => $total,
+                'ready' => $ready,
+                'not_ready' => max(0, $total - $ready),
+                'all_ready' => $total > 0 && $ready === $total,
+            ],
+            'orders' => $orders->map(function (Order $order) use ($documentsService) {
+                $documents = $documentsService->listDocuments($order);
+                $modelDocument = collect($documents)->first(fn (array $document) => ($document['extension'] ?? null) === 'xlsx');
+                $adrHpDocument = collect($documents)->first(fn (array $document) => ($document['extension'] ?? null) === 'pdf');
+                $requiresAdrHp = $order->items->contains(function ($item): bool {
+                    $adrEnabled = (bool) ($item->has_adr ?? $item->adr ?? false);
+                    if ($adrEnabled) {
+                        return true;
+                    }
+
+                    $dangerousCer = (bool) ($item->cerCode?->is_dangerous ?? false);
+                    $hasHpCode = trim((string) ($item->adr_hp ?? '')) !== '';
+
+                    return $dangerousCer || $hasHpCode;
+                });
+
+                $current = $documentsService->isCurrent($order);
+                $generationActive = $order->documents_status === OrderDocumentsStatus::GENERATING && ! $documentsService->isGeneratingStateStale($order);
+
+                return [
+                    'id' => $order->id,
+                    'legacy_code' => $order->legacy_code,
+                    'customer_name' => $order->customer?->company_name,
+                    'status' => OrderStatus::fromMixed($order->status)->value,
+                    'documents_status' => OrderDocumentsStatus::fromMixed($order->documents_status)->value,
+                    'documents_generated_at' => $order->documents_generated_at,
+                    'documents_error' => $order->documents_error,
+                    'documents_version' => (int) ($order->documents_version ?? 0),
+                    'current' => $current,
+                    'can_generate' => ! $current && ! $generationActive,
+                    'generation_active' => $generationActive,
+                    'has_model_document' => $modelDocument !== null,
+                    'model_document_name' => $modelDocument['name'] ?? null,
+                    'has_adr_hp_document' => $adrHpDocument !== null,
+                    'adr_hp_document_name' => $adrHpDocument['name'] ?? null,
+                    'requires_adr_hp_document' => $requiresAdrHp,
+                ];
+            })->values(),
+        ]);
     }
 
-    $queued = [];
-    $skipped = [];
+    public function generateDocuments(
+        Request $request,
+        Journey $journey,
+        OrderDocumentGenerationService $service
+    ): JsonResponse {
+        Gate::authorize('update', $journey);
 
-    foreach ($orders as $order) {
-        $documentsState = OrderDocumentsStatus::fromMixed($order->documents_status ?? OrderDocumentsStatus::NOT_GENERATED->value);
+        $validated = $request->validate([
+            'order_ids' => ['nullable', 'array'],
+            'order_ids.*' => ['integer', 'exists:orders,id'],
+        ]);
 
-        if ($documentsState === OrderDocumentsStatus::GENERATING && !$service->isGeneratingStateStale($order)) {
-            $skipped[] = [
-                'order_id' => $order->id,
-                'reason' => 'already_generating',
-            ];
-            continue;
+        $orderIds = array_values(array_unique(array_map('intval', $validated['order_ids'] ?? [])));
+        $query = Order::query()->where('journey_id', $journey->id);
+        if (! empty($orderIds)) {
+            $query->whereIn('id', $orderIds);
+        }
+        $orders = $journey->baseline()->exists()
+            ? $journey->orderExecutions()->where('status', '!=', 'released')
+                ->when($orderIds, fn ($q) => $q->whereIn('source_order_id', $orderIds))->get()
+                ->map(fn ($e) => app(ExecutionProjection::class)->order($e, $journey))
+            : $query->get();
+
+        if ($orders->isEmpty()) {
+            return response()->json([
+                'type' => 'warning',
+                'message' => 'Nessun ordine trovato nel journey selezionato.',
+            ], 422);
         }
 
-        if ($documentsState === OrderDocumentsStatus::GENERATING && $service->isGeneratingStateStale($order)) {
-            $service->recoverStaleGeneratingState($order);
+        $queued = [];
+        $skipped = [];
+
+        foreach ($orders as $order) {
+            $documentsState = OrderDocumentsStatus::fromMixed($order->documents_status ?? OrderDocumentsStatus::NOT_GENERATED->value);
+
+            if ($documentsState === OrderDocumentsStatus::GENERATING && ! $service->isGeneratingStateStale($order)) {
+                $skipped[] = [
+                    'order_id' => $order->id,
+                    'reason' => 'already_generating',
+                ];
+
+                continue;
+            }
+
+            if ($documentsState === OrderDocumentsStatus::GENERATING && $service->isGeneratingStateStale($order)) {
+                $service->recoverStaleGeneratingState($order);
+            }
+
+            if ($service->enqueueGeneration($order)) {
+                $queued[] = $order->id;
+            } else {
+                $skipped[] = ['order_id' => $order->id, 'reason' => 'already_current'];
+            }
         }
 
-        if ($service->enqueueGeneration($order)) $queued[] = $order->id;
-        else $skipped[] = ['order_id' => $order->id, 'reason' => 'already_current'];
+        return response()->json([
+            'type' => 'success',
+            'message' => sprintf(
+                'Generazione avviata per %d ordini%s.',
+                count($queued),
+                count($skipped) > 0 ? ' (alcuni ordini erano gia in generazione)' : ''
+            ),
+            'queued_order_ids' => $queued,
+            'skipped' => $skipped,
+        ], 202);
     }
-
-    return response()->json([
-        'type' => 'success',
-        'message' => sprintf(
-            'Generazione avviata per %d ordini%s.',
-            count($queued),
-            count($skipped) > 0 ? ' (alcuni ordini erano gia in generazione)' : ''
-        ),
-        'queued_order_ids' => $queued,
-        'skipped' => $skipped,
-    ], 202);
 }
-
-
-
-}
-
-
-

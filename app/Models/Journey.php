@@ -5,16 +5,21 @@ namespace App\Models;
 use App\Enums\DispatchStatus;
 use App\Enums\JourneyStatus;
 use App\Models\Concerns\HasDomainAudit;
-use Illuminate\Database\Eloquent\Model;
-use Mpociot\Versionable\VersionableTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Mpociot\Versionable\VersionableTrait;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
 class Journey extends Model implements AuditableContract
 {
-    use HasFactory, SoftDeletes, VersionableTrait, HasDomainAudit;
+    use HasDomainAudit, HasFactory, SoftDeletes, VersionableTrait;
+
+    protected function getAuthUserId()
+    {
+        return auth()->user() instanceof User ? auth()->id() : null;
+    }
 
     protected $keepOldVersions = true; // Keep all versions of the model
 
@@ -27,19 +32,19 @@ class Journey extends Model implements AuditableContract
         'execution_data' => 'array',
 
         // datetime
-        'planned_start_at'         => 'datetime',
-        'planned_end_at'           => 'datetime',
-        'actual_start_at'          => 'datetime',
-        'actual_end_at'            => 'datetime',
+        'planned_start_at' => 'datetime',
+        'planned_end_at' => 'datetime',
+        'actual_start_at' => 'datetime',
+        'actual_end_at' => 'datetime',
         'primary_warehouse_download_at' => 'datetime',
         'secondary_warehouse_download_at' => 'datetime',
-        'dispatch_started_at'          => 'datetime',
-        'dispatch_managed_at'          => 'datetime',
-        'dispatch_updated_at'          => 'datetime',
+        'dispatch_started_at' => 'datetime',
+        'dispatch_managed_at' => 'datetime',
+        'dispatch_updated_at' => 'datetime',
 
         // boolean
-        'is_double_load'           => 'boolean',
-        'is_temporary_storage'     => 'boolean',
+        'is_double_load' => 'boolean',
+        'is_temporary_storage' => 'boolean',
 
     ];
 
@@ -94,14 +99,21 @@ class Journey extends Model implements AuditableContract
         return $this->hasMany(Order::class);
     }
 
-    public function baseline() { return $this->hasOne(JourneyBaseline::class); }
-    public function orderExecutions() { return $this->hasMany(JourneyOrderExecution::class); }
+    public function baseline()
+    {
+        return $this->hasOne(JourneyBaseline::class);
+    }
+
+    public function orderExecutions()
+    {
+        return $this->hasMany(JourneyOrderExecution::class);
+    }
 
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class, 'vehicle_id');
-    }  
-    
+    }
+
     public function cargoForVehicle()
     {
         return $this->belongsTo(Cargo::class, 'vehicle_cargo_id');
@@ -171,5 +183,4 @@ class Journey extends Model implements AuditableContract
     {
         return $this->belongsTo(Warehouse::class, 'secondary_warehouse_id');
     }
-
 }

@@ -10,7 +10,7 @@
 <body>
     <script
         id="api-reference"
-        data-url="{{ route('dev.api-docs.openapi') }}"
+        data-url="{{ $specUrl }}"
     ></script>
     <script>
         document.getElementById('api-reference').dataset.configuration = JSON.stringify({

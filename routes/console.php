@@ -43,3 +43,6 @@ Schedule::command('auth:clear-resets')->everyFourHours();
 Schedule::command('risk:global')
     ->dailyAt('00:00')
     ->emailOutputTo((string) env('RISK_REPORT_EMAIL', 'matteo.argenton@gmail.com'));
+
+// Remove only expired authentication credentials; operational request history remains available.
+Schedule::command('sanctum:prune-expired --hours=24')->daily();

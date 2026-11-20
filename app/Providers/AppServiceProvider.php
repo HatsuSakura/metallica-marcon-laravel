@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\UserRole;
 use App\Models\Cargo;
 use App\Models\CatalogItem;
 use App\Models\Customer;
@@ -27,9 +28,11 @@ use App\Policies\TrailerPolicy;
 use App\Policies\UserPolicy;
 use App\Policies\VehiclePolicy;
 use App\Policies\WithdrawPolicy;
-use App\Enums\UserRole;
+use App\Services\JourneyExecution\FrozenPlanningGuard;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
@@ -49,8 +52,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        RateLimiter::for('agent-api', fn ($request) => Limit::perMinute(60)->by('agent:'.($request->user()?->id ?? $request->ip())));
+
         Schema::defaultStringLength(191);
-        \App\Services\JourneyExecution\FrozenPlanningGuard::register();
+        FrozenPlanningGuard::register();
 
         Gate::policy(DatabaseNotification::class, NotificationPolicy::class);
         Gate::policy(Cargo::class, CargoPolicy::class);
@@ -73,6 +78,8 @@ class AppServiceProvider extends ServiceProvider
                 UserRole::LOGISTIC,
             ], true);
         });
+
+        Gate::define('manageAgents', fn (User $user): bool => $user->role === UserRole::DEVELOPER);
 
         Gate::define('viewApiDocs', function (User $user): bool {
             return $user->is_admin || $user->role === UserRole::DEVELOPER;

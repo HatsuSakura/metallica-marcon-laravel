@@ -5,16 +5,22 @@ namespace App\Models;
 use App\Enums\OrderDocumentsStatus;
 use App\Enums\OrderStatus;
 use App\Models\Concerns\HasDomainAudit;
-use Illuminate\Database\Eloquent\Model;
-use Mpociot\Versionable\VersionableTrait;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Mpociot\Versionable\VersionableTrait;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
 class Order extends Model implements AuditableContract
 {
-    use HasFactory, SoftDeletes, VersionableTrait, HasDomainAudit;
+    use HasDomainAudit, HasFactory, SoftDeletes, VersionableTrait;
+
+    protected function getAuthUserId()
+    {
+        return auth()->user() instanceof User ? auth()->id() : null;
+    }
 
     protected $keepOldVersions = true; // Keep all versions of the model
 
@@ -30,7 +36,7 @@ class Order extends Model implements AuditableContract
         'documents_generated_at' => 'datetime',
         'documents_generation_started_at' => 'datetime',
     ];
-    
+
     protected $fillable = [
         'legacy_code',
         'is_urgent',
@@ -53,7 +59,7 @@ class Order extends Model implements AuditableContract
         'documents_generated_at',
         'documents_error',
         'documents_version',
-    ]; 
+    ];
 
     protected $auditInclude = [
         'customer_id',
@@ -74,38 +80,43 @@ class Order extends Model implements AuditableContract
         'notes',
     ];
 
-protected static function booted()
+    protected static function booted()
     {
         static::creating(function ($order) {
             if (blank($order->status)) {
                 $order->status = OrderStatus::STATUS_CREATED->value;
             }
 
-            $year_2  = now()->format('y');                     // es. "25"
-            $year_4  = (int) now()->format('Y');               // es. "2025"
-            $month   = now()->format('m');                     // es. "06"
-            $initial = $order->customer->seller->user_code;    // es. "MMM"
+            $year_2 = now()->format('y');                     // es. "25"
+            $year_4 = (int) now()->format('Y');               // es. "2025"
+            $month = now()->format('m');                     // es. "06"
+            $initial = $order->customer?->seller?->user_code;
+            if (blank($initial)) {
+                throw ValidationException::withMessages(['customer_id' => 'Assegna al cliente un commerciale con codice utente prima di creare l’ordine.']);
+            }    // es. "MMM"
 
             // operazione atomica in transazione
             $counter = DB::transaction(function () use ($year_4) {
                 $row = DB::table('order_counters')
-                         ->where('year', $year_4)
-                         ->lockForUpdate()
-                         ->first();
+                    ->where('year', $year_4)
+                    ->lockForUpdate()
+                    ->first();
 
                 if ($row) {
                     DB::table('order_counters')
-                      ->where('year', $year_4)
-                      ->increment('counter');
+                        ->where('year', $year_4)
+                        ->increment('counter');
+
                     return $row->counter + 1;
                 }
 
                 DB::table('order_counters')->insert([
-                    'year'       => $year_4,
-                    'counter'    => 1,
+                    'year' => $year_4,
+                    'counter' => 1,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+
                 return 1;
             });
 
@@ -119,7 +130,6 @@ protected static function booted()
             );
         });
     }
-
 
     // Relationship to order items
     public function items()
@@ -173,5 +183,4 @@ protected static function booted()
     {
         return $this->belongsTo(Site::class);
     }
-
 }

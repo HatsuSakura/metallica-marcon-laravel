@@ -479,3 +479,10 @@ Route::prefix('withdraws/{withdraw}')
 Route::resource('cer-code', \App\Http\Controllers\CerCodeController::class)
     ->only(['index', 'create', 'store', 'edit', 'update'])
     ->middleware(['auth', 'verified', 'can:accessBackofficeArea']);
+Route::prefix('dev')->name('dev.')->middleware(['auth', 'verified', 'can:manageAgents'])->group(function () {
+    Route::get('agents', [\App\Http\Controllers\AgentController::class, 'index'])->name('agents.index');
+    Route::post('agents', [\App\Http\Controllers\AgentController::class, 'store'])->name('agents.store');
+    Route::put('agents/{agent}', [\App\Http\Controllers\AgentController::class, 'update'])->name('agents.update');
+    Route::post('agents/{agent}/tokens', [\App\Http\Controllers\AgentController::class, 'issueToken'])->middleware('throttle:10,1')->name('agents.tokens.store');
+    Route::delete('agents/{agent}/tokens/{token}', [\App\Http\Controllers\AgentController::class, 'revokeToken'])->whereNumber('token')->name('agents.tokens.destroy');
+});

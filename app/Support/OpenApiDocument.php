@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Support\AgentApi\OpenApi;
 use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -18,25 +19,34 @@ class OpenApiDocument
             }
 
             foreach (array_diff($route->methods(), ['HEAD']) as $method) {
-                $paths['/'.$route->uri()][strtolower($method)] = $this->operation($route, $method);
+                $operation = $this->operation($route, $method);
+                if (str_starts_with($route->uri(), 'api/v1/')) {
+                    $agentOperation = app(OpenApi::class)->operation(str_replace('agent-api.', '', $route->getName()), $method);
+                    $agentOperation['parameters'] = array_merge($operation['parameters'], $agentOperation['parameters']);
+                    $operation = $agentOperation;
+                }
+                $paths['/'.$route->uri()][strtolower($method)] = $operation;
             }
         }
 
-        ksort($paths);
+        // Show integration endpoints before the legacy UI APIs in documentation viewers.
+        uksort($paths, fn ($a, $b) => (int) str_starts_with($b, '/api/v1/') <=> (int) str_starts_with($a, '/api/v1/') ?: strcmp($a, $b));
 
         return [
             'openapi' => '3.1.0',
             'info' => [
                 'title' => 'Metallica Marcon API',
-                'version' => '1.0.0',
-                'description' => 'Catalogo DEV delle API applicative. Le API usano la sessione Laravel, richiedono un utente verificato e applicano policy e gate specifici. Le operazioni mutative richiedono anche un token CSRF valido.',
+                'version' => '1.2.0',
+                'description' => 'Catalogo DEV: /api/v1 usa Bearer token agente e permessi granulari. Gli endpoint precedenti usano sessione Laravel, verifica email e CSRF per le mutazioni. La pagina di documentazione resta riservata agli utenti abilitati.',
             ],
             'servers' => [
                 ['url' => url('/'), 'description' => app()->environment('production') ? 'Produzione' : ucfirst(app()->environment())],
             ],
+            'tags' => array_map(fn ($name) => ['name' => $name], ['API agenti: Ordini', 'API agenti: Materiali ordini', 'API agenti: Viaggi', 'API agenti: Codici CER', 'API agenti: Anagrafiche']),
             'paths' => $paths,
             'components' => [
                 'securitySchemes' => [
+                    'agentBearer' => ['type' => 'http', 'scheme' => 'bearer', 'description' => 'Token generato da un developer in /dev/agents. Richiede agente attivo, scadenza valida e permessi specifici.'],
                     'sessionCookie' => [
                         'type' => 'apiKey',
                         'in' => 'cookie',
@@ -44,7 +54,7 @@ class OpenApiDocument
                         'description' => 'Sessione Laravel autenticata. Le richieste POST, PUT, PATCH e DELETE richiedono inoltre il token CSRF same-origin.',
                     ],
                 ],
-                'schemas' => [
+                'schemas' => array_merge(app(OpenApi::class)->schemas(), [
                     'ValidationErrors' => [
                         'type' => 'object',
                         'properties' => [
@@ -52,7 +62,7 @@ class OpenApiDocument
                             'errors' => ['type' => 'object', 'additionalProperties' => ['type' => 'array', 'items' => ['type' => 'string']]],
                         ],
                     ],
-                ],
+                ]),
             ],
         ];
     }
