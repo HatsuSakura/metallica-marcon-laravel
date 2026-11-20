@@ -204,4 +204,24 @@ class AgentApiTest extends JourneyExecutionTestCase
         $this->assertDatabaseHas('agent_api_requests', ['agent_id' => $this->agent->id, 'status' => 201]);
     }
 
+    public function test_dedicated_cer_read_permission_is_searchable_and_does_not_grant_other_access(): void
+    {
+        $doc = app(\App\Support\OpenApiDocument::class)->build();
+        $this->assertSame('cer-codes:read', $doc['paths']['/api/v1/cer-codes']['get']['x-required-ability']);
+        $this->assertArrayHasKey('/api/v1/cer-codes/{cerCode}', $doc['paths']);
+        $this->getJson('/api/v1/cer-codes')->assertUnauthorized();
+        $this->agent->update(['abilities' => ['cer-codes:read']]);
+        $this->token = $this->agent->createToken('cer-only', ['cer-codes:read'], now()->addDay())->plainTextToken;
+        DB::table('cer_codes')->where('id', 1)->update(['code' => '17 04 05']);
+        $this->api('GET', 'cer-codes?search=170405')->assertOk()->assertJsonPath('total', 1)->assertJsonPath('data.0.code', '17 04 05')->assertJsonPath('data.0.is_dangerous', false);
+        $this->api('GET', 'cer-codes?search=ferro')->assertOk()->assertJsonPath('total', 1);
+        $this->api('GET', 'cer-codes/1')->assertOk()->assertJsonPath('data.id', 1);
+        $this->api('GET', 'cer-codes/999')->assertNotFound();
+        $this->api('GET', 'orders')->assertForbidden();
+        $this->api('GET', 'references/customers')->assertForbidden();
+        $this->api('POST', 'cer-codes', ['code' => '150101'])->assertStatus(405);
+        DB::table('cer_codes')->where('id', 1)->update(['deleted_at' => now()]);
+        $this->api('GET', 'cer-codes/1')->assertNotFound();
+    }
+
 }

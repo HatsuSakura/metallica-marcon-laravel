@@ -5,6 +5,7 @@ namespace App\Support\AgentApi;
 class Abilities
 {
     public const ALL = [
+        'cer-codes:read' => 'Consultare solo i codici CER',
         'reference:read' => 'Consultare anagrafiche operative',
         'orders:read' => 'Consultare ordini e materiali',
         'orders:create' => 'Creare ordini con materiali e contenitori',

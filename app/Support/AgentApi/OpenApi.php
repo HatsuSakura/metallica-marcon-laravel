@@ -59,6 +59,8 @@ class OpenApi
 
     public function operation(string $name, string $method): array
     {
+        if (str_starts_with($name, 'cer-codes.')) return $this->cerOperation($name);
+
         $read = $method === 'GET';
         $item = str_starts_with($name, 'items.');
         $journey = str_starts_with($name, 'journeys.');
@@ -146,4 +148,30 @@ class OpenApi
         }
         return $op;
     }
+    private function cerOperation(string $name): array
+    {
+        $list = $name === 'cer-codes.index';
+        $record = ['type' => 'object', 'required' => ['id', 'code', 'description', 'is_dangerous'], 'properties' => [
+            'id' => ['type' => 'integer'], 'code' => ['type' => 'string'], 'description' => ['type' => 'string'], 'is_dangerous' => ['type' => 'boolean'],
+        ]];
+        $body = ['type' => 'object', 'properties' => ['data' => $list ? self::arrayOf($record) : $record]];
+        if ($list) $body['properties'] += ['current_page' => ['type' => 'integer'], 'last_page' => ['type' => 'integer'], 'per_page' => ['type' => 'integer'], 'total' => ['type' => 'integer'], 'next_page_url' => ['type' => ['string', 'null']]];
+        $op = [
+            'tags' => ['API agenti: Codici CER'], 'summary' => $list ? 'Cerca ed elenca codici CER' : 'Leggi codice CER',
+            'operationId' => $list ? 'agentCerCodesIndex' : 'agentCerCodesShow',
+            'description' => 'Sola lettura. Richiede Bearer token valido e permesso cer-codes:read sia sull’agente sia sul token. Non permette inserimento, modifica o eliminazione dei CER. Gli ID sono gli stessi utilizzati nei materiali degli ordini.',
+            'security' => [['agentBearer' => []]], 'x-required-ability' => 'cer-codes:read', 'parameters' => [],
+            'responses' => ['200' => ['description' => 'Codici CER', 'content' => ['application/json' => ['schema' => $body]]]],
+        ];
+        foreach (['401' => 'Token mancante, scaduto o revocato', '403' => 'Permesso insufficiente o agente disabilitato', '404' => 'Codice CER non trovato', '422' => 'Filtri non validi', '429' => 'Limite richieste superato'] as $status => $description) {
+            $op['responses'][$status] = ['description' => $description, 'content' => ['application/json' => ['schema' => self::ref('AgentError')]]];
+        }
+        if ($list) $op['parameters'] = [
+            ['name' => 'search', 'in' => 'query', 'description' => 'Codice o descrizione. Il codice può essere cercato anche senza spazi o asterisco.', 'schema' => ['type' => 'string', 'maxLength' => 200]],
+            ['name' => 'page', 'in' => 'query', 'schema' => ['type' => 'integer', 'minimum' => 1]],
+            ['name' => 'per_page', 'in' => 'query', 'schema' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 100, 'default' => 25]],
+        ];
+        return $op;
+    }
+
 }

@@ -8,6 +8,8 @@ use App\Http\Middleware\AuthenticateAgent;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('agent-api.')->middleware(['auth:sanctum', 'throttle:agent-api'])->group(function () {
+    Route::get('cer-codes', [\App\Http\Controllers\Api\V1\CerCodeController::class, 'index'])->middleware(AuthenticateAgent::class.':cer-codes:read')->name('cer-codes.index');
+    Route::get('cer-codes/{cerCode}', [\App\Http\Controllers\Api\V1\CerCodeController::class, 'show'])->whereNumber('cerCode')->middleware(AuthenticateAgent::class.':cer-codes:read')->name('cer-codes.show');
     Route::get('references/{resource}', [ReferenceController::class, 'index'])->middleware(AuthenticateAgent::class.':reference:read')->name('references.index');
     foreach (['orders' => OrderController::class, 'journeys' => JourneyController::class] as $resource => $controller) {
         $model = $resource === 'orders' ? 'order' : 'journey';

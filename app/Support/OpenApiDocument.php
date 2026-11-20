@@ -36,13 +36,13 @@ class OpenApiDocument
             'openapi' => '3.1.0',
             'info' => [
                 'title' => 'Metallica Marcon API',
-                'version' => '1.1.0',
+                'version' => '1.2.0',
                 'description' => 'Catalogo DEV: /api/v1 usa Bearer token agente e permessi granulari. Gli endpoint precedenti usano sessione Laravel, verifica email e CSRF per le mutazioni. La pagina di documentazione resta riservata agli utenti abilitati.',
             ],
             'servers' => [
                 ['url' => url('/'), 'description' => app()->environment('production') ? 'Produzione' : ucfirst(app()->environment())],
             ],
-            'tags' => array_map(fn ($name) => ['name' => $name], ['API agenti: Ordini', 'API agenti: Materiali ordini', 'API agenti: Viaggi', 'API agenti: Anagrafiche']),
+            'tags' => array_map(fn ($name) => ['name' => $name], ['API agenti: Ordini', 'API agenti: Materiali ordini', 'API agenti: Viaggi', 'API agenti: Codici CER', 'API agenti: Anagrafiche']),
             'paths' => $paths,
             'components' => [
                 'securitySchemes' => [
