@@ -64,4 +64,15 @@ class DevApiDocsTest extends TestCase
 
         $this->actingAs($user)->get('/dev/api-docs')->assertOk();
     }
+    public function test_viewer_loads_versioned_same_origin_document_and_agent_groups_are_first(): void
+    {
+        $user = User::factory()->make(['role' => UserRole::DEVELOPER, 'is_admin' => false, 'email_verified_at' => now()]);
+        $response = $this->actingAs($user)->get('/dev/api-docs')->assertOk()->assertHeader('Cache-Control', 'no-store, private');
+        $response->assertSee('data-url="/dev/openapi.json?v=', false);
+        $document = $this->getJson('/dev/openapi.json')->assertOk();
+        $this->assertSame('API agenti: Ordini', $document->json('tags.0.name'));
+        $this->assertStringStartsWith('/api/v1/', array_key_first($document->json('paths')));
+        $this->assertSame('API agenti: Ordini', $document->json('paths./api/v1/orders.post.tags.0'));
+    }
+
 }

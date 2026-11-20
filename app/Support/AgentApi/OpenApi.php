@@ -72,7 +72,7 @@ class OpenApi
             'items.show' => 'Leggi materiale e versione ordine', 'items.index' => 'Elenca materiali e versione ordine', 'items.store' => 'Aggiungi materiale all’ordine', 'items.update' => 'Modifica materiale dell’ordine', 'items.destroy' => 'Rimuovi materiale conservando lo storico',
             'references.index' => 'Consulta anagrafiche operative',
         ];
-        $op = ['tags' => [$reference ? 'Agent references' : ($item ? 'Agent order items' : ($journey ? 'Agent journeys' : 'Agent orders'))],
+        $op = ['tags' => [$reference ? 'API agenti: Anagrafiche' : ($item ? 'API agenti: Materiali ordini' : ($journey ? 'API agenti: Viaggi' : 'API agenti: Ordini'))],
             'summary' => $summary[$name], 'operationId' => 'agent'.str_replace(' ', '', ucwords(str_replace('.', ' ', $name))),
             'security' => [['agentBearer' => []]], 'x-required-ability' => $ability,
             'description' => "Bearer token agente obbligatorio. Permesso richiesto sia sull’agente sia sul token: `{$ability}`. Nessun accesso tramite sessione browser. Le scritture applicano direttamente dati operativi: il workflow email di bozze/proposte e approvazione è separato e non è implementato da questi endpoint.",

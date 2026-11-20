@@ -29,7 +29,8 @@ class OpenApiDocument
             }
         }
 
-        ksort($paths);
+        // Show integration endpoints before the legacy UI APIs in documentation viewers.
+        uksort($paths, fn ($a, $b) => (int) str_starts_with($b, '/api/v1/') <=> (int) str_starts_with($a, '/api/v1/') ?: strcmp($a, $b));
 
         return [
             'openapi' => '3.1.0',
@@ -41,6 +42,7 @@ class OpenApiDocument
             'servers' => [
                 ['url' => url('/'), 'description' => app()->environment('production') ? 'Produzione' : ucfirst(app()->environment())],
             ],
+            'tags' => array_map(fn ($name) => ['name' => $name], ['API agenti: Ordini', 'API agenti: Materiali ordini', 'API agenti: Viaggi', 'API agenti: Anagrafiche']),
             'paths' => $paths,
             'components' => [
                 'securitySchemes' => [
