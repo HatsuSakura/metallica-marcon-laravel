@@ -27,12 +27,19 @@ release.mkdir(parents=True, exist_ok=True)
 source.mkdir()
 with tarfile.open(args.archive) as archive:
     archive.extractall(source, filter='data')
+# Python's data filter leaves directory modes subject to the private host umask.
+# Source must be traversable by Apache's www-data after Docker COPY.
+source.chmod(0o755)
+for path in source.rglob('*'):
+    if path.is_dir():
+        path.chmod(0o755)
 services = ['metallicamarcon', 'metallicamarcon-worker', 'metallicamarcon-scheduler']
 # Captured privately, never print a complete inspect/config/env result.
 containers = json.loads(subprocess.check_output(['docker', 'inspect', *services]))
 previous = {item['Name'].lstrip('/'): item['Image'] for item in containers}
 vite = [value for value in containers[0]['Config']['Env'] if value.startswith('VITE_')]
 (source / '.env.production').write_text('\n'.join(key + '=' + json.dumps(value) for key, value in (entry.split('=', 1) for entry in vite)) + '\n')
+(source / '.env.production').chmod(0o644)  # Public VITE values only; no runtime secrets.
 image = 'metallica-marcon-jarvis:' + args.commit[:12]
 # Preserve original Compose, infrastructure and private runtime configuration.
 # Override only application image/build and the explicitly approved session lifetime.
@@ -42,6 +49,9 @@ with (release / 'build.log').open('wb') as log:
     result = subprocess.run(['docker', 'build', '-t', image, str(source)], stdout=log, stderr=subprocess.STDOUT)
 if result.returncode:
     raise SystemExit('Build failed; see private release build.log. Active services unchanged.')
+probe = subprocess.run(['docker', 'run', '--rm', '--user', 'www-data', image, 'php', '-r', 'exit(is_readable("bootstrap/app.php") && is_readable(".env.production") ? 0 : 1);'], capture_output=True)
+if probe.returncode:
+    raise SystemExit('Web user cannot read the prepared image; active services unchanged')
 after = json.loads(subprocess.check_output(['docker', 'inspect', *services]))
 if previous != {item['Name'].lstrip('/'): item['Image'] for item in after}:
     raise SystemExit('Active image changed concurrently; preparation requires review')

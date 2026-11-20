@@ -1,5 +1,7 @@
 # Stato sviluppi — Metallica Marcon / GLE
 
+**Jarvis 2026-11-20:** sorgente 74b7687 attivo, migrazioni e smoke passati. [Esito e fix pipeline/lock successivi](qa/2026-11-20-jarvis-dev-release.md). Stato QA da confermare dal PO.
+
 **Release unificata 2026-11-20:** [pacchetto DEV per QA e Jarvis](qa/2026-11-20-dev-release.md). Notifiche/fine viaggio, CER, API agenti e recupero sessioni integrati; 154 test backend, 22 file frontend e build passati. Preparazione artefatti separata dal deploy. Le fotografie sottostanti mantengono la propria data.
 
 **Aggiornamento locale 2026-11-17:** [notifiche di esecuzione viaggio](design/2026-11-17-operational-notifications.md), branch `feature/journey-stop-notifications`. Migrazione locale applicata, verifiche automatiche e browser eseguite; nessun commit/push/deploy della funzionalità. GLE-139–144 In corso, collaudo QA pendente. [Evidenze e limiti](qa/2026-11-17-operational-notifications.md).

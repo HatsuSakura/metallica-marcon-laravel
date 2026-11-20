@@ -1,5 +1,7 @@
 # Documentazione Metallica Marcon
 
+- [Deploy Jarvis della release DEV — 2026-11-20](qa/2026-11-20-jarvis-dev-release.md): 74b7687 attivo e verificato; QA distinta. Correzione permessi immagine e warning Composer documentati.
+
 **Release unificata 2026-11-20:** [pacchetto DEV per QA e Jarvis](qa/2026-11-20-dev-release.md). Notifiche/fine viaggio, CER, API agenti e recupero sessioni integrati; 154 test backend, 22 file frontend e build passati. Preparazione artefatti separata dal deploy. Le fotografie sottostanti mantengono la propria data.
 
 - [Anagrafica Codici CER — 2026-11-20](qa/2026-11-20-cer-registry.md): gestione riservata al backoffice, ricerca, disattivazione e compatibilità con i riferimenti esistenti; implementazione e migrazione locali.

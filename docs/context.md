@@ -464,3 +464,19 @@ SHA finale e checksum stanno nei manifest del pacchetto; non confondere
 push/preparazione con deploy o accettazione QA. .env, storage, database e
 backup non sono nei pacchetti; gli archivi storici .ai/.claude sono esclusi
 da git archive e dal contesto Docker senza cancellarli dal repository.
+
+## Jarvis attivato — 2026-11-20
+
+Su richiesta esplicita del PO, rilasciato 74b7687 su Jarvis, con backup privato
+20261120T210155Z, due migrazioni, sessione720, OpenAPI1.3.0 e smoke HTTP/asset/API
+passati. Container DB/Valkey e mount invariati. QA eseguita separatamente dal PO.
+
+Risolta una regressione di permessi del contesto Python (umask077 + filtrodata):
+normalizzate directory, immagine ricostruita, servizi ricreati e test ripetuti.
+Lo script ora verifica www-data prima di dichiarare l’immagine pronta.
+
+Warning lock QA riprodotto: valido per Composer2.10.3, hash non aggiornato per
+2.11.1 fissato. Riallineato solo content-hash via Composer, pacchetti invariati
+e validate2.11 passato. Fix pipeline/lock successivo al sorgente applicativo
+rilasciato74b7687; non confonderlo con un ulteriore deploy. Vedere runbook
+docs/qa/2026-11-20-jarvis-dev-release.md.
