@@ -1,5 +1,7 @@
 # Documentazione Metallica Marcon
 
+**Release unificata 2026-11-20:** [pacchetto DEV per QA e Jarvis](qa/2026-11-20-dev-release.md). Notifiche/fine viaggio, CER, API agenti e recupero sessioni integrati; 154 test backend, 22 file frontend e build passati. Preparazione artefatti separata dal deploy. Le fotografie sottostanti mantengono la propria data.
+
 - [Anagrafica Codici CER — 2026-11-20](qa/2026-11-20-cer-registry.md): gestione riservata al backoffice, ricerca, disattivazione e compatibilità con i riferimenti esistenti; implementazione e migrazione locali.
 
 - [Notifiche operative di viaggio — 2026-11-17](design/2026-11-17-operational-notifications.md): implementazione locale con tipo journey-execution-update, destinatari backend e interventi raggruppati; master GLE-139 e figlie GLE-140–144. [Verifiche ed evidenze](qa/2026-11-17-operational-notifications.md); QA pendente.

@@ -12,7 +12,6 @@ class HomepageTest extends JourneyExecutionTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        (require database_path('migrations/2024_10_09_115339_create_notifications_table.php'))->up();
         Schema::table('users', fn ($t) => $t->string('password')->nullable());
     }
 

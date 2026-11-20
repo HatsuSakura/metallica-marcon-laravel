@@ -9,3 +9,10 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+
+# Release archives contain application source, never local agent setup or legacy DB archives.
+.ai export-ignore
+.claude export-ignore
+.codex export-ignore
+.agents export-ignore
+docs/recovery export-ignore

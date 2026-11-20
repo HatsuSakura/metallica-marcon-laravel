@@ -224,4 +224,17 @@ class AgentApiTest extends JourneyExecutionTestCase
         $this->api('GET', 'cer-codes/1')->assertNotFound();
     }
 
+    public function test_disabled_cer_is_readable_but_only_retained_on_its_existing_order_row(): void
+    {
+        $created=$this->api('POST','orders',$this->payload(),['Idempotency-Key'=>'cer-retain-create'])->assertCreated()->json('data');
+        DB::table('cer_codes')->where('id',1)->update(['is_active'=>false]);
+        $this->api('GET','cer-codes/1')->assertOk()->assertJsonPath('data.is_active',false);
+        $this->api('GET','references/cer-codes')->assertOk()->assertJsonPath('data.0.is_active',0);
+        $this->api('POST','orders',$this->payload(),['Idempotency-Key'=>'cer-disabled-create'])->assertUnprocessable();
+        $current=$this->api('GET','orders/'.$created['id'])->assertOk()->json('data');
+        $updated=$this->api('PATCH','orders/'.$created['id'],['notes'=>'Mantiene CER storico'],['Idempotency-Key'=>'cer-retain-update','If-Match'=>$current['version']])->assertOk()->json('data');
+        $this->assertSame(1,$updated['items'][0]['cer_code_id']);
+        $this->api('POST','orders/'.$created['id'].'/items',$this->payload()['items'][0],['Idempotency-Key'=>'cer-disabled-item','If-Match'=>$updated['version']])->assertUnprocessable();
+    }
+
 }

@@ -1,5 +1,5 @@
 # VENDOR e STORAGE
-/vendor/
+/vendor
 storage/*.key
 storage/oauth-*.key
 storage/logs/
@@ -65,3 +65,6 @@ TO_DO_LIST.txt
 
 # generated per-environment compose file
 docker-compose.yml
+
+# Generated Python tooling cache
+__pycache__/

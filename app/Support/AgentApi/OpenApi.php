@@ -151,15 +151,15 @@ class OpenApi
     private function cerOperation(string $name): array
     {
         $list = $name === 'cer-codes.index';
-        $record = ['type' => 'object', 'required' => ['id', 'code', 'description', 'is_dangerous'], 'properties' => [
-            'id' => ['type' => 'integer'], 'code' => ['type' => 'string'], 'description' => ['type' => 'string'], 'is_dangerous' => ['type' => 'boolean'],
+        $record = ['type' => 'object', 'required' => ['id', 'code', 'description', 'is_dangerous', 'is_active'], 'properties' => [
+            'id' => ['type' => 'integer'], 'code' => ['type' => 'string'], 'description' => ['type' => 'string'], 'is_dangerous' => ['type' => 'boolean'], 'is_active' => ['type' => 'boolean'],
         ]];
         $body = ['type' => 'object', 'properties' => ['data' => $list ? self::arrayOf($record) : $record]];
         if ($list) $body['properties'] += ['current_page' => ['type' => 'integer'], 'last_page' => ['type' => 'integer'], 'per_page' => ['type' => 'integer'], 'total' => ['type' => 'integer'], 'next_page_url' => ['type' => ['string', 'null']]];
         $op = [
             'tags' => ['API agenti: Codici CER'], 'summary' => $list ? 'Cerca ed elenca codici CER' : 'Leggi codice CER',
             'operationId' => $list ? 'agentCerCodesIndex' : 'agentCerCodesShow',
-            'description' => 'Sola lettura. Richiede Bearer token valido e permesso cer-codes:read sia sull’agente sia sul token. Non permette inserimento, modifica o eliminazione dei CER. Gli ID sono gli stessi utilizzati nei materiali degli ordini.',
+            'description' => 'Sola lettura. Richiede Bearer token valido e permesso cer-codes:read sia sull’agente sia sul token. Non permette inserimento, modifica o eliminazione dei CER. Gli ID sono gli stessi utilizzati nei materiali degli ordini. is_active distingue i codici utilizzabili in nuove righe da quelli disattivati e conservati per lo storico. Una riga esistente può mantenere il proprio CER disattivato; nuovi abbinamenti sono rifiutati.',
             'security' => [['agentBearer' => []]], 'x-required-ability' => 'cer-codes:read', 'parameters' => [],
             'responses' => ['200' => ['description' => 'Codici CER', 'content' => ['application/json' => ['schema' => $body]]]],
         ];

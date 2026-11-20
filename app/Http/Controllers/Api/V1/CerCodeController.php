@@ -33,6 +33,6 @@ class CerCodeController extends Controller
 
     private function query(): Builder
     {
-        return CerCode::query()->whereNull('deleted_at')->select('id', 'code', 'description', 'is_dangerous');
+        return CerCode::query()->whereNull('deleted_at')->select('id', 'code', 'description', 'is_dangerous', 'is_active');
     }
 }

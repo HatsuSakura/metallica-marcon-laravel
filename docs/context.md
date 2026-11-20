@@ -440,3 +440,27 @@ Verifica visibilità per ruolo: 55 test PHP/369 asserzioni passati, 8 file
 frontend passati, build Vite e controllo diff riusciti. La matrice verifica
 il permesso di storico e la capability UI per driver, magazzino, Logistica,
 manager, developer e admin. I flussi operativi del driver continuano a passare.
+
+## Checkpoint release unificata — 2026-11-20
+
+Richiesta PO: salvare/committare/pushare tutta la versione DEV approvata e
+preparare pacchetti QA e Jarvis. Preparazione autorizzata, attivazione runtime
+non ancora eseguita. Branch di integrazione release/2026-11-20-dev unisce
+notifiche/CER (10e0d22), API agenti (33895e7) e recupero sessioni (d67f908),
+con conflitti risolti conservando contratti UI/API e overlay finale approvato.
+
+Aggiunta esplicitamente anche notifica finish dell’autista alla Logistica,
+con delta dell’intero viaggio e link ordini; nessun duplicato su retry.
+CER disattivati leggibili con is_active, mantenibili sulle righe esistenti,
+non utilizzabili su nuove righe UI/API. Swagger 1.3.0.
+
+Verifiche finali: 154 test backend/1104 assertion su SQLite isolato, 22 file
+frontend, build Vite, 71 PHP lint, cache rotte, 20 viewport/temi in Chrome e
+recupero sessioni/bozze reali IndexedDB con API simulate. DEV ha anche
+applicato la migrazione API mancante e SESSION_LIFETIME effettivo 720.
+
+Runbook [release](qa/2026-11-20-dev-release.md), evidenze locali versionate.
+SHA finale e checksum stanno nei manifest del pacchetto; non confondere
+push/preparazione con deploy o accettazione QA. .env, storage, database e
+backup non sono nei pacchetti; gli archivi storici .ai/.claude sono esclusi
+da git archive e dal contesto Docker senza cancellarli dal repository.

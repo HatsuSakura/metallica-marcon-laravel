@@ -12,6 +12,7 @@ class SessionRecoveryTest extends JourneyExecutionTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['session.lifetime'=>720]);
         $this->withoutMiddleware([HandleInertiaRequests::class, \Inertia\Middleware::class]);
     }
 

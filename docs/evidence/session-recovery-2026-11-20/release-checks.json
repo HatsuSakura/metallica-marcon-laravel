@@ -1,0 +1,36 @@
+{
+  "backend": {
+    "passed": 154,
+    "assertions": 1104,
+    "database": "isolated SQLite memory"
+  },
+  "frontend": {
+    "test_files_passed": 22
+  },
+  "build": "Vite passed; existing chunk-size warning",
+  "php_lint_files": 71,
+  "route_cache": "passed, cache cleared",
+  "browser": {
+    "responsive_theme_combinations": 20,
+    "api": "simulated",
+    "indexeddb": "real Chrome storage",
+    "checks": [
+      "outcome overlay requires OK",
+      "no duplicate outcome command",
+      "last stop unloading message",
+      "reduced motion",
+      "keyboard focus",
+      "notification disclosure read/unread",
+      "419 login return",
+      "no command replay",
+      "explicit recovery and cleanup",
+      "field conflicts",
+      "identity isolation",
+      "multiple tabs and compare-and-delete",
+      "offline resume",
+      "storage failure warning and copyable fields",
+      "actual driver material editor restoration"
+    ]
+  },
+  "deployed": false
+}

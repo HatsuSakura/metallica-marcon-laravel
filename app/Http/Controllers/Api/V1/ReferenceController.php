@@ -11,7 +11,7 @@ class ReferenceController extends Controller
     public const SOURCES = [
         'customers' => ['customers', ['id', 'company_name']],
         'sites' => ['sites', ['id', 'customer_id', 'name', 'address']],
-        'cer-codes' => ['cer_codes', ['id', 'code', 'description', 'is_dangerous']],
+        'cer-codes' => ['cer_codes', ['id', 'code', 'description', 'is_dangerous', 'is_active']],
         'holders' => ['holders', ['id', 'name', 'is_custom']],
         'vehicles' => ['vehicles', ['id', 'name', 'type', 'has_trailer', 'load_capacity']],
         'trailers' => ['trailers', ['id', 'name', 'load_capacity']],

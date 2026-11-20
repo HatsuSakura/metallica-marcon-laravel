@@ -26,6 +26,7 @@
 #
 # Usage:
 #   ./deploy-qa.sh --dry-run    # build + preview the transfer, no remote change
+#   ./deploy-qa.sh --prepare-only DIR # build QA archive only; no remote change
 #   ./deploy-qa.sh              # real deploy
 # =============================================================
 
@@ -85,10 +86,12 @@ RSYNC_FILTERS=(
 )
 
 DRY_RUN=0
+PREPARE_DIR=""
 case "${1:-}" in
   --dry-run) DRY_RUN=1 ;;
+  --prepare-only) PREPARE_DIR="${2:?Usage: deploy-qa.sh --prepare-only DIRECTORY}" ;;
   "") ;;
-  *) echo "Usage: $0 [--dry-run]" >&2; exit 1 ;;
+  *) echo "Usage: $0 [--dry-run | --prepare-only DIRECTORY]" >&2; exit 1 ;;
 esac
 
 step() { echo "==> $*"; }
@@ -170,6 +173,21 @@ step "Building frontend assets with the QA values..."
 [[ -f "$BUILD_DIR/public/build/manifest.json" ]] || die "build produced no manifest"
 MANIFEST_SHA="$(sha256sum "$BUILD_DIR/public/build/manifest.json" | cut -d' ' -f1)"
 step "Build complete (manifest ${MANIFEST_SHA:0:12})."
+
+# A reviewable QA artifact, built from pushed source with QA public Vite values.
+# This branch exits before rsync, backups, maintenance or any remote write.
+if [[ -n "$PREPARE_DIR" ]]; then
+  mkdir -p "$PREPARE_DIR"
+  PREPARE_DIR="$(cd "$PREPARE_DIR" && pwd)"
+  ARTIFACT="$PREPARE_DIR/qa-app-$SHORT.tar.gz"
+  tar --exclude='bootstrap/cache' --exclude='database/*.sqlite' --exclude='public/hot' --exclude='public/storage' \
+    -czf "$ARTIFACT" -C "$BUILD_DIR" "${SYNC_PATHS[@]}"
+  php -r 'file_put_contents($argv[1],json_encode(["source_commit"=>$argv[2],"environment"=>"qa","manifest_sha256"=>$argv[3],"status"=>"prepared-not-deployed"],JSON_PRETTY_PRINT|JSON_THROW_ON_ERROR).PHP_EOL);' \
+    "$PREPARE_DIR/qa-release.json" "$HEAD_COMMIT" "$MANIFEST_SHA"
+  (cd "$PREPARE_DIR" && sha256sum "$(basename "$ARTIFACT")" qa-release.json > SHA256SUMS)
+  step "QA package prepared in $PREPARE_DIR. No remote change."
+  exit 0
+fi
 
 # ============================
 # 4. PREVIEW THE TRANSFER
