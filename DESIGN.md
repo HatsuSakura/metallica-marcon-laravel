@@ -372,3 +372,11 @@ su mobile; wrapping consentito per nomi lunghi. Distinguere i disclosure con
 titoli semibold e conteggio, evitando HR e bordi tra sezioni. Spazio verticale
 tra gruppi 8px; summary più compatte da md. Conservare separatori leggeri
 fra righe tabellari e la distinzione degli stati letta/non letta.
+## Sessione scaduta e bozze locali
+
+Gestire 401/419 nel servizio sessione e nell’host condiviso. Verifica al rientro
+senza heartbeat, stato offline distinto, login con ritorno sicuro e nessun
+replay di azioni. IndexedDB conserva solo campi espliciti, isolati per utenza
+e risorsa, con Recupera/Scarta e confronto baseline/server per campo.
+Mostrare errori di storage e conflitti, preservare zero e assenza distinti.
+Dettagli e copertura: [GLE-145](docs/qa/2026-11-20-session-recovery.md).

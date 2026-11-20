@@ -275,8 +275,10 @@ fi
 cd "$HOME/$app"
 php "$phar" install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
 php artisan optimize:clear
+php artisan session:lifetime 720
 php artisan migrate --force
 php artisan config:cache
+php artisan session:lifetime 720 --check
 php artisan route:cache
 php artisan view:cache
 php artisan queue:restart

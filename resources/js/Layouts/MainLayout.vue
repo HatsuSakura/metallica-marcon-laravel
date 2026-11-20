@@ -30,6 +30,7 @@
 
 
         <!-- PAGE SLOT -->
+        <LocalDraftRecovery />
         <slot>Default</slot>
       </main>
 
@@ -119,6 +120,8 @@
 </template>
 
 <script setup>
+import LocalDraftRecovery from '@/Components/Session/LocalDraftRecovery.vue'
+
 import { computed, ref, reactive, provide } from 'vue'
 import {useNotificationCount} from '@/Composables/useNotificationCount'
 import {layoutContentWidthKey} from '@/Composables/layoutContentWidth'

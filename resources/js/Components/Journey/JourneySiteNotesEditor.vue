@@ -4,7 +4,7 @@
             <h4 class="min-w-0 break-words font-medium">Note della sede<span v-if="showSiteName" class="font-normal"> · {{ site.name || site.address || 'Sede' }}</span></h4>
             <div v-if="editable" class="flex shrink-0 items-center gap-1">
                 <template v-if="editing">
-                    <AppAction type="button" :disabled="busy" aria-label="Annulla modifica note della sede" title="Annulla" @click="editing = false" shape="circle" variant="cancel"><font-awesome-icon :icon="['fas','xmark']" aria-hidden="true" /></AppAction>
+                    <AppAction type="button" :disabled="busy" aria-label="Annulla modifica note della sede" title="Annulla" @click="cancel" shape="circle" variant="cancel"><font-awesome-icon :icon="['fas','xmark']" aria-hidden="true" /></AppAction>
                     <AppAction type="submit" :form="formId" :disabled="busy || !dirty" aria-label="Salva note della sede" title="Salva" shape="circle" variant="confirm"><font-awesome-icon :icon="['fas','floppy-disk']" aria-hidden="true" /></AppAction>
                 </template>
                 <AppAction v-else type="button" :disabled="busy" aria-label="Modifica note della sede" title="Modifica note della sede" @click="open" shape="circle" variant="function"><font-awesome-icon :icon="['fas','pencil']" aria-hidden="true" /></AppAction>
@@ -19,8 +19,11 @@
 <script setup>
 import AppAction from '@/Components/UI/AppAction.vue'
 import {computed,ref} from 'vue'
+import {useDraftBindings} from '@/Services/localDrafts'
 const props = defineProps({site:{type:Object,required:true},editable:Boolean,busy:Boolean,showSiteName:Boolean,idPrefix:{type:String,default:'journey'}})
 const emit = defineEmits(['command'])
+const localDrafts=useDraftBindings()
+const cancel=()=>{draft.value=original.value;editing.value=false;void localDrafts.clear(`site-notes:${props.site.id}`)}
 const editing = ref(false), draft = ref(''), original = ref(''), version = ref(null)
 const formId = computed(() => `${props.idPrefix}-site-${props.site.id}-notes`)
 const dirty = computed(() => draft.value !== original.value)
@@ -35,4 +38,6 @@ const save = () => {
     if (props.busy || !props.editable || !dirty.value) return
     emit('command','update_site_notes',{site_id:props.site.id,notes:draft.value,notes_version:version.value},()=>{editing.value=false})
 }
+localDrafts.bind(`site-notes:${props.site.id}`,{label:()=>`Note sede ${props.site.name || ''}`,value:()=>({notes:editing.value?draft.value:(props.site.notes ?? '')}),baseline:()=>({notes:props.site.notes ?? ''}),fields:{notes:'Note'},canRestore:()=>props.editable,restore:value=>{open();draft.value=value.notes}})
+
 </script>

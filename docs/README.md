@@ -4,6 +4,7 @@
 
 - [Notifiche operative di viaggio — 2026-11-17](design/2026-11-17-operational-notifications.md): implementazione locale con tipo journey-execution-update, destinatari backend e interventi raggruppati; master GLE-139 e figlie GLE-140–144. [Verifiche ed evidenze](qa/2026-11-17-operational-notifications.md); QA pendente.
 - [API protette e token agenti — 2026-11-20](qa/2026-11-20-agent-api.md): contratto JSON v1, gestione solo developer, Swagger e rilascio Jarvis.
+- [Sessioni e recupero bozze — GLE-145](qa/2026-11-20-session-recovery.md): implementazione e verifiche locali; applicazione runtime al rilascio.
 
 - [Date/ora e rifiniture viaggi — 2026-11-16](qa/2026-11-16-datetime-and-journey-refinements.md): datepicker comune, salva/resta/esci, documenti compatti e ordini aperti richiudibili.
 

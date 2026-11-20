@@ -36,6 +36,7 @@
 <script setup>
 import AppAction from '@/Components/UI/AppAction.vue'
 import {computed,ref} from 'vue'
+import {useDraftBindings} from '@/Services/localDrafts'
 import QuantityCounter from '@/Components/UI/QuantityCounter.vue'
 import JourneyContainerSummary from './JourneyContainerSummary.vue'
 import JourneyContainerQuantities from './JourneyContainerQuantities.vue'
@@ -56,4 +57,7 @@ const save = () => {
     emit('command','set_item_allocations',{item_id:props.item.id,vehicle_containers:draft.value.vehicle,trailer_containers:draft.value.trailer},()=>{editing.value=false})
 }
 const moveAll = location => emit('command','update_item',{item_id:props.item.id,cargo_location:location},()=>{editing.value=false})
+const localDrafts=useDraftBindings()
+localDrafts.bind(`split:${props.item.id}`,{label:()=>`Suddivisione CER ${props.item.cer_code?.code || ''}`,value:()=>editing.value?draft.value:splitDraft(props.item),baseline:()=>splitDraft(props.item),fields:{vehicle:'In motrice',trailer:'In rimorchio'},canRestore:()=>!props.readOnly && props.hasTrailer && !props.item.is_bulk,restore:value=>{draft.value={...value};editing.value=true}})
+
 </script>

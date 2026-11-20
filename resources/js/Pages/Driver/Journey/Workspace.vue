@@ -54,7 +54,7 @@
                 @move-stop="moveStop"
                 @select-stop="selectStop"
             >
-                <template #stop-actions="{stop}"><JourneyStopOutcomeActions v-if="canManage && journey.status === 'attivo' && stop.id === currentStop?.id" id-prefix="card-outcome" compact class="mx-3 mb-3" :busy="isLoading || intervention.active || intervention.busy" :skip-reasons="skipReasons" v-model:skip-panel-open="skipPanelOpen" v-model:skip-form="skipForm" @complete="completeCurrentStop" @skip="confirmSkip" /></template>
+                <template #stop-actions="{stop}"><JourneyStopOutcomeActions v-if="canManage && journey.status === 'attivo' && stop.id === currentStop?.id" :stop-id="stop.id" id-prefix="card-outcome" compact class="mx-3 mb-3" :busy="isLoading || intervention.active || intervention.busy" :skip-reasons="skipReasons" v-model:skip-panel-open="skipPanelOpen" v-model:skip-form="skipForm" @complete="completeCurrentStop" @skip="confirmSkip" /></template>
                 <template #before-stops><JourneyStartReorderPrompt v-if="startReorderPrompt" :busy="isLoading || intervention.busy" :error="startReorderError" @cancel="startReorderPrompt = false" @confirm="startJourney(true)" /></template>
             </JourneyStopsPanel>
 
@@ -91,7 +91,7 @@
                             <p v-if="order.execution_status === 'released'" class="text-warning">Ordine rilasciato alla Logistica: nessuna movimentazione eseguita.</p>
                         </article>
                     </section>
-                    <JourneyStopOutcomeActions v-if="canManage && journey.status === 'attivo' && isCurrentSelected" id-prefix="detail-outcome" :busy="isLoading || intervention.active || intervention.busy" :skip-reasons="skipReasons" v-model:skip-panel-open="skipPanelOpen" v-model:skip-form="skipForm" @complete="completeCurrentStop" @skip="confirmSkip" />
+                    <JourneyStopOutcomeActions v-if="canManage && journey.status === 'attivo' && isCurrentSelected" :stop-id="selectedStop.id" id-prefix="detail-outcome" :busy="isLoading || intervention.active || intervention.busy" :skip-reasons="skipReasons" v-model:skip-panel-open="skipPanelOpen" v-model:skip-form="skipForm" @complete="completeCurrentStop" @skip="confirmSkip" />
                 </template>
             </section>
         </div>
@@ -101,6 +101,10 @@
 </template>
 
 <script setup>
+import {provide,onMounted,onBeforeUnmount} from 'vue'
+import {LOCAL_DRAFT_CONTEXT,useDraftBindings,clearSavedDraftResource} from '@/Services/localDrafts'
+import {setResumeHandler,isSessionFailure} from '@/Services/sessionRecovery'
+
 import {useStore} from 'vuex'
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 import { materialCommandMessage } from '@/utils/journeyCommandFeedback'
@@ -149,6 +153,7 @@ const saveHeaderPreference = async value => {
         journey.value.header_open_on_entry = response.data.preferences.header_open_on_entry
         notify('success', 'Preferenza di apertura della testata salvata.')
     } catch (error) {
+        if(isSessionFailure(error))return false
         notify('error', error?.response?.data?.message || 'Preferenza non salvata. Riprova.')
     } finally { preferenceBusy.value = false }
 }
@@ -158,6 +163,23 @@ const startReorderPrompt = ref(false), startReorderError = ref('')
 const canManage = computed(() => !props.readOnly && journey.value.has_baseline && ['attivo', 'eseguito'].includes(journey.value.status))
 const canStart = computed(() => !props.readOnly && !journey.value.has_baseline && isJourneyCreated(journey.value.status))
 const page = usePage()
+const draftContext={
+    owner:()=>page.props.auth?.user?.id ?? page.props.user?.id,
+    scope:()=>`journey:${journey.value.id}`,
+    editable:()=>!props.readOnly && ['attivo','eseguito'].includes(journey.value.status),
+    metadata:()=>({journeyId:journey.value.id,revision:journey.value.execution_revision}),
+}
+provide(LOCAL_DRAFT_CONTEXT,draftContext)
+let removeResumeHandler
+onMounted(()=>{
+    removeResumeHandler=setResumeHandler(async()=>{
+        if(!journey.value.has_baseline){window.location.reload();return}
+        const {data}=await axios.get(`/api/journeys/${journey.value.id}/execution`,{sessionRefresh:true,timeout:15000})
+        refreshFromJourney(data.journey)
+    })
+})
+onBeforeUnmount(()=>removeResumeHandler?.())
+
 const returnTo = computed(() => {
     const query = new URLSearchParams((page.url || '').split('?')[1] || '')
     const value = query.get('return_to')
@@ -174,6 +196,9 @@ const finishStopTransition = async () => {
     await nextTick()
     document.getElementById("stop-detail-heading")?.focus({preventScroll:true})
 }
+try {selectedStopId.value=Number(sessionStorage.getItem(`selected-stop:${page.props.auth?.user?.id ?? page.props.user?.id}:${journey.value.id}`)) || null} catch {}
+watch(selectedStopId,id=>{try {sessionStorage.setItem(`selected-stop:${page.props.auth?.user?.id ?? page.props.user?.id}:${journey.value.id}`,String(id || ''))}catch{}})
+
 const reorderEnabled = ref(false)
 const reorderDraft = ref([])
 const isLoading = ref(false)
@@ -257,6 +282,9 @@ const completedStops = computed(() => stops.value.filter((stop) => normalizeJour
 const finishedStops = computed(() => stops.value.filter((stop) => !remainingStops.value.some((remaining) => remaining.id === stop.id)))
 
 const refreshFromJourney = (data) => {
+    const oldOrder=reorderableStops.value.map(stop=>stop.id)
+    const pendingOrder=reorderDraft.value.map(stop=>stop.id)
+    const reorderDirty=reorderEnabled.value && JSON.stringify(oldOrder)!==JSON.stringify(pendingOrder)
     journey.value = data
     stops.value = normalizeStops(data?.stops || [])
     if (!stops.value.some((stop) => stop.id === selectedStopId.value)) {
@@ -264,7 +292,7 @@ const refreshFromJourney = (data) => {
         selectedStopId.value = current?.id ?? stops.value[0]?.id ?? null
         if (finishedStops.value.some((stop) => stop.id === selectedStopId.value)) showFinished.value = true
     }
-    if (reorderEnabled.value) {
+    if (reorderEnabled.value && !reorderDirty) {
         reorderDraft.value = reorderableStops.value.map((stop) => stop)
     }
 }
@@ -280,6 +308,9 @@ watch(
     },
     { immediate: true }
 )
+
+const localDrafts=useDraftBindings(draftContext)
+localDrafts.bind('stop-order',{label:'Ordine delle tappe',value:()=>({stop_ids:reorderEnabled.value?reorderDraft.value.map(stop=>stop.id):reorderableStops.value.map(stop=>stop.id)}),baseline:()=>({stop_ids:reorderableStops.value.map(stop=>stop.id)}),fields:{stop_ids:'Sequenza tappe'},canRestore:()=>canManage.value && journey.value.status==='attivo',restore:value=>{reorderDraft.value=value.stop_ids.map(id=>stops.value.find(stop=>stop.id===id)).filter(Boolean);reorderEnabled.value=true}})
 
 const stopPrimarySite = (stop) => stopOrders(stop)[0]?.site ?? null
 
@@ -332,6 +363,7 @@ const stopTimetableSummary = (stop) => {
                 }
             })
     } catch (error) {
+        if(isSessionFailure(error))return false
         return []
     }
 }
@@ -351,7 +383,7 @@ const toggleReorder = () => {
     if (canStart.value) { startReorderError.value = ''; startReorderPrompt.value = true; return }
     if (!canManage.value || journey.value.status !== 'attivo') return
     reorderEnabled.value = !reorderEnabled.value
-    if (reorderEnabled.value) {
+    if (reorderEnabled.value && !reorderDirty) {
         reorderDraft.value = reorderableStops.value.map((stop) => stop)
     }
 }
@@ -389,6 +421,13 @@ const executeCommand = async (operation, input = {}, onSaved = null) => {
         const replacement = selectedToken && Object.entries(response.data.references?.stop || {}).find(([,token])=>token === selectedToken)
         if(replacement) selectedStopId.value=Number(replacement[0])
         refreshFromJourney(response.data.journey)
+        await nextTick()
+        const owner=page.props.auth?.user?.id ?? page.props.user?.id,scope=`journey:${journey.value.id}`
+        if(['skip','complete'].includes(operation))await clearSavedDraftResource(owner,scope,`stop-note:${input.stop_id}`)
+        if(['remove_item','hide_removed_item'].includes(operation)){
+            await clearSavedDraftResource(owner,scope,`material:${input.item_id}`)
+            await clearSavedDraftResource(owner,scope,`split:${input.item_id}`)
+        }
         if (typeof onSaved === 'function') onSaved()
         commandAttempt = null
         undoAction.value = intervention.active ? null : response.data.undo ?? null
@@ -407,6 +446,7 @@ const executeCommand = async (operation, input = {}, onSaved = null) => {
             : undoAction.value ? 'Valore ripristinato correttamente.' : 'Modifica salvata correttamente.')
         return true
     } catch (error) {
+        if(isSessionFailure(error))return false
         notify('error',(error?.response?.data?.message || error.message || 'Operazione non riuscita. Riprova.') + (error?.response?.status === 409 ? ' Ricarica la pagina per vedere i dati aggiornati.' : ''))
 
         return false
@@ -444,6 +484,7 @@ const startJourney = async (reorderAfterStart = false) => {
         }
         notify('success','Viaggio iniziato correttamente.')
     } catch (error) {
+        if(isSessionFailure(error))return false
         const message = error?.response?.data?.message || 'Avvio non riuscito.'
         if (reorderAfterStart) startReorderError.value = message
         else notify('error',message)
@@ -451,6 +492,7 @@ const startJourney = async (reorderAfterStart = false) => {
 }
 const afterStopOutcome = () => {
     skipPanelOpen.value = false
+    skipForm.value = {reason_code:'',driver_notes:''}
     if (currentStop.value) selectedStopId.value = currentStop.value.id
     else showFinished.value = true
 }

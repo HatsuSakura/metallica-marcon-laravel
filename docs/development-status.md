@@ -1,6 +1,7 @@
 # Stato sviluppi — Metallica Marcon / GLE
 
 **Aggiornamento locale 2026-11-17:** [notifiche di esecuzione viaggio](design/2026-11-17-operational-notifications.md), branch `feature/journey-stop-notifications`. Migrazione locale applicata, verifiche automatiche e browser eseguite; nessun commit/push/deploy della funzionalità. GLE-139–144 In corso, collaudo QA pendente. [Evidenze e limiti](qa/2026-11-17-operational-notifications.md).
+- [Sessioni e recupero bozze — GLE-145](qa/2026-11-20-session-recovery.md): implementazione e verifiche locali; applicazione runtime al rilascio.
 
 **Stato corrente 2026-11-11:** [checkpoint UAT autisti](checkpoints/2026-11-11-driver-uat.md). Commit 89b2b22 in QA, GLE-116–126 tutte In corso via MCP, attesa UAT; GLE-122 con residui espliciti. Gli aggiornamenti sottostanti sono fotografie precedenti.
 

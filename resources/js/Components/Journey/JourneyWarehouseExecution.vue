@@ -16,11 +16,19 @@
 </template>
 <script setup>
 import { computed, reactive, watch } from 'vue'
+import {useDraftBindings} from '@/Services/localDrafts'
 const props = defineProps({journey:Object, orders:Array, warehouses:Array, busy:Boolean})
 const emit = defineEmits(['command'])
-const forms = reactive({})
+const forms = reactive({}), saved = reactive({})
+const localDrafts=useDraftBindings()
 const items = computed(() => (props.orders || []).filter(o => o.execution_status === 'completed').flatMap(o => o.items || []))
-watch(items, list => { for (const item of list) forms[item.id] = { warehouse_id:item.warehouse_id || props.warehouses[0]?.id, weight_gross:item.weight_gross ?? '', weight_tare:item.weight_tare ?? '', warehouse_status:item.warehouse_status || 'received', warehouse_notes:item.warehouse_notes || '' } }, {immediate:true})
+watch(items, list => {for(const item of list){
+    const baseline={warehouse_id:item.warehouse_id || props.warehouses[0]?.id,weight_gross:item.weight_gross ?? '',weight_tare:item.weight_tare ?? '',warehouse_status:item.warehouse_status || 'received',warehouse_notes:item.warehouse_notes || ''}
+    const next={...forms[item.id]}
+    for(const [key,value] of Object.entries(baseline))if(!saved[item.id] || next[key]===saved[item.id][key])next[key]=value
+    forms[item.id]=next;saved[item.id]=baseline
+    localDrafts.bind(`warehouse:${item.id}`,{label:`Ricezione CER ${item.cer_code?.code || ''}`,value:()=>forms[item.id],baseline:()=>saved[item.id],fields:{warehouse_id:'Magazzino',weight_gross:'Lordo',weight_tare:'Tara',warehouse_status:'Stato ricezione',warehouse_notes:'Note'},canRestore:()=>props.journey.status!=='chiuso' && items.value.some(row=>row.id===item.id),restore:value=>{forms[item.id]={...value}}})
+}}, {immediate:true})
 const number = value => value === '' || value == null ? null : Number(value)
 const save = item => emit('command','warehouse_item', {item_id:item.id, ...forms[item.id], weight_gross:number(forms[item.id].weight_gross), weight_tare:number(forms[item.id].weight_tare)})
 </script>

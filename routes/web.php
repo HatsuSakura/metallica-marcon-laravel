@@ -486,3 +486,6 @@ Route::prefix('dev')->name('dev.')->middleware(['auth', 'verified', 'can:manageA
     Route::post('agents/{agent}/tokens', [\App\Http\Controllers\AgentController::class, 'issueToken'])->middleware('throttle:10,1')->name('agents.tokens.store');
     Route::delete('agents/{agent}/tokens/{token}', [\App\Http\Controllers\AgentController::class, 'revokeToken'])->whereNumber('token')->name('agents.tokens.destroy');
 });
+// Browser-session recovery is separate from machine-to-machine authentication.
+Route::get('/session/status', [\App\Http\Controllers\SessionController::class, 'status'])->middleware('throttle:60,1')->name('session.status');
+Route::get('/session/login', [\App\Http\Controllers\SessionController::class, 'login'])->middleware('throttle:20,1')->name('session.login');
