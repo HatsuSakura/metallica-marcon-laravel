@@ -1,6 +1,6 @@
 <template>
     <div v-if="canViewHistory || (!readOnly && journey.status === 'attivo' && !pending)" class="space-y-3">
-        <button v-if="!readOnly && journey.status === 'attivo' && !pending" type="button" class="btn btn-success min-h-12 w-full sm:w-auto" :disabled="busy" @click="emit('command', 'finish', {})">Termina viaggio</button>
+        <button v-if="!readOnly && journey.status === 'attivo' && !pending" type="button" class="btn btn-success min-h-12 w-full sm:w-auto" :disabled="busy || outcomeDisabled" @click="emit('command', 'finish', {})">Termina viaggio</button>
         <details v-if="canViewHistory" class="border-t border-base-300" @toggle="onToggle"><summary class="cursor-pointer py-3 font-semibold">Piano originale e storico modifiche · rev. {{ journey.execution_revision }}</summary>
             <p v-if="error" role="alert" class="text-error">{{ error }}</p>
             <template v-if="history"><p class="text-sm">Piano congelato alla prima partenza: {{ date(history.baseline.captured_at) }}</p>
@@ -16,7 +16,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import axios from 'axios'
-const props = defineProps({ journey: Object, readOnly: Boolean, busy: Boolean, canViewHistory: {type:Boolean,default:false} })
+const props = defineProps({ journey: Object, readOnly: Boolean, busy: Boolean, canViewHistory: {type:Boolean,default:false}, outcomeDisabled:Boolean })
 const emit = defineEmits(['command'])
 const pending = computed(() => (props.journey.stops || []).some(stop => ['planned','in_progress'].includes(stop.status)))
 const history = ref(null), error = ref('')
@@ -29,5 +29,5 @@ const date = value => value ? new Intl.DateTimeFormat('it-IT', {dateStyle:'short
 const value = v => v === null ? 'non registrato' : typeof v === 'object' ? 'elemento aggiunto/modificato' : String(v)
 const labels = {is_loaded:'Caricato',vehicle:'Contenitori in motrice',trailer:'Contenitori in rimorchio',holder_quantity:'Contenitori da ritirare',actual_containers:'Contenitori ritirati',weight_declared:'Peso dichiarato',actual_weight_kg:'Peso effettivo',total_holders_count:'Contenitori da consegnare',actual_delivered:'Contenitori consegnati',sequence:'Sequenza',status:'Stato',description:'Descrizione',notes:'Note',cargo_location:'Zona di carico',removed:'Materiale rimosso',hidden_from_driver:'Nascosto dalla lista'}
 const fieldLabel = path => labels[path.split('.').at(-1)] || path
-const operationLabel = op => ({update_site_notes:'Note della sede aggiornate',set_item_allocations:'Suddivisione del carico',set_item_loaded:'Verifica carico',execution_started:'Partenza',reorder:'Riordino tappe',complete:'Tappa completata',skip:'Tappa saltata',reopen:'Tappa riaperta',add_stop:'Tappa aggiunta',update_journey:'Viaggio modificato',update_order:'Ordine modificato',add_item:'Materiale aggiunto',update_item:'Materiale modificato',remove_item:'Materiale rimosso',restore_item:'Materiale ripristinato',hide_removed_item:'Materiale eliminato dalla lista',add_holder:'Consegna aggiunta',update_holder:'Consegna modificata',restore_original:'Ripristino originale',restore_previous:'Ripristino precedente',undo_restore:'Ripristino annullato',finish:'Viaggio terminato'})[op] || op
+const operationLabel = op => ({cancel_stop:'Tappa annullata',update_site_notes:'Note della sede aggiornate',set_item_allocations:'Suddivisione del carico',set_item_loaded:'Verifica carico',execution_started:'Partenza',reorder:'Riordino tappe',complete:'Tappa completata',skip:'Tappa saltata',reopen:'Tappa riaperta',add_stop:'Tappa aggiunta',update_journey:'Viaggio modificato',update_order:'Ordine modificato',add_item:'Materiale aggiunto',update_item:'Materiale modificato',remove_item:'Materiale rimosso',restore_item:'Materiale ripristinato',hide_removed_item:'Materiale eliminato dalla lista',add_holder:'Consegna aggiunta',update_holder:'Consegna modificata',restore_original:'Ripristino originale',restore_previous:'Ripristino precedente',undo_restore:'Ripristino annullato',finish:'Viaggio terminato'})[op] || op
 </script>

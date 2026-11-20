@@ -56,7 +56,7 @@ class DriverOrderController extends Controller
         $trailers = Trailer::all();
         $holders = Holder::all();
         $drivers = User::where('role', UserRole::DRIVER->value )->get();
-        $cerList = CerCode::select('id', 'code', 'description', 'is_dangerous')->get();
+        $cerList = CerCode::where('is_active', true)->orderBy('code')->get(['id', 'code', 'description', 'is_dangerous', 'is_active']);
         $warehouses = Warehouse::all();
 
         return inertia('Driver/Order/Create', [
@@ -85,7 +85,7 @@ class DriverOrderController extends Controller
             'logistics_user_id' => 'nullable',
             // 'journey_id' => ALLA CREAZIONE, al momento soprattutto, non viene passato e prende il default NULL
             'items' => 'nullable|array', // Make items optional
-            'items.*.cer_code_id' => 'required|exists:cer_codes,id',
+            'items.*.cer_code_id' => ['required', 'integer', new \App\Rules\AvailableCerCode],
             'items.*.order_item_group_id' => 'nullable|exists:order_item_groups,id',
             'items.*.order_item_group_label' => 'nullable|string|max:120',
             'items.*.holder_id' => 'required|exists:holders,id',
@@ -172,7 +172,7 @@ class DriverOrderController extends Controller
         $trailers = Trailer::all();
         $holders = Holder::all();
         $drivers = User::where('role', UserRole::DRIVER->value )->get();
-        $cerList = CerCode::select('id', 'code', 'description', 'is_dangerous')->get();
+        $cerList = CerCode::orderBy('code')->get(['id', 'code', 'description', 'is_dangerous', 'is_active']);
         $warehouses = Warehouse::all();
     
 
@@ -210,7 +210,7 @@ class DriverOrderController extends Controller
             'journey_id' => 'nullable',
             'items' => 'nullable|array', // Make items optional
             'items.*.id' => 'required',
-            'items.*.cer_code_id' => 'required|exists:cer_codes,id',
+            'items.*.cer_code_id' => ['required', 'integer', new \App\Rules\AvailableCerCode($order)],
             'items.*.order_item_group_id' => 'nullable|exists:order_item_groups,id',
             'items.*.order_item_group_label' => 'nullable|string|max:120',
             'items.*.holder_id' => 'required|exists:holders,id',

@@ -35,6 +35,7 @@ class DriverJourneyController extends Controller
         return inertia('Driver/Journey/Workspace', [
             'journey' => $readModel->load($journey),
             'readOnly' => ! Gate::allows('update', $journey),
+            'canBatchExecutionChange' => Gate::allows('viewExecutionHistory', $journey),
             'canViewExecutionHistory' => Gate::allows('viewExecutionHistory', $journey),
             'warehouseAccess' => Gate::allows('warehouseManage', $journey),
             'executionLookups' => app(DriverExecutionLookups::class)->load($journey),

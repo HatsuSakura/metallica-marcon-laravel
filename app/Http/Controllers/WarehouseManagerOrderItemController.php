@@ -51,7 +51,7 @@ class WarehouseManagerOrderItemController extends Controller
 
         return inertia('Warehouse/Order/Item/Create', [
             'order' => $order,
-            'cerCodes' => CerCode::all(),
+            'cerCodes' => CerCode::where('is_active', true)->orderBy('code')->get(),
             'holders' => Holder::all(),
             'warehouses' => Warehouse::all(),
             // altri dati
@@ -64,7 +64,7 @@ class WarehouseManagerOrderItemController extends Controller
 
         // 1) valida TUTTO
         $validated = $request->validate([
-            'cer_code_id'       => 'required|exists:cer_codes,id',
+            'cer_code_id'       => ['required', 'integer', new \App\Rules\AvailableCerCode],
             'holder_id'         => 'required|exists:holders,id',
             'holder_quantity'   => 'required|integer|min:1',
             'description'       => 'nullable|string|max:255',

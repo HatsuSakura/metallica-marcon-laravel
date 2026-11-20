@@ -412,12 +412,14 @@ Route::prefix('api')
         Route::get('/orders/{order}/documents/{document}/download', [API_OrderDocumentsController::class, 'download'])
             ->where('document', '.*');
         Route::get('/journeys/{journey}/documents-status', [JourneyController::class, 'documentsStatus']);
+        Route::get('/notifications/count', [NotificationController::class, 'count'])->name('notification.count');
         Route::post('/journeys/{journey}/generate-documents', [JourneyController::class, 'generateDocuments']);
         Route::post('/driver/journeys/{journey}/start', [\App\Http\Controllers\API_JourneyExecutionController::class, 'start']);
         Route::put('/journeys/{journey}/sites/{site}/notes', [\App\Http\Controllers\API_JourneySiteNotesController::class, 'update'])->name('api.journey.site-notes.update');
         Route::get('/journeys/{journey}/execution', [\App\Http\Controllers\API_JourneyExecutionController::class, 'read']);
         Route::get('/journeys/{journey}/execution/history', [\App\Http\Controllers\API_JourneyExecutionController::class, 'history']);
         Route::patch('/journeys/{journey}/driver-preferences', [\App\Http\Controllers\API_JourneyExecutionController::class, 'preferences']);
+        Route::post('/journeys/{journey}/execution/interventions', [\App\Http\Controllers\API_JourneyExecutionController::class, 'intervention']);
         Route::post('/journeys/{journey}/execution/commands', [\App\Http\Controllers\API_JourneyExecutionController::class, 'command']);
         Route::match(['get','post'], '/journeys/{journey}/execution/orders/{executionOrder}/documents', [\App\Http\Controllers\API_ExecutionDocumentsController::class, 'documents']);
         Route::get('/journeys/{journey}/execution/orders/{executionOrder}/documents/{document}/download', [\App\Http\Controllers\API_ExecutionDocumentsController::class, 'download']);
@@ -472,3 +474,8 @@ Route::prefix('withdraws/{withdraw}')
     Route::post('/attach-file', [WithdrawController::class, 'attachFile'])->name('withdraws.attach-file'); // pronta per quando la faremo
     // Other state-related actions
 });
+
+// CER registry: same backoffice roles as the other commercial registries.
+Route::resource('cer-code', \App\Http\Controllers\CerCodeController::class)
+    ->only(['index', 'create', 'store', 'edit', 'update'])
+    ->middleware(['auth', 'verified', 'can:accessBackofficeArea']);

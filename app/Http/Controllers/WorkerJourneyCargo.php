@@ -87,7 +87,7 @@ class WorkerJourneyCargo extends Controller
         $trailers = Trailer::all();
         $holders = Holder::all();
         $workers = User::where('role', UserRole::DRIVER->value )->get();
-        $cerList = CerCode::select('id', 'code', 'description', 'is_dangerous')->get();
+        $cerList = CerCode::where('is_active', true)->orderBy('code')->get(['id', 'code', 'description', 'is_dangerous', 'is_active']);
         $warehouses = Warehouse::all();
 
         return inertia('Warehouse/JourneyCargo/Create', [
@@ -115,7 +115,7 @@ class WorkerJourneyCargo extends Controller
             'logistics_user_id'=> 'required',
             // 'journey_id' => ALLA CREAZIONE, al momento soprattutto, non viene passato e prende il default NULL
             'items' => 'nullable|array', // Make items optional
-            'items.*.cer_code_id' => 'required|exists:cer_codes,id',
+            'items.*.cer_code_id' => ['required', 'integer', new \App\Rules\AvailableCerCode],
             'items.*.holder_id' => 'required|exists:holders,id',
             'items.*.holder_quantity' => 'required|integer|min:1',
             'items.*.description' => 'nullable|string',
@@ -250,7 +250,7 @@ class WorkerJourneyCargo extends Controller
             // ITEMS
             'items' => 'nullable|array', // Make items optional
             'items.*.id' => 'required',
-            'items.*.cer_code_id' => 'required|exists:cer_codes,id',
+            'items.*.cer_code_id' => ['required', 'integer', new \App\Rules\AvailableCerCode($order)],
             'items.*.holder_id' => 'required|exists:holders,id',
             'items.*.holder_quantity' => 'required|integer|min:1',
             'items.*.description' => 'nullable|string',

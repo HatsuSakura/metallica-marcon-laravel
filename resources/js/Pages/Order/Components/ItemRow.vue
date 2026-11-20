@@ -5,7 +5,7 @@
                 <label :for="`order-item-${index}-cer`" class="label">Materiale / CER</label>
                 <div class="flex min-w-0 flex-wrap items-center gap-2">
                     <template v-if="isEditingCer || !item.cer_code_id">
-                        <v-select v-model="item.cer_code_id" :input-id="`order-item-${index}-cer`" :data-form-field="`items.${index}.cer_code_id`" :options="props.cerList" label="code" :reduce="cer => cer.id" :filterable="true" :searchable="true" placeholder="Seleziona CER" class="custom-style-chooser min-w-0 flex-1 basis-48" :class="[getCerStyle(item.cer_code_id),guidanceClass('cer_code_id')]">
+                        <v-select v-model="item.cer_code_id" :input-id="`order-item-${index}-cer`" :data-form-field="`items.${index}.cer_code_id`" :options="props.cerList" :selectable="cer => cer.is_active !== false && cer.is_active !== 0" label="code" :reduce="cer => cer.id" :filterable="true" :searchable="true" placeholder="Seleziona CER" class="custom-style-chooser min-w-0 flex-1 basis-48" :class="[getCerStyle(item.cer_code_id),guidanceClass('cer_code_id')]">
                             <template #option="{code,description,is_dangerous}"><span :class="Number(is_dangerous) === 1 ? 'text-error font-semibold' : ''">{{ code }}</span><p class="whitespace-normal text-sm">{{ description }}</p></template>
                         </v-select>
                         <AppAction variant="confirm" :disabled="!item.cer_code_id" @click="confirmCerEdit">Conferma CER</AppAction>

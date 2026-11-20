@@ -10,7 +10,7 @@
                 <v-select
                   v-model="item.cer_code_id"
                   :id="'cer-' + index"
-                  :options="props.cerList"
+                  :options="props.cerList" :selectable="cer => cer.is_active !== false && cer.is_active !== 0"
                   label="code"
                   :reduce="cer => cer.id"
                   :filterable="true"

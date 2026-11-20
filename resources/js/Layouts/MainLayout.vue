@@ -90,6 +90,9 @@
                 <Link @click="closeDrawer" :href="route('customer.index')">Clienti</Link>
               </li>
               <li v-if="canManageBusinessTypes">
+                <Link @click="closeDrawer" :href="route('cer-code.index')">Codici CER</Link>
+              </li>
+              <li v-if="canManageBusinessTypes">
                 <Link @click="closeDrawer" :href="route('business-type.index')">Tipologie attività</Link>
               </li>
               <li>
@@ -116,6 +119,7 @@
 
 <script setup>
 import { computed, ref, reactive, provide } from 'vue'
+import {useNotificationCount} from '@/Composables/useNotificationCount'
 import {layoutContentWidthKey} from '@/Composables/layoutContentWidth'
 const contentWidth = reactive({fluid:false, owner:null})
 provide(layoutContentWidthKey, contentWidth)
@@ -189,9 +193,7 @@ const canManageBusinessTypes = computed(() => {
   return Boolean(user.is_admin || ['developer', 'manager', 'logistic'].includes(user.role))
 })
 
-const notificationsCount = computed(
-  () => Math.min(Number(page.props.user?.notificationCount ?? 0), 9)
-)
+const notificationsCount = useNotificationCount(currentUser, computed(() => Number(page.props.user?.notificationCount ?? 0)))
 
 </script>
 

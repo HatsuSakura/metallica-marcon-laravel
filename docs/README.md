@@ -1,5 +1,9 @@
 # Documentazione Metallica Marcon
 
+- [Anagrafica Codici CER — 2026-11-20](qa/2026-11-20-cer-registry.md): gestione riservata al backoffice, ricerca, disattivazione e compatibilità con i riferimenti esistenti; implementazione e migrazione locali.
+
+- [Notifiche operative di viaggio — 2026-11-17](design/2026-11-17-operational-notifications.md): implementazione locale con tipo journey-execution-update, destinatari backend e interventi raggruppati; master GLE-139 e figlie GLE-140–144. [Verifiche ed evidenze](qa/2026-11-17-operational-notifications.md); QA pendente.
+
 - [Date/ora e rifiniture viaggi — 2026-11-16](qa/2026-11-16-datetime-and-journey-refinements.md): datepicker comune, salva/resta/esci, documenti compatti e ordini aperti richiudibili.
 
 - [Ordini e gestione viaggi: convenzione UX/UI — 2026-11-16](qa/2026-11-16-planning-ui.md): componenti condivisi, dotazioni della sede, form responsive e verifiche locali.

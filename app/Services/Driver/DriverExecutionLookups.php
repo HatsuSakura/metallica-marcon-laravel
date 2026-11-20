@@ -22,7 +22,7 @@ class DriverExecutionLookups
 
         return [
             'warehouses' => Warehouse::get(['id', 'name']),
-            'cers' => CerCode::orderBy('code')->get(['id', 'code', 'description']),
+            'cers' => CerCode::orderBy('code')->get(['id', 'code', 'description', 'is_active']),
             'holders' => Holder::orderBy('name')->get(['id', 'name']),
             'customers' => Customer::orderBy('company_name')->get(['id', 'company_name']),
             'sites' => Site::orderBy('name')->get(['id', 'customer_id', 'name', 'address']),

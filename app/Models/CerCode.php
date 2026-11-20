@@ -13,17 +13,20 @@ class CerCode extends Model implements AuditableContract
 
     protected $casts = [
         'is_dangerous' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     protected $fillable = [
         'code',
         'description',
         'is_dangerous',
+        'is_active',
     ];
 
     protected $auditInclude = [
         'code',
         'description',
         'is_dangerous',
+        'is_active',
     ];
 }

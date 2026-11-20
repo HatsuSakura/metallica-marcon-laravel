@@ -82,9 +82,12 @@ abstract class JourneyExecutionTestCase extends TestCase
             DB::table('journey_stops')->insert(['id' => $id, 'journey_id' => 1, 'kind' => 'customer', 'customer_id' => 1, 'sequence' => $id, 'planned_sequence' => $id, 'status' => 'planned']);
             DB::table('journey_stop_orders')->insert(['journey_id' => 1, 'journey_stop_id' => $id, 'order_id' => $id]);
         }
+        (require database_path('migrations/2024_10_09_115339_create_notifications_table.php'))->up();
+        (require database_path('migrations/2026_11_17_120000_create_journey_execution_updates.php'))->up();
         (require database_path('migrations/2026_10_31_200000_create_journey_execution_context.php'))->up();
         (require database_path('migrations/2026_11_02_180000_add_execution_load_allocations.php'))->up();
         (require database_path('migrations/2026_11_13_160000_add_driver_uat_preferences.php'))->up();
+        (require database_path('migrations/2026_11_20_160000_add_active_to_cer_codes.php'))->up();
         Storage::fake('local');
         Bus::fake();
         foreach ([1, 2] as $id) {

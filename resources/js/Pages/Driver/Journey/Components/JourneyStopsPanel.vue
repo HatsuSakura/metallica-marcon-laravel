@@ -38,7 +38,7 @@
                         <span class="mt-2 block break-words font-semibold" :class="{ 'text-lg': stop.id === currentStopId }">{{ stopTitle(stop) }}</span>
                         <span v-if="stopSubtitle(stop)" class="mt-1 block break-words text-sm opacity-70">{{ stopSubtitle(stop) }}</span>
                         </button>
-                        <JourneyStopSiteNotes :stop="stop" :id-prefix="`card-stop-${stop.id}`" :editable="!readOnly" :busy="isLoading" class="px-3 pb-3" @command="(operation, input, onSaved) => $emit('command', operation, input, onSaved)" />
+                        <JourneyStopSiteNotes :stop="stop" :id-prefix="`card-stop-${stop.id}`" :editable="!readOnly && siteNotesEditable" :busy="isLoading" class="px-3 pb-3" @command="(operation, input, onSaved) => $emit('command', operation, input, onSaved)" />
                         <JourneyStopContacts v-if="isPending(stop)" :stop="stop" class="px-3 pb-3" />
                         <JourneyContainerMovements v-if="stop.kind !== 'technical' && !['skipped', 'cancelled'].includes(stop.status)" :orders="stopContainerOrders(stop)" :census="census" :completed="normalizeJourneyStopStatus(stop.status) === JOURNEY_STOP_STATUS.DONE" class="px-3 pb-2" />
                         <slot name="stop-actions" :stop="stop" />
@@ -67,6 +67,7 @@ const props = defineProps({
     reorderEnabled: Boolean,
     isLoading: Boolean,
     readOnly: Boolean,
+    siteNotesEditable:{type:Boolean,default:true},
     canStart: Boolean,
     lookups: { type: Object, default: () => ({}) },
     census: { type: Array, default: () => [] },

@@ -2,7 +2,7 @@
   <div>
     <v-select
       v-model="model"
-      :options="props.options"
+      :options="props.options" :selectable="cer => cer.is_active !== false && cer.is_active !== 0"
       label="code"
       :reduce="c => c.id"
       :filterable="true" 

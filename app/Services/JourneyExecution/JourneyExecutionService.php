@@ -91,9 +91,10 @@ class JourneyExecutionService
         }
     }
 
-    public function command(Journey $journey, int $actor, int $expectedRevision, string $operation, array $input): Journey
+    public function command(Journey $journey, int $actor, int $expectedRevision, string $operation, array $input, bool $publish = true, ?string $interventionId = null): Journey
     {
-        return DB::transaction(function () use ($journey, $actor, $expectedRevision, $operation, $input) {
+        $interventionId ??= $publish ? (string) \Illuminate\Support\Str::uuid() : null;
+        return DB::transaction(function () use ($journey, $actor, $expectedRevision, $operation, $input, $publish, $interventionId) {
             if ($operation === 'reopen') {
                 DB::table('users')->where('id', $journey->driver_id)->lockForUpdate()->first();
             }
@@ -102,6 +103,7 @@ class JourneyExecutionService
             abort_unless((int) $j->execution_revision === $expectedRevision, 409, 'Il viaggio è stato aggiornato. Ricarica prima di modificare.');
             abort_if($j->status === JourneyStatus::STATUS_CLOSED, 422, 'Il viaggio è chiuso.');
             abort_unless($j->status === JourneyStatus::STATUS_ACTIVE || in_array($operation, ['reopen', 'warehouse_item', 'close'], true), 422, 'Riapri una tappa prima di modificare un viaggio terminato.');
+            $notificationBefore = $publish ? app(ExecutionUpdateSnapshot::class)->capture($j) : [];
             $before = $this->state($j);
             $extra = [];
             switch ($operation) {
@@ -114,6 +116,8 @@ class JourneyExecutionService
                 case 'reorder': $this->reorder($j, $input['stop_ids']);
                     break;
                 case 'complete': $this->complete($j, $input);
+                    break;
+                case 'cancel_stop': $this->cancelStop($j, $input);
                     break;
                 case 'skip': $this->skip($j, $input);
                     break;
@@ -238,8 +242,13 @@ class JourneyExecutionService
             JourneyEvent::create(['journey_id' => $j->id, 'journey_stop_id' => $input['stop_id'] ?? null, 'created_by_user_id' => $actor,
                 'payload' => ['event' => 'execution_changed', 'operation' => $operation, 'revision' => $revision,
                     'previous_revision' => $expectedRevision, 'changes' => $changes, 'reason_code' => $input['reason_code'] ?? null,
-                    'driver_notes' => $input['driver_notes'] ?? null] + $extra]);
+                    'driver_notes' => $input['driver_notes'] ?? null] + $extra + ($interventionId ? ['intervention_id'=>$interventionId] : [])]);
 
+            if ($publish) {
+                $fresh = $j->fresh();
+                app(ExecutionUpdatePublisher::class)->record($fresh, $actor, $interventionId, $notificationBefore,
+                    app(ExecutionUpdateSnapshot::class)->capture($fresh), [$operation], $input['stop_id'] ?? null);
+            }
             return $j->fresh();
         });
     }
@@ -356,6 +365,26 @@ class JourneyExecutionService
         $this->advance($j);
     }
 
+    private function cancelStop(Journey $journey, array $input): void
+    {
+        $stop = $journey->stops()->whereIn('status',['planned','in_progress'])->findOrFail($input['stop_id']);
+        foreach ($journey->orderExecutions()->where('journey_stop_id',$stop->id)->get() as $execution) {
+            abort_unless($execution->status === 'pending',422,'La tappa contiene ordini già eseguiti.');
+            abort_if($execution->items()->where(fn ($q) => $q->where('actual_containers','>',0)->orWhere('actual_weight_kg','>',0)->orWhere('is_loaded',true))->exists()
+                || $execution->holders()->where('actual_delivered','>',0)->exists(),422,'La tappa ha movimentazioni registrate: non può essere rimossa.');
+            $execution->status = 'released';
+            $execution->save();
+            if ($execution->source_order_id) {
+                DB::table('order_commitments')->where('order_id',$execution->source_order_id)->where('journey_id',$journey->id)->delete();
+                DB::table('orders')->where('id',$execution->source_order_id)->where('journey_id',$journey->id)->update([
+                    'journey_id'=>null,'cargo_location'=>null,'status'=>'creato','documents_status'=>'not_generated']);
+            }
+        }
+        DB::table('journey_stops')->where('id',$stop->id)->update(['status'=>'cancelled','completed_at'=>now(),
+            'driver_notes'=>$input['driver_notes'] ?? null,'updated_at'=>now()]);
+        $this->advance($journey);
+    }
+
     private function addStop(Journey $j, array $input): void
     {
         $data = $input;
@@ -407,6 +436,9 @@ class JourneyExecutionService
     {
         $data = Arr::only($input, ['cer_code_id', 'holder_id', 'holder_quantity', 'weight_declared', 'description', 'is_bulk', 'cargo_location', 'order_item_group_label', 'warehouse_id']);
         if (isset($input['cer_code_id'])) {
+            if (!DB::table('cer_codes')->where('id', $input['cer_code_id'])->where('is_active', true)->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['cer_code_id' => 'Seleziona un codice CER attivo.']);
+            }
             $data['cer_code'] = (array) DB::table('cer_codes')->find($input['cer_code_id']);
         }
         if (array_key_exists('holder_id', $input)) {

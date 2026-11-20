@@ -1,6 +1,6 @@
 <template>
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label class="form-control min-w-0">Codice CER<select v-model="cer" required class="select select-bordered min-h-12 w-full min-w-0" :disabled="disabled"><option disabled value="">Seleziona CER</option><option v-for="option in lookups.cers" :key="option.id" :value="option.id">{{ option.code }} — {{ option.description }}</option></select></label>
+        <label class="form-control min-w-0">Codice CER<select v-model="cer" required class="select select-bordered min-h-12 w-full min-w-0" :disabled="disabled"><option disabled value="">Seleziona CER</option><option v-for="option in lookups.cers" :key="option.id" :value="option.id" :disabled="option.is_active === false || option.is_active === 0">{{ option.code }} — {{ option.description }}</option></select></label>
         <div class="min-w-0 space-y-1 sm:col-span-2">
             <label class="label min-h-12 justify-start gap-3"><input v-model="bulk" type="checkbox" class="checkbox" :disabled="disabled" />Materiale sfuso</label>
             <div class="grid grid-cols-[minmax(0,1fr)_9rem] items-end gap-3">

@@ -54,63 +54,43 @@ class API_JourneyExecutionController extends Controller
 
     public function command(Request $request, Journey $journey, JourneyExecutionService $service)
     {
-        Gate::authorize(in_array($request->input('operation'), ['warehouse_item', 'close'], true) ? 'warehouseManage' : 'update', $journey);
+        Gate::authorize($request->input('operation') === 'cancel_stop' ? 'viewExecutionHistory' : (in_array($request->input('operation'), ['warehouse_item', 'close'], true) ? 'warehouseManage' : 'update'), $journey);
         $data = $request->validate([
             'revision' => ['required', 'integer', 'min:1'],
-            'operation' => ['required', Rule::in(['set_item_allocations', 'set_item_loaded', 'reorder', 'complete', 'skip', 'reopen', 'add_stop', 'update_journey', 'update_order', 'add_item', 'update_item', 'remove_item', 'restore_item', 'hide_removed_item', 'add_holder', 'update_holder', 'restore_original', 'restore_previous', 'undo_restore', 'finish', 'warehouse_item', 'close'])],
+            'intervention_id' => ['nullable','uuid'],
+            'operation' => ['required', Rule::in(\App\Services\JourneyExecution\ExecutionCommandValidator::OPERATIONS)],
             'input' => ['present', 'array'],
         ]);
         $operation = $data['operation'];
-        $rules = match ($operation) {
-            'set_item_allocations' => ['item_id' => 'required|integer', 'vehicle_containers' => 'required|integer|min:0', 'trailer_containers' => 'required|integer|min:0'],
-            'set_item_loaded' => ['item_id' => 'required|integer', 'is_loaded' => 'required|boolean'],
-            'reorder' => ['stop_ids' => 'required|array|min:1', 'stop_ids.*' => 'required|integer|distinct'],
-            'complete' => ['stop_id' => 'required|integer', 'confirm_current_quantities' => 'boolean'],
-            'skip' => ['stop_id' => 'required|integer', 'reason_code' => ['required', Rule::in(['traffic', 'over_capacity', 'customer_closed', 'customer_refused', 'vehicle_issue', 'other'])], 'driver_notes' => 'nullable|string|max:2000|required_if:reason_code,other'],
-            'reopen' => ['stop_id' => 'required|integer'],
-            'add_stop' => ['kind' => ['required', Rule::in(['customer', 'technical'])], 'source_order_id' => 'nullable|integer|exists:orders,id',
-                'customer_id' => 'nullable|integer|exists:customers,id', 'site_id' => 'nullable|integer|exists:sites,id',
-                'technical_action_id' => 'required_if:kind,technical|nullable|integer|exists:journey_stop_actions,id', 'description' => 'nullable|string|max:255', 'address_text' => 'nullable|string|max:255'],
-            'update_journey' => ['notes' => 'nullable|string|max:5000', 'vehicle_id' => 'missing', 'trailer_id' => 'missing', 'vehicle' => 'missing', 'trailer' => 'missing', 'vehicle_cargo_id' => 'missing', 'trailer_cargo_id' => 'missing'],
-            'update_order' => ['execution_order_id' => 'required|integer', 'notes' => 'nullable|string|max:5000', 'cargo_location' => ['sometimes', Rule::in(['vehicle', 'trailer', 'fulfill'])]],
-            'add_item', 'update_item' => ['execution_order_id' => ($operation === 'add_item' ? 'required' : 'nullable').'|integer', 'item_id' => ($operation === 'update_item' ? 'required' : 'nullable').'|integer',
-                'cer_code_id' => ($operation === 'add_item' ? 'required' : 'sometimes').'|integer|exists:cer_codes,id', 'holder_id' => 'nullable|integer|exists:holders,id',
-                'holder_quantity' => 'nullable|integer|min:0', 'weight_declared' => 'nullable|numeric|min:0', 'description' => 'nullable|string|max:2000', 'is_bulk' => 'boolean',
-                'actual_containers' => 'nullable|integer|min:0', 'actual_weight_kg' => 'nullable|numeric|min:0', 'cargo_location' => ['sometimes', 'nullable', Rule::in(['vehicle', 'trailer'])],
-                'order_item_group_label' => 'nullable|string|max:120', 'warehouse_id' => 'nullable|integer|exists:warehouses,id'],
-            'remove_item', 'restore_item', 'hide_removed_item' => ['item_id' => 'required|integer'],
-            'add_holder' => ['execution_order_id' => 'required|integer', 'holder_id' => 'required|integer|exists:holders,id', 'total_holders_count' => 'required|integer|min:0', 'actual_delivered' => 'nullable|integer|min:0'],
-            'update_holder' => ['holder_id' => 'required|integer', 'total_holders_count' => 'sometimes|required|integer|min:0', 'actual_delivered' => 'nullable|integer|min:0'],
-            'restore_original', 'restore_previous' => ['item_id' => 'required|integer', 'field' => 'required|string'],
-            'warehouse_item' => ['item_id' => 'required|integer', 'warehouse_id' => 'required|integer|exists:warehouses,id',
-                'weight_gross' => 'nullable|numeric|min:0', 'weight_tare' => 'nullable|numeric|min:0',
-                'warehouse_notes' => 'nullable|string|max:5000', 'warehouse_status' => ['required', Rule::in(['received', 'weighed', 'classified'])]],
-            'undo_restore' => ['event_id' => 'required|integer'],
-            'finish', 'close' => [],
-        };
-        $messages = [];
-        foreach (['vehicle_id', 'trailer_id', 'vehicle', 'trailer', 'vehicle_cargo_id', 'trailer_cargo_id'] as $field) {
-            $messages[$field.'.missing'] = 'Il convoglio è fissato alla partenza: motrice e rimorchio non possono essere modificati durante il viaggio.';
-        }
-        if ($operation === 'update_holder' && $request->user()->role === \App\Enums\UserRole::DRIVER && !$request->user()->is_admin) {
-            $rules['total_holders_count'] = 'missing';
-        }
-        $input = validator($data['input'], $rules, $messages)->validate();
-        if ($operation === 'add_stop' && $input['kind'] === 'customer' && empty($input['source_order_id'])) {
-            validator($input, ['customer_id' => 'required', 'site_id' => 'required'])->validate();
-        }
-        if ($operation === 'set_item_allocations') {
-            $input['vehicle_containers'] = (int) $input['vehicle_containers'];
-            $input['trailer_containers'] = (int) $input['trailer_containers'];
-        }
-        $j = $service->command($journey, $request->user()->id, $data['revision'], $operation, $input);
+        $input = app(\App\Services\JourneyExecution\ExecutionCommandValidator::class)->validate($request->user(), $operation, $data['input']);
+        $id = $data['intervention_id'] ?? (string) \Illuminate\Support\Str::uuid();
+        $result = app(\App\Services\JourneyExecution\ExecutionInterventions::class)->run($journey,$request->user(),$data['revision'],$id,
+            [['id'=>$id,'operation'=>$operation,'input'=>$input]]);
+        $j = $result['journey'];
 
         $undo = null;
-        if (in_array($operation, ['restore_original', 'restore_previous'], true) && $j->execution_revision > $data['revision']) {
+        if (!$result['replayed'] && in_array($operation, ['restore_original', 'restore_previous'], true) && $j->execution_revision > $data['revision']) {
             $event = $j->events()->where('payload->revision', $j->execution_revision)->where('payload->operation', $operation)->firstOrFail();
             $undo = ['event_id' => $event->id, 'revision' => $j->execution_revision];
         }
 
         return response()->json(['journey' => app(DriverJourneyReadModel::class)->load($j), 'undo' => $undo]);
     }
+    public function intervention(Request $request, Journey $journey)
+    {
+        Gate::authorize('viewExecutionHistory',$journey);
+        Gate::authorize('update',$journey);
+        $data = $request->validate([
+            'intervention_id'=>['required','uuid'],'revision'=>['required','integer','min:1'],
+            'preview'=>['sometimes','boolean'],'commands'=>['required','array','min:1','max:50'],
+            'commands.*.id'=>['required','uuid','distinct'],
+            'commands.*.operation'=>['required',Rule::in(\App\Services\JourneyExecution\ExecutionInterventions::BATCH_OPERATIONS)],
+            'commands.*.input'=>['present','array'],
+        ]);
+        $preview = (bool)($data['preview'] ?? false);
+        $result = app(\App\Services\JourneyExecution\ExecutionInterventions::class)->run($journey,$request->user(),$data['revision'],$data['intervention_id'],$data['commands'],$preview,true);
+        if (!$preview) $result['journey'] = app(DriverJourneyReadModel::class)->load($result['journey']);
+        return response()->json($result);
+    }
+
 }

@@ -346,3 +346,29 @@ Il giudizio non deriva da una palette generata automaticamente.
 Skill consultate: `~/.agents/skills/impeccable/SKILL.md` (Operate e valutazione
 indipendente) e `~/.agents/skills/ui-ux-pro-max/SKILL.md` (ricerche locali UX e
 stack, con filtro rispetto alle versioni installate).
+
+### Conferma esito tappa
+
+Dopo la conferma backend di Completa/Salta, il workspace mostra fino alla conferma esplicita con OK
+un overlay modale condiviso con nome tappa, esito e prossima destinazione.
+Durante richiesta e overlay i comandi non possono produrre un secondo esito;
+lo sfondo è sfocato e inerte. Ingresso con fade breve, disattivato con reduced motion. OK a tutta larghezza
+su mobile; testi con dimensione e interlinea uniformi, esito semibold.
+Dopo l’ultima tappa indicare il coordinamento dello scarico con Logistica,
+senza dichiarare il viaggio chiuso. Al termine il focus va al dettaglio tappa.
+
+Nelle notifiche esporre ogni variazione una sola volta: accorpare previsto ed
+effettivo solo se valori iniziali e finali coincidono numericamente per la stessa
+risorsa. Le prime quattro variazioni sono visibili, le successive in «Altre
+variazioni». Collegamenti compatti con icona e identificativo, nome accessibile
+completo; «Segna come letta» nella stessa toolbar, allineato a destra.
+
+Il confronto principale delle notifiche è un disclosure aperto per le non lette
+e chiuso per le lette; «Altre variazioni» è chiuso di default. La lettura cambia
+il default, senza impedire all’utente di riaprire il confronto.
+
+Card notifiche compatte: data/autore/cliente in riga da md, cliente separato
+su mobile; wrapping consentito per nomi lunghi. Distinguere i disclosure con
+titoli semibold e conteggio, evitando HR e bordi tra sezioni. Spazio verticale
+tra gruppi 8px; summary più compatte da md. Conservare separatori leggeri
+fra righe tabellari e la distinzione degli stati letta/non letta.

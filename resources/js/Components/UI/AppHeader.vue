@@ -11,7 +11,7 @@
             <template v-if="user">
                 <Link :href="route('notification.index')" class="btn btn-square btn-ghost relative min-h-12 shrink-0" :aria-label="notificationsCount ? `Notifiche: ${notificationsCount} non lette` : 'Notifiche'">
                     <font-awesome-icon :icon="['fas', 'bell']" class="h-5 w-5" aria-hidden="true" />
-                    <span v-if="notificationsCount" class="badge badge-error badge-xs absolute right-0 top-0" aria-hidden="true">{{ notificationsCount }}</span>
+                    <span v-if="notificationsCount" class="badge badge-error badge-xs absolute right-0 top-0" aria-hidden="true">{{ notificationsCount > 99 ? '99+' : notificationsCount }}</span>
                 </Link>
                 <details ref="accountMenu" class="dropdown dropdown-end shrink-0" @keydown.esc="closeAccountMenu">
                     <summary class="btn btn-ghost h-12 w-12 min-h-12 list-none p-0 md:w-auto md:gap-2 md:px-3" aria-label="Menu account">
