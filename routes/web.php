@@ -472,3 +472,7 @@ Route::prefix('withdraws/{withdraw}')
     Route::post('/attach-file', [WithdrawController::class, 'attachFile'])->name('withdraws.attach-file'); // pronta per quando la faremo
     // Other state-related actions
 });
+
+// Browser-session recovery is separate from machine-to-machine authentication.
+Route::get('/session/status', [\App\Http\Controllers\SessionController::class, 'status'])->middleware('throttle:60,1')->name('session.status');
+Route::get('/session/login', [\App\Http\Controllers\SessionController::class, 'login'])->middleware('throttle:20,1')->name('session.login');

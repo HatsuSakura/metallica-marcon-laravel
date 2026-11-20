@@ -1,5 +1,7 @@
 # Documentazione Metallica Marcon
 
+- [Sessioni e recupero bozze — GLE-145](qa/2026-11-20-session-recovery.md): implementazione e verifiche locali; applicazione runtime al rilascio.
+
 - [Date/ora e rifiniture viaggi — 2026-11-16](qa/2026-11-16-datetime-and-journey-refinements.md): datepicker comune, salva/resta/esci, documenti compatti e ordini aperti richiudibili.
 
 - [Ordini e gestione viaggi: convenzione UX/UI — 2026-11-16](qa/2026-11-16-planning-ui.md): componenti condivisi, dotazioni della sede, form responsive e verifiche locali.

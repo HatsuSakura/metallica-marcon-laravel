@@ -1,5 +1,7 @@
 # Stato sviluppi — Metallica Marcon / GLE
 
+- [Sessioni e recupero bozze — GLE-145](qa/2026-11-20-session-recovery.md): implementazione e verifiche locali; applicazione runtime al rilascio.
+
 **Stato corrente 2026-11-11:** [checkpoint UAT autisti](checkpoints/2026-11-11-driver-uat.md). Commit 89b2b22 in QA, GLE-116–126 tutte In corso via MCP, attesa UAT; GLE-122 con residui espliciti. Gli aggiornamenti sottostanti sono fotografie precedenti.
 
 

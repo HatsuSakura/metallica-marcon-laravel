@@ -39,6 +39,7 @@ class HandleInertiaRequests extends Middleware
         return array_merge(
             parent::share($request), 
             [
+                'session' => ['csrf_fingerprint' => $request->user() ? hash('sha256', $request->session()->token()) : null],
                 'flash' => [
                     'success' => $request->session()->get('success'),
                     'error' => $request->session()->get('error'),

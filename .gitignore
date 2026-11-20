@@ -23,7 +23,7 @@ bootstrap/cache/
 # Lock files: NON escludere — necessari per build Docker riproducibili
 
 # NODE MODULES & VITE
-node_modules/
+/node_modules
 public/build/
 /public/hot
 /public/storage

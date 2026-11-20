@@ -1,27 +1,8 @@
-// src/composables/useLoadingOverlay.js
-import { ref } from 'vue'
-
+import {ref} from 'vue'
 export const isLoading = ref(false)
-
 export function setupAxiosInterceptors(axiosInstance) {
-  let pending = 0
-
-  axiosInstance.interceptors.request.use(cfg => {
-    pending++
-    isLoading.value = true
-    return cfg
-  }, err => Promise.reject(err))
-
-  axiosInstance.interceptors.response.use(
-    res => {
-      pending = Math.max(0, pending - 1)
-      if (pending === 0) isLoading.value = false
-      return res
-    },
-    err => {
-      pending = Math.max(0, pending - 1)
-      if (pending === 0) isLoading.value = false
-      return Promise.reject(err)
-    }
-  )
+    const pending = new Set()
+    const finish = config => {if(config)pending.delete(config);isLoading.value=pending.size>0}
+    axiosInstance.interceptors.request.use(config=>{pending.add(config);isLoading.value=true;return config},error=>Promise.reject(error))
+    axiosInstance.interceptors.response.use(response=>{finish(response.config);return response},error=>{finish(error.config);return Promise.reject(error)})
 }

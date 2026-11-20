@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         */
         $middleware->web(append: [
+            \App\Http\Middleware\EnsureSessionOwner::class,
             HandleInertiaRequests::class,
             \App\Http\Middleware\PlanningWriteBoundary::class,       // For INERTIA setup & configuration
             InertiaMiddleware::class,           // For INERTIA setup & configuration
@@ -42,7 +43,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $exception, \Illuminate\Http\Request $request) {
+            if ($exception->getStatusCode() === 419 && ($request->expectsJson() || $request->header('X-Inertia'))) {
+                return response()->json(['message' => 'La sessione è scaduta. Accedi nuovamente per continuare.'], 419, ['X-Session-Expired' => '1', 'Cache-Control' => 'no-store, private']);
+            }
+            return null;
+        });
     })
     ->create();
 

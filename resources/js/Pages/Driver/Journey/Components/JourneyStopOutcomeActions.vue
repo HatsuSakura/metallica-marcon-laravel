@@ -19,9 +19,17 @@
                     </div>
 </template>
 <script setup>
+import {watch} from 'vue'
+import {useDraftBindings} from '@/Services/localDrafts'
 import AppAction from '@/Components/UI/AppAction.vue'
-defineProps({busy:Boolean,compact:Boolean, idPrefix:{type:String,required:true}, skipReasons:{type:Array,required:true}})
+const props=defineProps({stopId:[Number,String],busy:Boolean,compact:Boolean, idPrefix:{type:String,required:true}, skipReasons:{type:Array,required:true}})
 defineEmits(['complete','skip'])
 const skipPanelOpen = defineModel('skipPanelOpen', {type:Boolean,default:false})
 const skipForm = defineModel('skipForm', {type:Object,required:true})
+const localDrafts=useDraftBindings()
+watch(()=>props.stopId,id=>{
+    if(!id)return
+    localDrafts.bind(`stop-note:${id}`,{label:`Note della tappa #${id}`,value:()=>props.stopId===id?skipForm.value:{reason_code:'',driver_notes:''},baseline:()=>({reason_code:'',driver_notes:''}),fields:{reason_code:'Motivo',driver_notes:'Note'},canRestore:()=>props.stopId===id,restore:value=>{skipForm.value={...value};skipPanelOpen.value=true}})
+},{immediate:true})
+
 </script>

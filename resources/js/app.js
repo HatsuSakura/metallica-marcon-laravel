@@ -1,3 +1,5 @@
+import SessionRecoveryHost from '@/Components/Session/SessionRecoveryHost.vue'
+import {installSessionRecovery,sessionState,setSessionIdentity} from '@/Services/sessionRecovery'
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
 import MainLayout from '@/Layouts/MainLayout.vue'
@@ -15,6 +17,7 @@ import axios from 'axios'
 import { setupAxiosInterceptors } from '@/Composables/useLoadingOverlay.js' 
 
 setupAxiosInterceptors(axios)
+installSessionRecovery()
 
 DataTable.use(DataTablesLib); // The DataTable component doesn't have datatables.net core included, so we need to tell it to use the DataTablesLib library
 
@@ -31,7 +34,9 @@ createInertiaApp({
     return page
   },
   setup({ el, App, props, plugin }) {
-    const app = createApp({ render: () => [h(App, props), h(AppNotifications)] });
+    const initial=props.initialPage?.props || {}
+    setSessionIdentity(initial.auth?.user?.id ?? initial.user?.id ?? null,initial.session?.csrf_fingerprint)
+    const app = createApp({ render: () => [h('div', {inert:sessionState.mode!=='ready' ? true : undefined}, [h(App, props), h(AppNotifications)]), h(SessionRecoveryHost)] });
       app.use(plugin);
       app.use(ZiggyVue);
       app.use(GoogleMap, {

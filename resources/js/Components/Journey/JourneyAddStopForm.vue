@@ -23,7 +23,8 @@
             </form>
 </template>
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch, nextTick } from 'vue'
+import {useDraftBindings} from '@/Services/localDrafts'
 import SearchableSelect from '@/Components/UI/SearchableSelect.vue'
 const props = defineProps({lookups:{type:Object,default:()=>({})},busy:Boolean})
 const emit = defineEmits(['command','saved'])
@@ -42,6 +43,9 @@ watch(() => stop.customer_id, () => { stop.site_id = '' })
 const addStop = () => {
     if (mode.value === 'order' && !stop.source_order_id) return
     if (mode.value === 'customer' && (!stop.customer_id || !sites.value.some(site => site.id === stop.site_id))) return
-    emit('command', 'add_stop', { kind: mode.value === 'technical' ? 'technical' : 'customer', description: stop.description, address_text: stop.address_text, ...(mode.value === 'order' ? { source_order_id: stop.source_order_id } : mode.value === 'customer' ? { customer_id: stop.customer_id, site_id: stop.site_id } : { technical_action_id: stop.technical_action_id }) }, () => emit('saved'))
+    emit('command', 'add_stop', { kind: mode.value === 'technical' ? 'technical' : 'customer', description: stop.description, address_text: stop.address_text, ...(mode.value === 'order' ? { source_order_id: stop.source_order_id } : mode.value === 'customer' ? { customer_id: stop.customer_id, site_id: stop.site_id } : { technical_action_id: stop.technical_action_id }) }, () => {Object.assign(stop,{source_order_id:'',customer_id:'',site_id:'',technical_action_id:'',description:'',address_text:''});mode.value='order';void localDrafts.clear('new-stop');emit('saved')})
 }
+const localDrafts=useDraftBindings()
+localDrafts.bind('new-stop',{label:'Nuova tappa',value:()=>({mode:mode.value,...stop}),baseline:()=>({mode:'order',source_order_id:'',customer_id:'',site_id:'',technical_action_id:'',description:'',address_text:''}),fields:{mode:'Tipo tappa',source_order_id:'Ordine',customer_id:'Cliente',site_id:'Sede',technical_action_id:'Attività',description:'Descrizione',address_text:'Indirizzo'},restore:value=>{const {mode:restoredMode,site_id:siteId,...fields}=value;mode.value=restoredMode;Object.assign(stop,fields);nextTick(()=>{stop.site_id=siteId})}})
+
 </script>

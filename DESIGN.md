@@ -346,3 +346,12 @@ Il giudizio non deriva da una palette generata automaticamente.
 Skill consultate: `~/.agents/skills/impeccable/SKILL.md` (Operate e valutazione
 indipendente) e `~/.agents/skills/ui-ux-pro-max/SKILL.md` (ricerche locali UX e
 stack, con filtro rispetto alle versioni installate).
+
+## Sessione scaduta e bozze locali
+
+Gestire 401/419 nel servizio sessione e nell’host condiviso. Verifica al rientro
+senza heartbeat, stato offline distinto, login con ritorno sicuro e nessun
+replay di azioni. IndexedDB conserva solo campi espliciti, isolati per utenza
+e risorsa, con Recupera/Scarta e confronto baseline/server per campo.
+Mostrare errori di storage e conflitti, preservare zero e assenza distinti.
+Dettagli e copertura: [GLE-145](docs/qa/2026-11-20-session-recovery.md).
